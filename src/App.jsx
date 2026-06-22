@@ -4,13 +4,24 @@ import SignInPage from "./pages/SignInPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import ProjectsPage from "./pages/ProjectsPage.jsx";
+import TasksPage from "./pages/TasksPage.jsx";
+import MeetingsPage from "./pages/MeetingsPage.jsx";
+import WorkspacePlaceholderPage from "./pages/WorkspacePlaceholderPage.jsx";
 
 const routes = {
   "/": LandingPage,
   "/signin": SignInPage,
   "/reset-password": ResetPasswordPage,
   "/signup": SignUpPage,
-  "/dashboard": DashboardPage
+  "/dashboard": DashboardPage,
+  "/projects": ProjectsPage,
+  "/tasks": TasksPage,
+  "/meetings": MeetingsPage,
+  "/uploads": () => <WorkspacePlaceholderPage active="Upload Center" />,
+  "/ai-chat": () => <WorkspacePlaceholderPage active="AI Chat" />,
+  "/employees": () => <WorkspacePlaceholderPage active="Employees" />,
+  "/reports": () => <WorkspacePlaceholderPage active="Reports" />
 };
 
 function getPath() {

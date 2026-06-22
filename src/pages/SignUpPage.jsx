@@ -22,7 +22,7 @@ export default function SignUpPage() {
         <PrimaryButton>Create Workspace</PrimaryButton>
         <div className="divider"><span>or sign up with</span></div>
         <GoogleButton>Sign up with Google</GoogleButton>
-        <p className="auth-switch">Already have an account? <a href="#/signin">Sign in</a></p>
+        <p className="auth-switch">Already have an account? <a className="auth-inline-action" href="#/signin">Sign in</a></p>
       </div>
     </AuthLayout>
   );
