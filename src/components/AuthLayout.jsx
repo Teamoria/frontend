@@ -2,7 +2,7 @@ import Brand from "./Brand.jsx";
 
 export default function AuthLayout({ variant = "analytics", title, text, children }) {
   return (
-    <main className="auth-shell">
+    <main className={`auth-shell auth-shell--${variant}`}>
       <aside className={`auth-visual auth-visual--${variant}`}>
         <Brand />
         <div className="auth-copy">

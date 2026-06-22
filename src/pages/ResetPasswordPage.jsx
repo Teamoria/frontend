@@ -8,17 +8,17 @@ export default function ResetPasswordPage() {
       title="Your security, our priority."
       text="We'll help you get back to your account in no time."
     >
-      <div className="auth-form">
+      <div className="auth-form reset-password-form">
         <h1>Reset your password</h1>
         <p>Enter your email and we'll send you a reset link</p>
         <div className="form-stack">
           <span className="label">Email address</span>
-          <TextInput icon="@" placeholder="you@example.com" />
+          <TextInput icon={<span className="mail-icon" />} placeholder="you@example.com" />
         </div>
         <PrimaryButton>Send Reset Link</PrimaryButton>
-        <a className="back-link" href="#/signin">&lt;- Back to Sign In</a>
+        <a className="back-link" href="#/signin"><span aria-hidden="true">&lt;-</span> Back to Sign In</a>
         <div className="success-card">
-          <span>OK</span>
+          <span aria-hidden="true" />
           <div>
             <h2>Reset link sent!</h2>
             <p>We've sent a password reset link to <b>you@example.com</b>.</p>
