@@ -7,7 +7,17 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import ProjectsPage from "./pages/ProjectsPage.jsx";
 import TasksPage from "./pages/TasksPage.jsx";
 import MeetingsPage from "./pages/MeetingsPage.jsx";
-import WorkspacePlaceholderPage from "./pages/WorkspacePlaceholderPage.jsx";
+import WorkspaceDetailsPage from "./pages/WorkspaceDetailsPage.jsx";
+import UploadCenterPage from "./pages/UploadCenterPage.jsx";
+import AiChatPage from "./pages/AiChatPage.jsx";
+import AgentRunsPage from "./pages/AgentRunsPage.jsx";
+import AgentRunDetailsPage from "./pages/AgentRunDetailsPage.jsx";
+import WorkspaceGraphPage from "./pages/WorkspaceGraphPage.jsx";
+import EmployeesPage from "./pages/EmployeesPage.jsx";
+import ReportsPage from "./pages/ReportsPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
+import MarketingPage from "./pages/MarketingPage.jsx";
 
 const routes = {
   "/": LandingPage,
@@ -18,10 +28,20 @@ const routes = {
   "/projects": ProjectsPage,
   "/tasks": TasksPage,
   "/meetings": MeetingsPage,
-  "/uploads": () => <WorkspacePlaceholderPage active="Upload Center" />,
-  "/ai-chat": () => <WorkspacePlaceholderPage active="AI Chat" />,
-  "/employees": () => <WorkspacePlaceholderPage active="Employees" />,
-  "/reports": () => <WorkspacePlaceholderPage active="Reports" />
+  "/workspace": WorkspaceDetailsPage,
+  "/uploads": UploadCenterPage,
+  "/ai-chat": AiChatPage,
+  "/agent-runs": AgentRunsPage,
+  "/agent-run-details": AgentRunDetailsPage,
+  "/workspace-graph": WorkspaceGraphPage,
+  "/employees": EmployeesPage,
+  "/reports": ReportsPage,
+  "/settings": SettingsPage,
+  "/profile": ProfilePage,
+  "/product": () => <MarketingPage page="product" />,
+  "/features": () => <MarketingPage page="features" />,
+  "/solutions": () => <MarketingPage page="solutions" />,
+  "/pricing": () => <MarketingPage page="pricing" />
 };
 
 function getPath() {

@@ -3,11 +3,12 @@ import { meetingActions, meetingDecisions, meetingSummary, meetings } from "../d
 
 export default function MeetingsPage() {
   return (
-    <AppShell active="Meetings" user="Jane Cooper" role="Product Manager">
+    <AppShell active="Meetings" user="Jane Cooper" role="Project Manager">
       <section className="meeting-workspace">
         <div className="meeting-brand-title">
+          <span className="page-kicker">Meeting intelligence</span>
           <h1>Meeting Alchemy</h1>
-          <p>Smart Summaries powered by <b>AI</b></p>
+          <p>Smart summaries, transcript review, decisions, actions, and sentiment powered by <b>Teamoria AI</b>.</p>
         </div>
         <div className="meetings-layout">
           <aside className="meetings-list">
@@ -19,12 +20,12 @@ export default function MeetingsPage() {
           <section>
             <div className="meeting-title-row">
               <div>
-                <h1>Product Roadmap Sync</h1>
-                <p>May 22, 2025 - 10:00 AM to 11:00 AM - 6 Participants</p>
+                <h1>AI Sprint Planning</h1>
+                <p>June 23, 2026 - 09:00 to 10:00 - 6 participants</p>
               </div>
               <div className="page-actions">
                 <button className="filter-button" type="button">Share</button>
-                <button className="product-button" type="button">Export</button>
+                <button className="filter-button" type="button">Export</button>
               </div>
             </div>
 
@@ -41,7 +42,7 @@ export default function MeetingsPage() {
                 <p>{meetingSummary}</p>
                 <div className="page-actions">
                   <span className="status-badge status-badge--green">Generated in 28s</span>
-                  <span className="status-badge status-badge--green">Powered by Teamoria AI</span>
+                  <span className="status-badge status-badge--green">Sources attached</span>
                 </div>
               </article>
 
@@ -51,9 +52,11 @@ export default function MeetingsPage() {
                   {meetingActions.map(([task, owner, date]) => (
                     <label className="action-item" key={task}>
                       <input type="checkbox" />
-                      <b>{task}</b>
-                      <span>{owner}</span>
-                      <time>{date}</time>
+                      <span className="mini-avatar">{initials(owner)}</span>
+                      <span className="action-copy">
+                        <b>{task}</b>
+                        <small>{owner} - {date}</small>
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -80,7 +83,7 @@ export default function MeetingsPage() {
               </article>
 
               <div className="audio-player">
-                <button className="play-button" type="button">▶</button>
+                <button className="play-button" type="button" aria-label="Play audio">▶</button>
                 <span>00:00</span>
                 <div className="waveform" />
                 <span>60:00</span>
@@ -114,4 +117,8 @@ function renderMeetings() {
       </div>
     );
   });
+}
+
+function initials(name) {
+  return name.split(" ").map((part) => part[0]).join("").slice(0, 2);
 }
