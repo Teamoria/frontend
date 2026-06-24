@@ -1,4 +1,5 @@
 import AuthLayout from "../components/AuthLayout.jsx";
+import { FiMail, FiLock, FiUser, FiBriefcase, FiAward } from "react-icons/fi";
 import { GoogleButton, PrimaryButton, TextInput } from "../components/FormControls.jsx";
 
 export default function SignUpPage() {
@@ -25,17 +26,17 @@ export default function SignUpPage() {
 
         <div className="form-stack">
           <span className="label">Full name</span>
-          <TextInput icon="U" name="fullName" placeholder="Alex Morgan" required />
+          <TextInput icon={<FiUser />} name="fullName" placeholder="Alex Morgan" required />
 
           <span className="label">Work email</span>
-          <TextInput icon="@" name="email" type="email" placeholder="you@company.com" required />
+          <TextInput icon={<FiMail />} name="email" type="email" placeholder="you@company.com" required />
 
           <span className="label">Company name</span>
-          <TextInput icon="C" name="company" placeholder="Taqat Digital" required />
+          <TextInput icon={<FiBriefcase />} name="company" placeholder="Taqat Digital" required />
 
           <span className="label">Job title / Role</span>
           <label className="field">
-            <span className="field-icon" aria-hidden="true">R</span>
+            <span className="field-icon" aria-hidden="true"><FiAward /></span>
             <select name="role" defaultValue="project-manager">
               <option value="admin">Company Admin</option>
               <option value="general-manager">General Manager</option>
@@ -45,7 +46,7 @@ export default function SignUpPage() {
           </label>
 
           <span className="label">Password</span>
-          <TextInput icon="[]" name="password" type="password" placeholder="Create a strong password" required />
+          <TextInput icon={<FiLock />} name="password" type="password" placeholder="Create a strong password" required />
         </div>
 
         <PrimaryButton type="submit">Create Workspace</PrimaryButton>

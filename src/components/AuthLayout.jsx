@@ -22,6 +22,40 @@ function AnalyticsArtwork() {
       <div className="orb orb-a" />
       <div className="cube cube-a" />
       <div className="cube cube-b" />
+      <div className="project-illustration">
+        <div className="tablet-screen">
+          <div className="tablet-top" />
+          <div className="tablet-body">
+            <div className="tablet-metrics">
+              <span className="metric-dot" />
+              <span className="metric-dot" />
+              <span className="metric-dot" />
+            </div>
+            <div className="tablet-chart" />
+            <div className="tablet-cards">
+              <span>AI</span>
+              <span>PM</span>
+              <span>Ops</span>
+            </div>
+          </div>
+        </div>
+        <div className="tablet-hex-grid">
+          {['SEO', 'Team', 'Idea', 'Growth', 'Share'].map((item) => (
+            <div key={item} className="hex-item">
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="project-board">
+        <span>Backlog</span>
+        <span>In progress</span>
+        <span>Completed</span>
+      </div>
+      <div className="workflow-ring">
+        <span />
+        <span />
+      </div>
       <div className="mini-card ai-card">
         <b>AI Insights</b>
         <span>Projects on track</span>
