@@ -694,6 +694,7 @@ select {
 }
 
 .auth-visual {
+  background-image: url();
   background:
     radial-gradient(circle at 92% 16%, rgba(125, 83, 255, 0.5), transparent 16%),
     radial-gradient(circle at 8% 90%, rgba(135, 92, 255, 0.55), transparent 17%),
@@ -708,9 +709,8 @@ select {
 
 .auth-visual::before {
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 50%;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(240, 239, 239, 0.06),
     0 0 80px rgba(103, 66, 255, 0.12);
   content: "";
   height: 560px;
@@ -1003,11 +1003,16 @@ select {
   display: flex;
   font-size: 16px;
   gap: 10px;
+  margin-top: -2px;
+
 }
 
 .checkbox input {
-  height: 20px;
-  width: 20px;
+  height: 15px;
+  width: 15px;
+  margin-top: 2px;
+  margin-left: 1px;
+  margin-right: 1px;
 }
 
 .primary-button {
@@ -1080,6 +1085,7 @@ select {
   justify-content: center;
   min-height: 62px;
   width: 100%;
+  margin-top: 25px;
 }
 
 .google-button:hover {
@@ -1113,7 +1119,7 @@ select {
 
 .auth-visual {
   position: relative;
-  background-image: url('/src/assets/log.webp');
+  background-image: url('/src/assets/Future.webp');
   background-size: contain;
   background-position: center center;
   background-repeat: no-repeat;
@@ -1126,14 +1132,24 @@ select {
   position: absolute;
   inset: 0;
   /* Very light linear overlay only — preserves natural photo appearance */
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.10) 100%);
-  z-index: 1;
+  /* background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.10) 100%); */
   pointer-events: none;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.auth-visual>* {
+  position: relative;
+  z-index: 2;
 }
 
 .auth-visual .auth-copy {
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 /* Ensure no decorative pseudo elements or gradient artifacts remain over the photo */
@@ -1638,11 +1654,12 @@ select {
 }
 
 .auth-visual--security {
-  background:
+  background-image: url("/src/assets/wallpaper.webp");
+  /* background:
     radial-gradient(circle at 90% 16%, rgba(123, 91, 255, 0.33), transparent 12%),
     radial-gradient(circle at 0 52%, rgba(89, 65, 222, 0.45), transparent 9%),
     radial-gradient(circle at 52% 61%, rgba(104, 81, 255, 0.24), transparent 30%),
-    linear-gradient(150deg, #17126f 0%, #25138f 48%, #3f24dc 100%);
+    linear-gradient(150deg, #17126f 0%, #25138f 48%, #3f24dc 100%); */
   padding: 46px 54px;
 }
 
@@ -1653,10 +1670,13 @@ select {
 
 .auth-visual--security::before {
   border-color: rgba(255, 255, 255, 0.09);
-  height: 360px;
+  /* height: 360px;
   left: 84px;
   top: 258px;
-  width: 360px;
+  width: 360px; */
+  width: 100%;
+  height: 100%;
+
 }
 
 .auth-visual--security::after {
@@ -1851,8 +1871,9 @@ select {
 }
 
 .reset-password-form {
-  margin-top: 8px;
-  max-width: 402px;
+  margin-top: 0px;
+  max-width: 600px;
+  /* 402 */
 }
 
 .reset-password-form h1 {
@@ -1890,6 +1911,14 @@ select {
   flex-basis: 20px;
   height: 20px;
   justify-content: center;
+}
+
+.reset-password-form .primary-button {
+  background: #4423d4;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 50px;
 }
 
 .mail-icon {
@@ -4899,6 +4928,7 @@ select {
   padding: 7px 10px;
 }
 
+
 .signup-steps {
   display: grid;
   gap: 8px;
@@ -4911,7 +4941,7 @@ select {
   border: 1px solid #e5e8f1;
   border-radius: 8px;
   color: #697286;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
   min-height: 38px;
   padding: 11px 10px;
@@ -4940,6 +4970,7 @@ select {
 .auth-shell--signup {
   grid-template-columns: minmax(520px, 42vw) minmax(620px, 1fr);
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .auth-shell--signup .auth-visual {
@@ -4973,11 +5004,17 @@ select {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  padding: 24px clamp(44px, 6vw, 96px);
+  /* padding: 24px clamp(44px, 6vw, 96px); */
+  padding: 16px 32px;
+  overflow-y: auto;
 }
 
 .auth-shell--signup .auth-form {
-  width: min(100%, 640px);
+  width: min(100%, 480px);
+
+  border-radius: 20px;
+  gap: 8px;
+  padding: 14px 24px;
 }
 
 .auth-shell--signup .auth-form h1 {
@@ -4987,68 +5024,77 @@ select {
 }
 
 .auth-shell--signup .auth-form>p {
-  font-size: 17px;
-  margin-bottom: 16px;
+  font-size: 13px;
+  margin-bottom: 8px;
 }
 
 .auth-shell--signup .signup-steps {
-  gap: 8px;
-  margin: 0 0 14px;
+  gap: 6px;
+  margin: 6px 0 10px;
 }
 
 .auth-shell--signup .signup-steps span {
   border-radius: 7px;
   font-size: 11px;
-  min-height: 28px;
-  padding: 6px 8px;
+  min-height: 24px;
+  padding: 4px 6px;
 }
 
 .auth-shell--signup .form-stack {
-  gap: 5px;
+  gap: 4px !important;
 }
 
 .auth-shell--signup .label {
-  font-size: 15px;
   line-height: 1.2;
+  margin-top: 10px;
+  font-size: 11px;
+  margin-bottom: 0;
 }
 
 .auth-shell--signup .field {
   border-radius: 8px;
   gap: 14px;
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 36px;
+  padding: 0 10px;
 }
 
 .auth-shell--signup .field input,
 .auth-shell--signup .field select {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .auth-shell--signup .field-icon {
-  flex-basis: 26px;
-  font-size: 16px;
+  /* flex-basis: 26px;
+  font-size: 16px; */
+  font-size: 13px;
 }
 
 .auth-shell--signup .form-stack+.primary-button {
-  margin-top: 20px;
+  margin-top: 10px;
+  border-radius: 50px;
+  margin-bottom: 20px;
 }
 
+
 .auth-shell--signup .primary-button {
-  font-size: 17px;
-  min-height: 54px;
+  min-height: 40px;
+  font-size: 13px;
 }
 
 .auth-shell--signup .divider {
-  margin: 14px 0 12px;
+  margin: 8px 0 6px;
+  font-size: 12px;
 }
 
 .auth-shell--signup .google-button {
-  min-height: 44px;
+  min-height: 36px;
+  font-size: 13px;
+  margin-top: 0;
 }
 
 .auth-shell--signup .auth-switch {
-  font-size: 16px;
-  margin-top: 16px !important;
+  font-size: 12px;
+  margin-top: 8px !important;
 }
 
 .auth-shell--signup .ai-card {
@@ -5366,13 +5412,29 @@ select {
 }
 
 .auth-shell--signup .signup-steps {
-  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  margin-top: 25px;
 }
 
 .auth-shell--signup .signup-steps span {
-  font-size: 10px;
+  /* font-size: 10px;
   min-height: 26px;
-  padding: 5px 8px;
+  padding: 5px 8px; */
+  flex: 1;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  background: #f0f0f0;
+  color: #999;
+}
+
+.signup-steps span.active {
+  background: #4c36ef;
+  color: #fff;
 }
 
 .auth-shell--signup .form-stack {
@@ -5380,17 +5442,17 @@ select {
 }
 
 .auth-shell--signup .label {
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .auth-shell--signup .field {
-  min-height: 42px;
+  min-height: 38px;
   padding: 0 16px;
 }
 
 .auth-shell--signup .field input,
 .auth-shell--signup .field select {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .auth-shell--signup .field-icon {
@@ -5404,7 +5466,7 @@ select {
 
 .auth-shell--signup .primary-button {
   font-size: 16px;
-  min-height: 50px;
+  min-height: 44px;
 }
 
 .auth-shell--signup .divider {
@@ -5414,7 +5476,7 @@ select {
 
 .auth-shell--signup .google-button {
   font-size: 15px;
-  min-height: 42px;
+  min-height: 38px;
 }
 
 .auth-shell--signup .auth-switch {
@@ -5432,12 +5494,12 @@ select {
 }
 
 .auth-shell.auth-shell--signup .auth-panel .auth-form h1 {
-  font-size: 34px;
+  font-size: 26px;
   margin-bottom: 6px;
 }
 
 .auth-shell.auth-shell--signup .auth-panel .auth-form>p {
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 12px;
 }
 
@@ -7432,6 +7494,7 @@ select {
 
   .auth-visual {
     min-height: 620px;
+
   }
 
   .auth-shell--security .auth-visual {
@@ -8248,4 +8311,74 @@ select {
   .role-orbit {
     display: none;
   }
+}
+
+/* sign in */
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .auth-form {
+  width: min(100%, 480px);
+  padding: 14px 24px;
+  border-radius: 20px;
+  min-height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-family: inter;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .auth-form h1 {
+  font-size: 30px;
+  margin-bottom: 6px;
+  margin-top: 20px;
+  font-family: inter;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .auth-form>p {
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .label {
+  font-size: 17px;
+  margin-bottom: -8px;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .field {
+  min-height: 46px;
+  padding: 0 14px;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .field input {
+  font-size: 14px;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .form-row {
+  margin: 14px 0 18px;
+  font-size: 13px;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .primary-button {
+  min-height: 48px;
+  font-size: 15px;
+  margin-top: 4px;
+  opacity: 0.6;
+  border-radius: 50px;
+  background: #171075;
+  box-shadow: none;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .divider {
+  margin: 18px 0 14px;
+  font-size: 13px;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .google-button {
+  min-height: 44px;
+  font-size: 14px;
+  margin-top: 0;
+}
+
+.auth-shell:not(.auth-shell--security):not(.auth-shell--signup) .auth-switch {
+  font-size: 13px;
+  margin-top: 20px !important;
 }

@@ -14,15 +14,15 @@ export default function SignInPage() {
         <p>Sign in to continue to Teamoria</p>
         <div className="form-stack">
           <span className="label">Email</span>
-          <TextInput icon={<FiMail />} placeholder="you@company.com" />
+          <TextInput icon={<FiMail />} placeholder="you@company.com" required />
           <span className="label">Password</span>
-          <TextInput icon={<FiLock />} type="password" placeholder="Password" />
+          <TextInput icon={<FiLock />} type="password" placeholder="Password" required />
         </div>
         <div className="form-row">
           <label className="checkbox"><input type="checkbox" /> Remember me</label>
           <a href="#/reset-password">Forgot password?</a>
         </div>
-        <PrimaryButton>Sign In</PrimaryButton>
+        <PrimaryButton type="submit">Sign In</PrimaryButton>
         <div className="divider"><span>or continue with</span></div>
         <div className="social-row">
           <GoogleButton>Sign in with Google</GoogleButton>
