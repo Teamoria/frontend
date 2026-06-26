@@ -9279,3 +9279,49 @@ select {
   font-size: 14px;
   margin-top: 18px !important;
 }
+
+/* ── Auth Loading Screen ── */
+.auth-loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--bg, #0d0f18);
+  color: #b0b4c8;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  gap: 1rem;
+}
+
+.auth-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(140, 100, 255, 0.2);
+  border-top-color: #8c64ff;
+  border-radius: 50%;
+  animation: auth-spin 0.7s linear infinite;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Logout Button ── */
+.logout-button {
+  background: none;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  color: #ff6b6b;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.logout-button:hover {
+  background: rgba(255, 80, 80, 0.1);
+  border-color: rgba(255, 80, 80, 0.5);
+  color: #ff5252;
+}
+

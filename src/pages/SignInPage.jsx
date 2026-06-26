@@ -4,8 +4,10 @@ import { FiMail, FiLock } from "react-icons/fi";
 import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { loginWithEmail } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 
 export default function SignInPage() {
+  const { login } = useAuth();
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -17,10 +19,11 @@ export default function SignInPage() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      await loginWithEmail({
+      const payload = await loginWithEmail({
         email: formData.get("email"),
         password: formData.get("password")
       });
+      login(payload?.data?.user || payload?.data || null);
       window.location.hash = "/dashboard";
     } catch (error) {
       setStatus({ type: "error", message: error.message });

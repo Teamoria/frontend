@@ -122,3 +122,19 @@ export async function verifyOtp({ email, code, type = "register", newPassword })
 export async function getCurrentUser() {
   return apiRequest("/test-if-logged-in", { auth: true });
 }
+
+export async function logoutUser() {
+  try {
+    await apiRequest("/auth/logout", { auth: true });
+  } finally {
+    clearAccessToken();
+  }
+}
+
+export async function forgotPasswordSendOtp({ email }) {
+  return sendOtp({ email, type: "forgot-password" });
+}
+
+export async function forgotPasswordVerify({ email, code, newPassword }) {
+  return verifyOtp({ email, code, type: "forgot-password", newPassword });
+}
