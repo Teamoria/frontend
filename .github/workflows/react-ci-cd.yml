@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  # CI - بناء واختبار التطبيق
+  # CI
   build:
     runs-on: ubuntu-latest
 
@@ -27,7 +27,7 @@ jobs:
       - name: Build
         run: npm run build
 
-  # CD - نشر التطبيق على السيرفر
+  # CD
   deploy:
     needs: build
     runs-on: ubuntu-latest
