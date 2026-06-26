@@ -1,13 +1,17 @@
 import AppShell, { AvatarStack, Panel, QuickAction, StatCard } from "../components/app/AppShell.jsx";
 import { dashboardStats, recentTasks, todayMeetings } from "../data/teamoriaData.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const firstName = user?.name?.split(" ")[0] || "there";
+
   return (
     <AppShell active="Dashboard">
       <div className="product-page-head dashboard-command-head">
         <div>
           <span className="page-kicker">Live workspace command center</span>
-          <h1>Good morning, Sarah</h1>
+          <h1>Good morning, {firstName}</h1>
           <p>Track projects, meetings, uploads, and AI workspace knowledge from one operational view.</p>
         </div>
       </div>

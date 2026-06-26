@@ -3,6 +3,7 @@ import AuthLayout from "../components/AuthLayout.jsx";
 import { FiMail, FiShield } from "react-icons/fi";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { loginWithEmail, sendOtp, verifyOtp } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 
 const PENDING_SIGNUP_KEY = "teamoria_pending_signup";
 
@@ -15,6 +16,7 @@ function getPendingSignup() {
 }
 
 export default function VerifyOtpPage() {
+  const { login } = useAuth();
   const [pendingSignup, setPendingSignup] = useState(getPendingSignup);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,10 +58,11 @@ export default function VerifyOtpPage() {
       });
 
       if (pendingSignup.password) {
-        await loginWithEmail({
+        const payload = await loginWithEmail({
           email: pendingSignup.email,
           password: pendingSignup.password
         });
+        login(payload?.data?.user || payload?.data || null);
       }
 
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);

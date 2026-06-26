@@ -1,9 +1,14 @@
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
+import { useAuth } from "../../lib/AuthContext.jsx";
 
 const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
 
-export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
+export default function AppShell({ active = "Dashboard", children }) {
+  const { user } = useAuth();
+  const userName = user?.name || "User";
+  const userRole = user?.role || user?.job_title || "Team Member";
+  const roleId = user?.role_id || "project-manager";
   const visibleNav = navItems.filter((item) => item.roles.includes(roleId));
   return (
     <main className="product-shell" dir="ltr">
@@ -29,7 +34,7 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
         </div>
       </aside>
       <section className="product-main">
-        <Topbar user={user} role={role} />
+        <Topbar user={userName} role={userRole} />
         {children}
       </section>
     </main>
@@ -37,6 +42,7 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
 }
 
 export function Topbar({ user, role }) {
+  const { logout } = useAuth();
   return (
     <header className="product-topbar">
       <label className="product-search">
@@ -68,6 +74,9 @@ export function Topbar({ user, role }) {
           </div>
           <button className="profile-caret" type="button" aria-label="Open profile menu">v</button>
         </div>
+        <button className="ghost-button logout-button" type="button" onClick={logout} title="Sign out">
+          Logout
+        </button>
       </div>
     </header>
   );

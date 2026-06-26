@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthProvider } from "./lib/AuthContext.jsx";
 import App from "./App.jsx";
 import "./styles.css";
 
@@ -9,7 +10,9 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "missing-google-
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={googleClientId}>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </GoogleOAuthProvider>
   </React.StrictMode>
 );

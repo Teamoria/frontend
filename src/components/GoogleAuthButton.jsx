@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { GoogleButton } from "./FormControls.jsx";
 import { loginWithGoogle } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 export default function GoogleAuthButton({ children, disabled = false, onError, onStart }) {
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const googleLogin = useGoogleLogin({
@@ -17,7 +19,8 @@ export default function GoogleAuthButton({ children, disabled = false, onError, 
           throw new Error("Google did not return an access token.");
         }
 
-        await loginWithGoogle(tokenResponse.access_token);
+        const payload = await loginWithGoogle(tokenResponse.access_token);
+        login(payload?.data?.user || payload?.data || null);
         window.location.hash = "/dashboard";
       } catch (error) {
         onError?.(error.message);
