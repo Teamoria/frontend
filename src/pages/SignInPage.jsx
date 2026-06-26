@@ -1,5 +1,6 @@
 import AuthLayout from "../components/AuthLayout.jsx";
 import { GoogleButton, PrimaryButton, TextInput } from "../components/FormControls.jsx";
+import { systemUsers } from "../data/systemFlowData.js";
 
 export default function SignInPage() {
   return (
@@ -25,6 +26,22 @@ export default function SignInPage() {
         <div className="social-row">
           <GoogleButton>Sign in with Google</GoogleButton>
           <button type="button"><b>M</b> Continue with Microsoft</button>
+        </div>
+        <div className="demo-users-panel">
+          <div className="demo-users-head">
+            <span>System users</span>
+            <small>Demo access for every role</small>
+          </div>
+          <div className="demo-users-grid">
+            {systemUsers.map((user) => (
+              <a className={`demo-user-card demo-user-card--${user.roleId}`} href={`#${user.entry}`} key={user.email}>
+                <span>{user.role.slice(0, 2).toUpperCase()}</span>
+                <b>{user.role}</b>
+                <small>{user.email}</small>
+                <em>{user.password}</em>
+              </a>
+            ))}
+          </div>
         </div>
         <p className="auth-switch">Don't have an account? <a href="#/signup">Sign up</a></p>
       </div>

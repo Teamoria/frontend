@@ -222,3 +222,78 @@ export const reports = [
   ["Task Completion Trend", "286", "Completed this month"],
   ["AI Insight Accuracy", "94%", "Answers with cited sources"]
 ];
+
+export const aiToolingMap = [
+  ["LLM Completion", "llm_service.py", "OpenAI Chat Completions", "Prompt-based generation"],
+  ["Embeddings", "embedding_service.py", "OpenAI Embeddings", "Text-to-vector embedding"],
+  ["Vector Search", "vector_store.py", "Pinecone REST API", "Chunking and semantic search"],
+  ["RAG Chat", "rag_service.py", "OpenAI + Pinecone", "Retrieval-augmented generation"],
+  ["Transcription", "transcriber.py", "FFmpeg + Groq Whisper", "Audio chunking and speech recognition"],
+  ["Upload Processing", "upload_processor.py", "PDF/DOCX/OCR libraries", "Classification and knowledge extraction"],
+  ["Task Extraction", "task_extractor.py", "Internal Python rules", "Keyword-based extraction"],
+  ["Agent System", "agent_service.py", "OpenAI + MCP tools", "Tool-oriented agent workflow"],
+  ["MCP Integration", "mcp_service.py", "MCP JSON-RPC", "Dynamic tool discovery"],
+  ["Workspace Graph", "workspace_graph_service.py", "SQLAlchemy + React SVG", "Graph construction"]
+];
+
+export const aiArchitectureFlows = [
+  {
+    title: "High-Level AI Architecture",
+    summary: "Frontend requests move through the backend into upload processing, RAG chat, agent execution, and graph services.",
+    nodes: ["React Frontend", "PHP Backend", "Upload Processing", "Workspace Chat", "Agent Service", "Workspace Graph"]
+  },
+  {
+    title: "Upload Processing Algorithm",
+    summary: "Files become extracted text, summaries, tasks, PostgreSQL records, and Pinecone-searchable knowledge.",
+    nodes: ["Upload", "Store File", "Detect Source", "Extract Content", "Transcribe", "Clean Transcript", "Classify", "Generate Title", "Summarize", "Extract Tasks", "Store", "Index"]
+  },
+  {
+    title: "RAG Chat Algorithm",
+    summary: "Questions are answered from scoped workspace context with deterministic shortcuts and semantic search when needed.",
+    nodes: ["Question", "Access Scope", "Visible Records", "Quick Check", "Search Decision", "Pinecone Search", "Security Filter", "Build Context", "Grounded LLM", "Answer"]
+  },
+  {
+    title: "Vector Search Algorithm",
+    summary: "Meeting summaries and transcripts become searchable chunks, then filtered context for grounded answers.",
+    nodes: ["Meeting Content", "Summary Chunk", "Transcript Chunks", "NDJSON Records", "Pinecone Upsert", "Query", "Top-K Matches", "Permission Filter"]
+  },
+  {
+    title: "Agent Workflow",
+    summary: "Agents validate scope, build local context, execute MCP tools, log steps, and synthesize a final response.",
+    nodes: ["Validate", "Create Run", "Build Context", "Determine Intent", "Execute Tools", "Store Logs", "AI Synthesis", "Complete"]
+  },
+  {
+    title: "Transcription Algorithm",
+    summary: "Audio and video files are normalized, chunked, sent to Groq Whisper, retried, merged, and cleaned.",
+    nodes: ["Receive File", "Verify Provider", "FFmpeg", "Chunk Audio", "Whisper", "Retry", "Merge", "Cleanup", "Transcript"]
+  },
+  {
+    title: "Workspace Graph Algorithm",
+    summary: "The system authenticates users, builds scope, loads workspace entities, and renders relationships in SVG.",
+    nodes: ["JWT Auth", "Access Scope", "Load Tasks", "Load Files", "Load Notes", "Dependencies", "Projects", "Graph Response", "React SVG"]
+  }
+];
+
+export const mcpToolCatalog = [
+  ["list_tasks", "Returns visible tasks filtered by project and status."],
+  ["search_meetings", "Searches meeting title, summary, and transcript."],
+  ["get_project_status", "Returns project information, task counts, and status distribution."],
+  ["echo", "Returns provided arguments for tool execution testing."]
+];
+
+export const aiLimitations = [
+  ["Task Extraction", "Currently rule-based and should move to structured LLM extraction."],
+  ["Pinecone Dependency", "Vector search is skipped when Pinecone is not configured."],
+  ["Missing OpenAI Key", "LLM service returns placeholder responses without a configured key."],
+  ["Arabic Encoding", "Some backend files contain mojibake Arabic text and need cleanup."],
+  ["Agent Routing", "Intent routing is keyword-based and should become classifier-driven."]
+];
+
+export const aiFutureImprovements = [
+  "Intelligent task extraction with GPT-4o structured outputs",
+  "Hybrid search across vector search, SQL search, and metadata filters",
+  "Graph database integration with Neo4j or Memgraph",
+  "Persistent agent memory per user, workspace, and agent",
+  "Multi-agent collaboration for PM, meeting, risk, and scheduling assistants",
+  "Advanced RAG with query rewriting, re-ranking, citations, and validation"
+];

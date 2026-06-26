@@ -17,13 +17,22 @@ const overviewCards = [
   ["Pricing", "Review simple plans for MVP, business, and enterprise use.", "#/pricing"]
 ];
 
+const coreScreens = [
+  ["Admin Panel", "Platform dashboard, plans, companies, payments, and stats.", "#/Admin", "AD"],
+  ["Company Owner", "Company dashboard, team, projects, billing, and settings.", "#/Owner", "OW"],
+  ["Manager Workspace", "Assigned workspace, project board, uploads, and AI actions.", "#/Manager", "MG"],
+  ["Member Workspace", "My projects, task updates, notes, uploads, and AI answers.", "#/Member", "MB"],
+  ["Upload Center", "Upload videos, audio, PDFs, docs, and track AI processing.", "#/uploads", "UP"],
+  ["AI Chat", "Ask permission-aware questions with documents and task sources.", "#/ai-chat", "AI"]
+];
+
 export default function LandingPage() {
   return (
     <main className="site-page clickup-style-page marketing-clean-page landing-overview-page">
       <MarketingHeader page="home" />
 
       <section className="saas-hero">
-        <div className="saas-hero-copy">
+        <div className="saas-hero-copy landing-shell">
           <span className="pill">Teamoria AI Workspace</span>
           <h1>Turn every meeting and document into action.</h1>
           <p>
@@ -43,12 +52,12 @@ export default function LandingPage() {
       </section>
 
       <section className="feature-rail-section">
-        <div className="feature-rail">
+        <div className="feature-rail landing-shell">
           {featureRail.map((item) => <span key={item}>{item}</span>)}
         </div>
       </section>
 
-      <section className="homepage-map-section">
+      <section className="homepage-map-section landing-shell">
         <div className="section-center">
           <span className="page-kicker">Explore Teamoria</span>
           <h2>Explore the Teamoria platform.</h2>
@@ -64,7 +73,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="product-preview-section">
+      <section className="core-screens-section landing-shell">
+        <div className="section-title-row">
+          <div>
+            <span className="page-kicker">Core Screens</span>
+            <h2>الشاشات الأساسية للنظام</h2>
+          </div>
+          <a className="filter-button" href="#/signin">View demo users</a>
+        </div>
+        <div className="core-screens-grid">
+          {coreScreens.map(([title, text, href, icon]) => (
+            <a href={href} key={title}>
+              <span>{icon}</span>
+              <b>{title}</b>
+              <p>{text}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section className="product-preview-section landing-shell">
         <div className="browser-preview">
           <div className="browser-bar">
             <span />
@@ -114,7 +142,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="saas-stats-section">
+      <section className="saas-stats-section landing-shell">
         {statCards.map(([value, label]) => (
           <article key={label}>
             <strong>{value}</strong>
@@ -123,7 +151,7 @@ export default function LandingPage() {
         ))}
       </section>
 
-      <section className="final-cta-section">
+      <section className="final-cta-section landing-shell">
         <h2>Start building your AI workspace.</h2>
         <p>Give every employee a chatbot grounded in your meetings, files, tasks, and permissions.</p>
         <a className="primary-link" href="#/signup">Create Workspace</a>

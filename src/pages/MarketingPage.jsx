@@ -1,5 +1,14 @@
 import MarketingHeader from "../components/marketing/MarketingHeader.jsx";
 
+const coreScreenLinks = [
+  ["Admin", "#/Admin"],
+  ["Owner", "#/Owner"],
+  ["Manager", "#/Manager"],
+  ["Member", "#/Member"],
+  ["Upload", "#/uploads"],
+  ["AI Chat", "#/ai-chat"]
+];
+
 function MarketingCta({ title, text, action = "Create Workspace" }) {
   return (
     <section className="marketing-cta-clean">
@@ -9,6 +18,22 @@ function MarketingCta({ title, text, action = "Create Workspace" }) {
         <p>{text}</p>
       </div>
       <a className="primary-link" href="#/signup">{action}</a>
+    </section>
+  );
+}
+
+function CoreScreensStrip() {
+  return (
+    <section className="marketing-core-strip">
+      <div>
+        <span className="page-kicker">Live Screens</span>
+        <h2>Open the real product views.</h2>
+      </div>
+      <div>
+        {coreScreenLinks.map(([label, href]) => (
+          <a href={href} key={label}>{label}</a>
+        ))}
+      </div>
     </section>
   );
 }
@@ -88,6 +113,8 @@ function ProductPage() {
         ))}
       </section>
 
+      <CoreScreensStrip />
+
       <MarketingCta
         title="Build the product experience your team can actually use."
         text="Start with the full visual MVP, then connect APIs when the backend is ready."
@@ -143,6 +170,8 @@ function FeaturesPage() {
         </article>
       </section>
 
+      <CoreScreensStrip />
+
       <MarketingCta
         title="Turn the feature list into a working SaaS demo."
         text="Use the existing visual pages to present the full AI workspace story with confidence."
@@ -197,6 +226,8 @@ function SolutionsPage() {
         ))}
       </section>
 
+      <CoreScreensStrip />
+
       <MarketingCta
         title="Design the platform around real company responsibilities."
         text="Admins control structure, managers see outcomes, and employees get focused help without permission leaks."
@@ -249,6 +280,8 @@ function PricingPage() {
           <p>The frontend can show the complete buying story before backend billing exists.</p>
         </article>
       </section>
+
+      <CoreScreensStrip />
     </>
   );
 }

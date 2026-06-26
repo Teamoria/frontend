@@ -51,7 +51,7 @@ export default function TasksPage() {
   }
 
   return (
-    <AppShell active="Tasks" user="Olivia Rhye" role="Project Manager">
+    <AppShell active="Kanban Board" user="Fares Namlah" role="Manager" roleId="manager">
       <div className="task-board-toolbar">
         <div>
           <span className="page-kicker">Delivery board</span>

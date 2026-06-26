@@ -3,7 +3,7 @@ import { projects } from "../data/teamoriaData.js";
 
 export default function ProjectsPage() {
   return (
-    <AppShell active="Workspaces">
+    <AppShell active="Projects" roleId="owner">
       <PageHeader
         title="Workspace Hub"
         eyebrow="Company workspaces with progress, health, files, members, and AI activity."

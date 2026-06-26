@@ -1,16 +1,25 @@
 import Brand from "../Brand.jsx";
-import { navItems } from "../../data/teamoriaData.js";
+import { roleNavigation, roleProfiles } from "../../data/systemFlowData.js";
 
-const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
+const iconSymbolMap = { building: "48", folder: "12", check: "286", trend: "94%", calendar: "43", payments: "$", plans: "3", spark: "AI", users: "64" };
 
-export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
-  const visibleNav = navItems.filter((item) => item.roles.includes(roleId));
+export default function AppShell({ active = "Dashboard", children, user, role, roleId = "manager" }) {
+  const normalizedRole = {
+    "company-owner": "owner",
+    "general-manager": "owner",
+    "project-manager": "manager",
+    employee: "member"
+  }[roleId] || roleId;
+  const profile = roleProfiles[normalizedRole] || roleProfiles.manager;
+  const visibleNav = roleNavigation[normalizedRole] || roleNavigation.manager;
+  const displayUser = user || profile.user;
+  const displayRole = role || profile.role;
   return (
     <main className="product-shell" dir="ltr">
       <aside className="product-sidebar">
         <div className="sidebar-brand-wrap">
           <Brand compact />
-          <span className="live-chip">Live MVP</span>
+          <span className="live-chip">{profile.badge}</span>
         </div>
         <nav>
           {visibleNav.map((item) => (
@@ -22,14 +31,14 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
           ))}
         </nav>
         <div className="sidebar-footer">
-          <span>Company</span>
-          <b>Taqat Digital</b>
-          <small>Multi-company demo</small>
+          <span>{normalizedRole === "admin" ? "Scope" : "Company"}</span>
+          <b>{profile.company}</b>
+          <small>{profile.status}</small>
           <div className="sidebar-health"><i /><span>AI services ready</span></div>
         </div>
       </aside>
       <section className="product-main">
-        <Topbar user={user} role={role} />
+        <Topbar user={displayUser} role={displayRole} />
         {children}
       </section>
     </main>

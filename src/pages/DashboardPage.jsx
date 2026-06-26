@@ -16,7 +16,7 @@ export default function DashboardPage() {
         <QuickAction href="#/workspace" label="Workspace" caption="Open project command view" />
         <QuickAction href="#/uploads" label="Upload" caption="Process files and meetings" />
         <QuickAction href="#/ai-chat" label="Ask AI" caption="Query sources with citations" />
-        <QuickAction href="#/agent-runs" label="Agent Run" caption="Inspect execution logs" />
+        <QuickAction href="#/ai-system" label="AI System" caption="View algorithms and tools" />
       </section>
 
       <div className="stats-grid-modern">
