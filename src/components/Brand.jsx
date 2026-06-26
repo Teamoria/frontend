@@ -1,6 +1,6 @@
 import logoImage from "../assets/teamoria-logo.png";
 
-export default function Brand({ compact = false }) {
+export default function Brand({ compact = false, tagline = "AI Workspace" }) {
   return (
     <a className={`brand ${compact ? "brand--compact" : ""}`} href="#/">
       <span className="brand-mark" aria-hidden="true">
@@ -8,7 +8,7 @@ export default function Brand({ compact = false }) {
       </span>
       <span className="brand-word">
         Teamoria
-        <small>AI Workspace</small>
+        <small>{tagline}</small>
       </span>
     </a>
   );

@@ -18,7 +18,6 @@ import EmployeesPage from "./pages/EmployeesPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
-import MarketingPage from "./pages/MarketingPage.jsx";
 
 const routes = {
   "/": LandingPage,
@@ -39,16 +38,13 @@ const routes = {
   "/employees": EmployeesPage,
   "/reports": ReportsPage,
   "/settings": SettingsPage,
-  "/profile": ProfilePage,
-  "/product": () => <MarketingPage page="product" />,
-  "/features": () => <MarketingPage page="features" />,
-  "/solutions": () => <MarketingPage page="solutions" />,
-  "/pricing": () => <MarketingPage page="pricing" />
+  "/profile": ProfilePage
 };
 
 function getPath() {
   const hash = window.location.hash.replace("#", "");
-  return routes[hash] ? hash : "/";
+  const path = hash.split("?")[0];
+  return routes[path] ? path : "/";
 }
 
 export default function App() {

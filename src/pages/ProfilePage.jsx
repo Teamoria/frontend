@@ -1,10 +1,11 @@
-import AppShell, { PageHeader, Panel } from "../components/app/AppShell.jsx";
+import { FiCheckCircle, FiEdit2, FiFileText, FiMessageCircle, FiTrendingUp, FiUploadCloud } from "react-icons/fi";
+import AppShell from "../components/app/AppShell.jsx";
 
 const profileStats = [
   ["Assigned Workspaces", "3"],
   ["Open Tasks", "18"],
   ["Meetings Joined", "27"],
-  ["AI Questions", "142"]
+  ["Questions Asked", "142"]
 ];
 
 const accessItems = [
@@ -13,122 +14,147 @@ const accessItems = [
   ["Mobile Delivery Team", "Contributor access", "Assigned tasks and meeting sources"]
 ];
 
-const activity = [
-  ["Reviewed extracted tasks", "AI Sprint Planning", "12 min ago"],
-  ["Uploaded meeting recording", "Upload Center", "48 min ago"],
-  ["Asked workspace AI about risks", "AI Chat", "Today"],
-  ["Changed task priority", "Task Hub", "Yesterday"]
+const activityItems = [
+  [FiCheckCircle, "Reviewed extracted tasks", "AI Sprint Planning", "12 min ago"],
+  [FiUploadCloud, "Uploaded meeting recording", "Upload Center", "45 min ago"],
+  [FiMessageCircle, "Asked workspace AI about risks", "AI Chat", "Today"],
+  [FiEdit2, "Changed task priority", "Task Hub", "Yesterday"]
+];
+
+const permissions = [
+  ["Can manage workspace tasks", true],
+  ["Can upload files and meetings", true],
+  ["Can invite company admins", false],
+  ["Can change AI model settings", true],
+  ["Can view cited AI answers", true]
+];
+
+const preferences = [
+  "Arabic + English Interface",
+  "Light Interface",
+  "Email meeting summaries",
+  "Show AI citations by default"
 ];
 
 export default function ProfilePage() {
   return (
-    <AppShell active="Profile">
-      <PageHeader
-        title="Profile"
-        eyebrow="Personal details, assigned role, company scope, activity, and workspace access."
-        actions={(
-          <>
-            <button className="filter-button" type="button">Edit Profile</button>
-            <button className="product-button profile-save-button" type="button">Save Changes</button>
-          </>
-        )}
-      />
-      <section className="profile-layout">
-        <Panel className="profile-hero-panel">
-          <div className="profile-hero">
-            <div className="profile-cover" />
-            <div className="profile-main-row">
-              <div className="profile-avatar-wrap">
-                <div className="avatar-image avatar-image--large" />
-                <span className="presence-dot" />
-              </div>
+    <AppShell active="Profile" user="Sarah Johnson" role="Project Manager">
+      <main className="profile-command-page">
+        <section className="profile-command-main">
+          <section className="profile-banner">
+            <div className="profile-delivery-score">
+              <small>Delivery Score</small>
+              <strong>94%</strong>
+              <FiTrendingUp aria-hidden="true" />
+            </div>
+            <div className="profile-banner-user">
+              <div className="profile-photo">SJ</div>
               <div>
-                <h2>Sarah Johnson</h2>
+                <h1>Sarah Johnson</h1>
                 <p>Project Manager - Taqat Digital</p>
-                <div className="profile-badges">
-                  <span>Active account</span>
-                  <span>Verified email</span>
-                  <span>Project scope only</span>
+                <div>
+                  <span>AI Assessment</span>
+                  <span>Verified Email</span>
+                  <span>Project Scope Only</span>
                 </div>
               </div>
-              <div className="profile-score">
-                <small>Delivery score</small>
-                <strong>94%</strong>
-              </div>
             </div>
-            <div className="profile-stat-grid">
-              {profileStats.map(([label, value]) => (
-                <article key={label}>
-                  <strong>{value}</strong>
-                  <span>{label}</span>
+          </section>
+
+          <section className="profile-command-stats">
+            {profileStats.map(([label, value]) => (
+              <article key={label}>
+                <strong>{value}</strong>
+                <span>{label}</span>
+              </article>
+            ))}
+          </section>
+
+          <section className="profile-command-section">
+            <h2>Access Scope</h2>
+            <div className="profile-access-grid">
+              {accessItems.map(([title, level, detail]) => (
+                <article key={title}>
+                  <div><i aria-hidden="true" /><b>{title}</b></div>
+                  <strong>{level}</strong>
+                  <p>{detail}</p>
                 </article>
               ))}
             </div>
-          </div>
-        </Panel>
+          </section>
 
-        <Panel title="Account Details">
-          <div className="profile-fields">
-            <label><span>Full name</span><input defaultValue="Sarah Johnson" /></label>
-            <label><span>Work email</span><input defaultValue="sarah@teamoria.ai" /></label>
-            <label><span>Job title</span><input defaultValue="Project Manager" /></label>
-            <label><span>Company</span><input defaultValue="Taqat Digital" /></label>
-          </div>
-        </Panel>
+          <section className="profile-command-section">
+            <div className="profile-section-head">
+              <h2>Recent Activity</h2>
+              <button type="button">View All</button>
+            </div>
+            <div className="profile-activity-list">
+              {activityItems.map(([Icon, title, source, time]) => (
+                <article key={title}>
+                  <div>
+                    <Icon aria-hidden="true" />
+                    <b>{title}</b>
+                  </div>
+                  <span>{source}</span>
+                  <time>{time}</time>
+                </article>
+              ))}
+            </div>
+          </section>
+        </section>
 
-        <Panel title="Access Scope">
-          <div className="access-timeline">
-            {accessItems.map(([name, level, detail]) => (
-              <article key={name}>
-                <span />
-                <div>
-                  <b>{name}</b>
-                  <small>{level}</small>
-                  <p>{detail}</p>
-                </div>
-              </article>
-            ))}
+        <aside className="profile-control-panel">
+          <div className="profile-control-head">
+            <h2>Account Controls</h2>
+            <div>
+              <button type="button">Edit Profile</button>
+              <button type="button">Save Changes</button>
+            </div>
           </div>
-        </Panel>
 
-        <Panel title="Role Permissions">
-          <div className="permission-list">
-            {[
-              ["Can manage workspace tasks", true],
-              ["Can upload files and meetings", true],
-              ["Can invite company admins", false],
-              ["Can change AI model settings", false],
-              ["Can view cited AI answers", true]
-            ].map(([label, allowed]) => (
-              <div className={allowed ? "allowed" : "blocked"} key={label}>
-                <span className="permission-switch" aria-hidden="true"><i /></span>
-                <b>{label}</b>
-              </div>
-            ))}
-          </div>
-        </Panel>
+          <section>
+            <h3>Account Details</h3>
+            <div className="profile-form-stack">
+              <label><span>Full name</span><input defaultValue="Sarah Johnson" /></label>
+              <label><span>Work email</span><input defaultValue="sarahj@teamoria.ai" /></label>
+              <label><span>Job title</span><input defaultValue="Project Manager" /></label>
+              <label><span>Company</span><input defaultValue="Taqat Digital" /></label>
+            </div>
+          </section>
 
-        <Panel title="Recent Activity">
-          <div className="activity-feed">
-            {activity.map(([title, area, time]) => (
-              <article key={title}>
-                <div />
-                <b>{title}</b>
-                <span>{area}</span>
-                <time>{time}</time>
-              </article>
-            ))}
-          </div>
-        </Panel>
+          <section>
+            <h3>Role Permissions</h3>
+            <div className="profile-toggle-list">
+              {permissions.map(([label, active]) => (
+                <article className={active ? "is-on" : ""} key={label}>
+                  <span>{label}</span>
+                  <i aria-hidden="true" />
+                </article>
+              ))}
+            </div>
+          </section>
 
-        <Panel title="Preferences">
-          <div className="settings-list">
-            {["Arabic + English interface", "Light interface", "Email meeting summaries", "Show AI citations by default"].map((item) => (
-              <label key={item}><span>{item}</span><input defaultChecked type="checkbox" /></label>
-            ))}
-          </div>
-        </Panel>
-      </section>
+          <section>
+            <h3>Preferences</h3>
+            <div className="profile-preference-list">
+              {preferences.map((preference) => (
+                <label key={preference}>
+                  <span>{preference}</span>
+                  <input type="checkbox" defaultChecked />
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="profile-source-card">
+            <FiFileText aria-hidden="true" />
+            <div>
+              <b>Permission source</b>
+              <span>Synced from company role matrix</span>
+            </div>
+          </section>
+        </aside>
+      </main>
     </AppShell>
   );
 }

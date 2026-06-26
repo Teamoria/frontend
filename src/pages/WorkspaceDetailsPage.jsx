@@ -4,7 +4,7 @@ import { projects, recentTasks, uploads } from "../data/teamoriaData.js";
 export default function WorkspaceDetailsPage() {
   const workspace = projects[0];
   return (
-    <AppShell active="Workspaces">
+    <AppShell active="Projects">
       <PageHeader
         title={workspace.title}
         eyebrow={`${workspace.company} - ${workspace.members} members - ${workspace.files} indexed files`}
