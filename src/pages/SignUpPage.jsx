@@ -39,8 +39,7 @@ export default function SignUpPage() {
       sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
         email,
         password,
-        role: dashboardRole,
-        debugCode: payload?.data?.code ? String(payload.data.code) : ""
+        role: dashboardRole
       }));
       window.location.hash = "/verify-otp";
     } catch (error) {

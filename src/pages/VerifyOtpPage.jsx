@@ -28,11 +28,6 @@ export default function VerifyOtpPage() {
         type: "error",
         message: "No pending signup email found. Please create an account first."
       });
-    } else if (pendingSignup.debugCode) {
-      setStatus({
-        type: "success",
-        message: `Verification code received for local testing. Code: ${pendingSignup.debugCode}`
-      });
     }
   }, [pendingSignup]);
 
@@ -85,9 +80,7 @@ export default function VerifyOtpPage() {
 
     try {
       const payload = await sendOtp({ email: pendingSignup.email, type: "register" });
-      const debugCode = payload?.data?.code ? ` Code: ${payload.data.code}` : "";
-      setStatus({ type: "success", message: `A new verification code was sent.${debugCode}` });
-      setPendingSignup(getPendingSignup());
+      setStatus({ type: "success", message: "A new verification code was sent." });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {

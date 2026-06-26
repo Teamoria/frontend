@@ -11,7 +11,6 @@ const workspaceImage =
 export default function ResetPasswordPage() {
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
-  const [debugCode, setDebugCode] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,12 +25,10 @@ export default function ResetPasswordPage() {
     try {
       const payload = await forgotPasswordSendOtp({ email: emailValue });
       setEmail(emailValue);
-      const code = payload?.data?.code ? String(payload.data.code) : "";
-      setDebugCode(code);
       setStep("otp");
       setStatus({
         type: "success",
-        message: code ? `Verification code sent. Test code: ${code}` : "Verification code sent to your work email."
+        message: "Verification code sent to your email."
       });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
@@ -98,7 +95,7 @@ export default function ResetPasswordPage() {
           {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
           <div className="form-stack">
             <span className="label">Verification code</span>
-            <TextInput icon={<FiShield />} name="code" placeholder="Enter OTP code" value={debugCode} required disabled={isSubmitting} />
+            <TextInput icon={<FiShield />} name="code" placeholder="Enter OTP code" required disabled={isSubmitting} />
             <span className="label">New password</span>
             <TextInput icon={<FiLock />} name="newPassword" type="password" placeholder="Enter new password" required disabled={isSubmitting} />
           </div>
