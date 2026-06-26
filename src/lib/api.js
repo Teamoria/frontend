@@ -51,7 +51,21 @@ export async function apiRequest(path, { method = "GET", body, auth = false } = 
   const payload = await response.json().catch(() => null);
 
   if (!response.ok || payload?.success === false) {
-    const message = payload?.message || "Something went wrong. Please try again.";
+    let message = payload?.message || "Something went wrong. Please try again.";
+
+    // Teamoria API returns validation errors in payload.data when error_code is VALIDATION_ERROR
+    // Format: { data: { field: ["error1", "error2"], ... }, error_code: "VALIDATION_ERROR" }
+    const validationErrors =
+      (payload?.error_code === "VALIDATION_ERROR" && payload?.data) ||
+      payload?.errors;
+
+    if (validationErrors && typeof validationErrors === "object" && !Array.isArray(validationErrors)) {
+      const errorMessages = Object.values(validationErrors).flat();
+      if (errorMessages.length > 0) {
+        message = errorMessages.join("\n");
+      }
+    }
+
     throw new Error(message);
   }
 
