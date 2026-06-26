@@ -18,6 +18,7 @@ import {
   FiUsers,
   FiZap
 } from "react-icons/fi";
+import "../styles/dashboard.css";
 import {
   ActivityOverviewChart,
   AIInsightCard,

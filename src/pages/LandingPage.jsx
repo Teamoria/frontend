@@ -6,6 +6,7 @@ import {
   FiUsers,
   FiZap
 } from "react-icons/fi";
+import "../styles/landing.css";
 
 const copy = {
   en: {

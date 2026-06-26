@@ -23,6 +23,7 @@ import {
 } from "react-icons/fi";
 import AppShell, { PageHeader, Panel } from "../components/app/AppShell.jsx";
 import { employees, roles } from "../data/teamoriaData.js";
+import "../styles/employees.css";
 
 export default function EmployeesPage() {
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);

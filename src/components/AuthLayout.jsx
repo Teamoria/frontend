@@ -1,4 +1,5 @@
 import Brand from "./Brand.jsx";
+import "../styles/auth.css";
 
 export default function AuthLayout({ variant = "analytics", title, text, children }) {
   return (

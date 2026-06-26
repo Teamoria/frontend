@@ -12,6 +12,7 @@ import {
   FiZap
 } from "react-icons/fi";
 import AppShell from "../components/app/AppShell.jsx";
+import "../styles/ai-chat.css";
 
 const conversations = [
   ["Q3 Roadmap Analysis", "2 hours ago", true],

@@ -1,6 +1,7 @@
 import { FiBarChart2, FiBriefcase, FiCloud, FiFolder, FiHome, FiMessageCircle, FiSettings, FiUser, FiUsers, FiZap } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
+import "../../styles/app-shell.css";
 
 const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
 const sidebarIconMap = {

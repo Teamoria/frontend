@@ -1,5 +1,6 @@
 import { FiCheckCircle, FiEdit2, FiFileText, FiMessageCircle, FiTrendingUp, FiUploadCloud } from "react-icons/fi";
 import AppShell from "../components/app/AppShell.jsx";
+import "../styles/profile.css";
 
 const profileStats = [
   ["Assigned Workspaces", "3"],
