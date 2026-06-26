@@ -1,6 +1,7 @@
 import Brand from "../Brand.jsx";
 
 const navItems = [
+  ["home", "Home"],
   ["product", "Product"],
   ["features", "Features"],
   ["solutions", "Solutions"],
@@ -13,7 +14,7 @@ export default function MarketingHeader({ page = "home" }) {
       <Brand compact />
       <nav>
         {navItems.map(([key, label]) => (
-          <a className={page === key ? "active" : ""} href={`#/${key}`} key={key}>
+          <a className={page === key ? "active" : ""} href={key === "home" ? "#/" : `#/${key}`} key={key}>
             {label}
           </a>
         ))}

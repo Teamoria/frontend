@@ -15,20 +15,20 @@ function MarketingCta({ title, text, action = "Create Workspace" }) {
 
 function ProductPage() {
   const tour = [
-    ["01", "Upload intelligence", "Convert video, audio, PDFs, docs, and images into searchable workspace memory."],
-    ["02", "Meeting understanding", "Generate transcripts, summaries, decisions, and follow-up tasks from every meeting."],
-    ["03", "Specialized AI bots", "Create a bot per file, meeting, or workspace with source-grounded answers."],
-    ["04", "Execution graph", "Connect people, tasks, meetings, files, and permissions in one operational map."]
+    ["01", "Ingest company knowledge", "Bring meetings, documents, audio, video, and project files into a governed workspace."],
+    ["02", "Extract operational context", "Identify summaries, decisions, risks, owners, and due work from every uploaded source."],
+    ["03", "Route work by responsibility", "Turn knowledge into scoped tasks, role dashboards, and permission-aware action."],
+    ["04", "Answer with evidence", "Give teams AI responses grounded in approved company sources, not generic guesses."]
   ];
 
   return (
     <>
       <section className="marketing-hero-split product-hero">
         <div>
-          <span className="pill">Product Tour</span>
-          <h1>Run meetings, documents, tasks, and company knowledge from one AI workspace.</h1>
+          <span className="pill">Product Platform</span>
+          <h1>One workspace where knowledge becomes execution.</h1>
           <p>
-            Teamoria gives every company a clean place to upload knowledge, extract work, ask grounded questions, and see project context without losing permissions.
+            Teamoria connects uploads, meetings, employees, projects, tasks, and AI copilots into one operating layer for modern teams.
           </p>
           <div className="hero-actions">
             <a className="primary-link" href="#/signup">Start workspace</a>
@@ -39,24 +39,24 @@ function ProductPage() {
           <div className="mini-browser-bar"><span /><span /><span /><b>Teamoria Command Center</b></div>
           <div className="console-grid">
             <article className="console-panel wide">
-              <span>AI Upload</span>
-              <h3>Roadmap meeting.mp4</h3>
+              <span>Workspace intelligence</span>
+              <h3>AI Platform Launch</h3>
               <div className="processing-line"><i style={{ width: "82%" }} /></div>
-              <p>Transcript, action items, bot, and citations are ready.</p>
+              <p>Meeting brief, action board, source citations, and specialist copilots are ready.</p>
             </article>
             <article className="console-panel">
-              <span>Tasks</span>
+              <span>Open tasks</span>
               <strong>18</strong>
-              <p>Extracted this week</p>
+              <p>Routed by role</p>
             </article>
             <article className="console-panel">
-              <span>Bots</span>
+              <span>AI copilots</span>
               <strong>43</strong>
-              <p>Knowledge assistants</p>
+              <p>Grounded assistants</p>
             </article>
             <article className="console-panel wide">
-              <span>Grounded answer</span>
-              <p>Sarah owns the permission review and needs finance approval before Friday.</p>
+              <span>Permission-aware answer</span>
+              <p>The launch risk is tied to API authorization review and the finance approval dependency due Friday.</p>
             </article>
           </div>
         </div>
@@ -79,18 +79,18 @@ function ProductPage() {
       </section>
 
       <section className="platform-layers">
-        {["React frontend", "FastAPI backend", "OpenAI + Pinecone + PostgreSQL"].map((item, index) => (
+        {["Experience layer", "Operations engine", "Knowledge intelligence"].map((item, index) => (
           <article key={item}>
             <span>{index + 1}</span>
             <h3>{item}</h3>
-            <p>{index === 0 ? "A polished user interface for every role." : index === 1 ? "Auth, routing, scoping, uploads, and agents." : "Grounded answers, vector search, and persistent storage."}</p>
+            <p>{index === 0 ? "A polished workspace for every role and workflow." : index === 1 ? "Secure routing, access control, uploads, tasks, and agent activity." : "Grounded answers, search, citations, and company memory."}</p>
           </article>
         ))}
       </section>
 
       <MarketingCta
-        title="Build the product experience your team can actually use."
-        text="Start with the full visual MVP, then connect APIs when the backend is ready."
+        title="Give every team a workspace that knows the work."
+        text="Teamoria turns operational knowledge into tasks, answers, reports, and trusted company context."
       />
     </>
   );
@@ -98,23 +98,23 @@ function ProductPage() {
 
 function FeaturesPage() {
   const features = [
-    ["Upload Center", "Drag and drop files, show AI processing stages, and prepare source bots."],
-    ["AI Chat", "Ask workspace-specific questions with citations and suggested prompts."],
-    ["Meeting AI", "Transcription, summaries, sentiment, decisions, and action items."],
-    ["Task Hub", "Kanban, list, calendar modes, priorities, due dates, and AI source badges."],
-    ["Agent Runs", "Visualize authorization, tool calls, step logs, and final synthesis."],
-    ["Workspace Graph", "Interactive relationships between files, people, projects, and meetings."],
-    ["Permissions", "Role-based views for admins, executives, project managers, and employees."],
-    ["Reports", "Readable AI analytics for leadership and project visibility."]
+    ["Upload Intelligence", "Process files, recordings, and documents into structured workspace memory."],
+    ["Grounded AI Chat", "Ask questions with source citations, scoped access, and suggested next steps."],
+    ["Meeting Understanding", "Convert calls into transcripts, decisions, risks, summaries, and follow-up work."],
+    ["Task Command", "Manage extracted and manual work through priorities, owners, deadlines, and AI context."],
+    ["Agent Runs", "Track AI execution with authorization, tool calls, step logs, and final synthesis."],
+    ["Workspace Graph", "See how people, projects, files, meetings, and tasks connect across the company."],
+    ["Governed Permissions", "Keep every page and answer aligned with company, role, project, and workspace scope."],
+    ["Executive Reports", "Give leadership readable insight into project health, knowledge usage, and delivery risks."]
   ];
 
   return (
     <>
       <section className="marketing-feature-hero">
         <span className="pill">Feature System</span>
-        <h1>Every Teamoria feature has a clear job.</h1>
+        <h1>Enterprise AI features built around real work.</h1>
         <p>
-          Instead of repeating the same story, this page shows the actual feature set your platform includes and what each part does.
+          Each module has a specific role in the operational workflow: capture knowledge, understand it, protect it, and convert it into action.
         </p>
       </section>
 
@@ -144,8 +144,8 @@ function FeaturesPage() {
       </section>
 
       <MarketingCta
-        title="Turn the feature list into a working SaaS demo."
-        text="Use the existing visual pages to present the full AI workspace story with confidence."
+        title="Bring AI into the workflow without losing control."
+        text="Teamoria gives teams speed, traceability, and permissions in the same product experience."
         action="View live demo"
       />
     </>
@@ -165,9 +165,9 @@ function SolutionsPage() {
       <section className="solutions-hero">
         <div>
           <span className="pill">Role-Based Platform</span>
-          <h1>Different roles. Different pages. One connected company brain.</h1>
+          <h1>Every role gets the right workspace, context, and control.</h1>
           <p>
-            Teamoria should not show the same workspace to everyone. Each role gets the pages, actions, and knowledge scope that match their responsibility.
+            Teamoria adapts the product experience to company admins, executives, project managers, and employees while keeping knowledge boundaries intact.
           </p>
         </div>
         <div className="role-orbit">
@@ -198,8 +198,8 @@ function SolutionsPage() {
       </section>
 
       <MarketingCta
-        title="Design the platform around real company responsibilities."
-        text="Admins control structure, managers see outcomes, and employees get focused help without permission leaks."
+        title="Design AI around company responsibility."
+        text="Admins control governance, managers see outcomes, and employees get focused answers without permission leaks."
       />
     </>
   );
@@ -207,7 +207,7 @@ function SolutionsPage() {
 
 function PricingPage() {
   const plans = [
-    ["Starter", "$0", "For MVP demos and small validation teams.", ["Upload demo files", "AI task previews", "Basic dashboard", "Single workspace"]],
+    ["Starter", "$0", "For focused pilots and small validation teams.", ["Upload sample files", "AI task previews", "Basic dashboard", "Single workspace"]],
     ["Business", "$19", "For teams running real projects and meetings.", ["Unlimited workspaces", "Meeting AI", "Role permissions", "Reports and graphs"]],
     ["Enterprise", "Custom", "For multi-company deployments and governance.", ["Advanced security", "Custom AI limits", "Dedicated support", "Company-level controls"]]
   ];
@@ -216,8 +216,8 @@ function PricingPage() {
     <>
       <section className="pricing-hero-clean">
         <span className="pill">Pricing</span>
-        <h1>Simple plans without repeating the marketing pages.</h1>
-        <p>Choose the level that matches how much AI workspace intelligence the company needs today.</p>
+        <h1>Plans that scale from pilot workspace to enterprise deployment.</h1>
+        <p>Choose the operating level that matches your team size, governance needs, and AI knowledge volume.</p>
       </section>
 
       <section className="pricing-plans-clean">
@@ -238,15 +238,15 @@ function PricingPage() {
       <section className="pricing-note-strip">
         <article>
           <span>AI usage</span>
-          <p>Usage can be priced by processed hours, storage, or generated answers later.</p>
+          <p>AI capacity can scale by processed hours, storage, source volume, and generated answers.</p>
         </article>
         <article>
           <span>Security</span>
           <p>Role visibility and company boundaries stay central to every plan.</p>
         </article>
         <article>
-          <span>MVP ready</span>
-          <p>The frontend can show the complete buying story before backend billing exists.</p>
+          <span>Pilot ready</span>
+          <p>Start with a focused workspace and expand into governed company-wide intelligence.</p>
         </article>
       </section>
     </>

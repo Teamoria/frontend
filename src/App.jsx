@@ -3,6 +3,7 @@ import LandingPage from "./pages/LandingPage.jsx";
 import SignInPage from "./pages/SignInPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
+import VerifyOtpPage from "./pages/VerifyOtpPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ProjectsPage from "./pages/ProjectsPage.jsx";
 import TasksPage from "./pages/TasksPage.jsx";
@@ -24,6 +25,7 @@ const routes = {
   "/signin": SignInPage,
   "/reset-password": ResetPasswordPage,
   "/signup": SignUpPage,
+  "/verify-otp": VerifyOtpPage,
   "/dashboard": DashboardPage,
   "/projects": ProjectsPage,
   "/tasks": TasksPage,
