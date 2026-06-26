@@ -1,15 +1,13 @@
 export const navItems = [
   { label: "Dashboard", ar: "لوحة التحكم", path: "/dashboard", icon: "grid", roles: ["admin", "general-manager", "project-manager", "employee"] },
-  { label: "Workspaces", ar: "مساحات العمل", path: "/projects", icon: "folder", roles: ["admin", "general-manager", "project-manager"] },
+  { label: "Projects", ar: "المشاريع", path: "/projects", icon: "folder", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "Tasks", ar: "المهام", path: "/tasks", icon: "check", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "Meetings", ar: "الاجتماعات", path: "/meetings", icon: "calendar", roles: ["admin", "general-manager", "project-manager", "employee"] },
-  { label: "Upload Center", ar: "مركز الرفع", path: "/uploads", icon: "upload", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "AI Chat", ar: "مساعد الذكاء", path: "/ai-chat", icon: "spark", roles: ["admin", "general-manager", "project-manager", "employee"] },
-  { label: "Agent Runs", ar: "تشغيل الوكيل", path: "/agent-runs", icon: "agent", roles: ["admin", "general-manager", "project-manager"] },
-  { label: "Workspace Graph", ar: "خريطة العمل", path: "/workspace-graph", icon: "graph", roles: ["admin", "general-manager", "project-manager"] },
-  { label: "Employees", ar: "الموظفون", path: "/employees", icon: "users", roles: ["admin", "general-manager"] },
-  { label: "Reports", ar: "التقارير", path: "/reports", icon: "chart", roles: ["admin", "general-manager", "project-manager"] },
-  { label: "Settings", ar: "الإعدادات", path: "/settings", icon: "settings", roles: ["admin", "general-manager"] },
+  { label: "Upload Center", ar: "مركز الرفع", path: "/uploads", icon: "upload", roles: ["admin", "general-manager", "project-manager", "employee"] },
+  { label: "Employees", ar: "الموظفون", path: "/employees", icon: "users", roles: ["admin", "general-manager", "project-manager", "employee"] },
+  { label: "Reports", ar: "التقارير", path: "/reports", icon: "chart", roles: ["admin", "general-manager", "project-manager", "employee"] },
+  { label: "Settings", ar: "الإعدادات", path: "/settings", icon: "settings", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "Profile", ar: "الملف الشخصي", path: "/profile", icon: "profile", roles: ["admin", "general-manager", "project-manager", "employee"] }
 ];
 

@@ -1,48 +1,67 @@
+import { FiBarChart2, FiBriefcase, FiCloud, FiFolder, FiHome, FiMessageCircle, FiSettings, FiUser, FiUsers, FiZap } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
-import { useAuth } from "../../lib/AuthContext.jsx";
+import "../../styles/app-shell.css";
 
 const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
+const sidebarIconMap = {
+  grid: FiHome,
+  folder: FiFolder,
+  check: FiBriefcase,
+  calendar: FiUsers,
+  spark: FiZap,
+  upload: FiCloud,
+  users: FiUsers,
+  chart: FiBarChart2,
+  settings: FiSettings,
+  profile: FiUser
+};
+const rolePreviewProfiles = {
+  admin: { user: "Ahmed Alyazouri", role: "Company Admin", roleId: "admin" },
+  "general-manager": { user: "Aseel Harazeen", role: "General Manager", roleId: "general-manager" },
+  "project-manager": { user: "Fares Namlah", role: "Project Manager", roleId: "project-manager" },
+  employee: { user: "Sarah Johnson", role: "Employee", roleId: "employee" }
+};
 
-export default function AppShell({ active = "Dashboard", children }) {
-  const { user } = useAuth();
-  const userName = user?.name || "User";
-  const userRole = user?.role || user?.job_title || "Team Member";
-  const roleId = user?.role_id || "project-manager";
-  const visibleNav = navItems.filter((item) => item.roles.includes(roleId));
+export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
+  const previewRole = new URLSearchParams(window.location.search).get("role");
+  const profile = rolePreviewProfiles[previewRole] || { user, role, roleId };
   return (
     <main className="product-shell" dir="ltr">
-      <aside className="product-sidebar">
-        <div className="sidebar-brand-wrap">
-          <Brand compact />
-          <span className="live-chip">Live MVP</span>
-        </div>
-        <nav>
-          {visibleNav.map((item) => (
-            <a className={active === item.label ? "active" : ""} href={`#${item.path}`} key={item.label}>
-              <span className={`app-nav-icon app-nav-icon--${item.icon}`} aria-hidden="true" />
-              <span>{item.label}</span>
-              {item.label === "Tasks" ? <b className="nav-badge">3</b> : null}
-            </a>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <span>Company</span>
-          <b>Taqat Digital</b>
-          <small>Multi-company demo</small>
-          <div className="sidebar-health"><i /><span>AI services ready</span></div>
-        </div>
-      </aside>
+      <AppSidebar active={active} roleId={profile.roleId} />
       <section className="product-main">
-        <Topbar user={userName} role={userRole} />
+        <Topbar user={profile.user} role={profile.role} />
         {children}
       </section>
     </main>
   );
 }
 
+export function AppSidebar({ active = "Dashboard", roleId = "project-manager" }) {
+  const visibleNav = navItems;
+
+  return (
+    <aside className="product-sidebar">
+      <div className="sidebar-brand-wrap">
+        <Brand compact tagline="Enterprise AI PM" />
+      </div>
+      <nav>
+        {visibleNav.map((item) => {
+          const Icon = sidebarIconMap[item.icon] || FiMessageCircle;
+          return (
+            <a className={active === item.label ? "active" : ""} href={`#${item.path}`} key={item.label}>
+              <Icon className="sidebar-nav-icon" aria-hidden="true" />
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
+      </nav>
+      <a className="sidebar-new-project" href="#/projects">+ <span>New Project</span></a>
+    </aside>
+  );
+}
+
 export function Topbar({ user, role }) {
-  const { logout } = useAuth();
   return (
     <header className="product-topbar">
       <label className="product-search">
@@ -74,9 +93,6 @@ export function Topbar({ user, role }) {
           </div>
           <button className="profile-caret" type="button" aria-label="Open profile menu">v</button>
         </div>
-        <button className="ghost-button logout-button" type="button" onClick={logout} title="Sign out">
-          Logout
-        </button>
       </div>
     </header>
   );

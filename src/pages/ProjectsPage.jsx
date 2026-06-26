@@ -3,15 +3,15 @@ import { projects } from "../data/teamoriaData.js";
 
 export default function ProjectsPage() {
   return (
-    <AppShell active="Workspaces">
+    <AppShell active="Projects">
       <PageHeader
-        title="Workspace Hub"
-        eyebrow="Company workspaces with progress, health, files, members, and AI activity."
+        title="Projects Hub"
+        eyebrow="Company projects with progress, health, files, members, and AI activity."
         actions={(
           <>
             <button className="filter-button" type="button">Filters</button>
-            <button className="select-button" type="button">All Workspaces</button>
-            <a className="product-button" href="#/workspace">New Workspace</a>
+            <button className="select-button" type="button">All Projects</button>
+            <a className="product-button" href="#/workspace">New Project</a>
           </>
         )}
       />

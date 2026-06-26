@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "./lib/AuthContext.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import SignInPage from "./pages/SignInPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
@@ -19,21 +18,13 @@ import EmployeesPage from "./pages/EmployeesPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
-import MarketingPage from "./pages/MarketingPage.jsx";
 
-const publicRoutes = {
+const routes = {
   "/": LandingPage,
   "/signin": SignInPage,
   "/reset-password": ResetPasswordPage,
   "/signup": SignUpPage,
   "/verify-otp": VerifyOtpPage,
-  "/product": () => <MarketingPage page="product" />,
-  "/features": () => <MarketingPage page="features" />,
-  "/solutions": () => <MarketingPage page="solutions" />,
-  "/pricing": () => <MarketingPage page="pricing" />
-};
-
-const protectedRoutes = {
   "/dashboard": DashboardPage,
   "/projects": ProjectsPage,
   "/tasks": TasksPage,
@@ -50,16 +41,13 @@ const protectedRoutes = {
   "/profile": ProfilePage
 };
 
-const authPages = new Set(["/signin", "/signup", "/reset-password", "/verify-otp"]);
-const allRoutes = { ...publicRoutes, ...protectedRoutes };
-
 function getPath() {
   const hash = window.location.hash.replace("#", "");
-  return allRoutes[hash] ? hash : "/";
+  const path = hash.split("?")[0];
+  return routes[path] ? path : "/";
 }
 
 export default function App() {
-  const { user, isLoading } = useAuth();
   const [path, setPath] = useState(getPath);
 
   useEffect(() => {
@@ -68,28 +56,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
 
-  // Show loading screen while checking auth
-  if (isLoading) {
-    return (
-      <div className="auth-loading-screen">
-        <div className="auth-loading-spinner" />
-        <p>جاري التحميل...</p>
-      </div>
-    );
-  }
+  const Page = useMemo(() => routes[path] || LandingPage, [path]);
 
-  // Redirect: authenticated user visiting auth pages → dashboard
-  if (user && authPages.has(path)) {
-    window.location.hash = "/dashboard";
-    return null;
-  }
-
-  // Redirect: unauthenticated user visiting protected pages → signin
-  if (!user && protectedRoutes[path]) {
-    window.location.hash = "/signin";
-    return null;
-  }
-
-  const Page = allRoutes[path] || LandingPage;
   return <Page />;
 }
