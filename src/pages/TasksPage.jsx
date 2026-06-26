@@ -1,17 +1,65 @@
 import { useMemo, useState } from "react";
 import AppShell from "../components/app/AppShell.jsx";
-import { kanbanColumns } from "../data/teamoriaData.js";
+import { FiCalendar, FiChevronDown, FiFilter, FiGrid, FiList, FiMoreHorizontal, FiPlus, FiUser, FiZap } from "react-icons/fi";
+import "../styles/tasks.css";
 
 const emptyTask = {
   title: "",
-  owner: "Olivia Rhye",
-  date: "Jun 30, 2026",
+  owner: "Alex Rivera",
+  date: "Oct 31",
   priority: "Medium",
-  tags: "Manual, Task"
+  tags: "Manual, Task",
+  stage: "todo"
 };
 
+const initialColumns = [
+  {
+    id: "todo",
+    title: "To Do",
+    tone: "neutral",
+    tasks: [
+      { title: "Analyze meeting transcripts", owner: "Aisha Hassan", date: "Oct 24", priority: "High", tags: ["AI", "Meeting"], ai: true },
+      { title: "Update project roadmap", owner: "Jordan Diaz", date: "Oct 26", priority: "Medium", tags: ["Roadmap", "Planning"] },
+      { title: "Prepare Q4 risk register", owner: "Nora Kim", date: "Oct 27", priority: "High", tags: ["Risk", "Ops"] },
+      { title: "Collect sprint feedback", owner: "Maya Stone", date: "Oct 28", priority: "Low", tags: ["Team", "Survey"] }
+    ]
+  },
+  {
+    id: "progress",
+    title: "In Progress",
+    tone: "blue",
+    tasks: [
+      { title: "AI Insight Generation", owner: "Alex Rivera", date: "Today", priority: "High", tags: ["Insight", "Source"], active: true, ai: true, comments: true },
+      { title: "Employee feedback loop", owner: "Omar Reed", date: "Tomorrow", priority: "Medium", tags: ["People", "Process"] }
+    ]
+  },
+  {
+    id: "review",
+    title: "Review",
+    tone: "purple",
+    tasks: [
+      { title: "Resource allocation Q4", owner: "Aseel Rahman", date: "Oct 30", priority: "Medium", tags: ["Finance", "Approval"], description: "Requires manager approval for the new headcount in the Engineering team." }
+    ]
+  },
+  {
+    id: "done",
+    title: "Done",
+    tone: "green",
+    done: true,
+    tasks: [
+      { title: "Draft AI usage policy", owner: "Sophia Chen", date: "Finished", priority: "Low", tags: ["Policy", "AI"] },
+      { title: "Publish release checklist", owner: "Liam Carter", date: "Finished", priority: "Low", tags: ["Release", "QA"] },
+      { title: "Sync stakeholder notes", owner: "Ethan Brooks", date: "Finished", priority: "Medium", tags: ["Notes", "Client"] },
+      { title: "Close onboarding tickets", owner: "Noah Patel", date: "Finished", priority: "Low", tags: ["Support"] },
+      { title: "Archive sprint demo files", owner: "Fatima Ali", date: "Finished", priority: "Low", tags: ["Files"] },
+      { title: "Approve UI color tokens", owner: "Mira Lee", date: "Finished", priority: "Medium", tags: ["Design"] },
+      { title: "Validate meeting summary QA", owner: "Daniel Park", date: "Finished", priority: "Low", tags: ["AI", "QA"] }
+    ]
+  }
+];
+
 export default function TasksPage() {
-  const [columns, setColumns] = useState(kanbanColumns);
+  const [columns, setColumns] = useState(initialColumns);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskDraft, setTaskDraft] = useState(emptyTask);
 
@@ -37,66 +85,95 @@ export default function TasksPage() {
     const newTask = {
       title,
       owner: taskDraft.owner.trim() || "Olivia Rhye",
-      date: taskDraft.date.trim() || "Jun 30, 2026",
+      date: taskDraft.date.trim() || "Oct 31",
       priority: taskDraft.priority,
       tags: taskDraft.tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 3)
     };
 
     setColumns((current) => current.map((column, index) => (
-      index === 0
-        ? { ...column, count: column.count + 1, tasks: [newTask, ...column.tasks] }
+      column.id === taskDraft.stage || (!taskDraft.stage && index === 0)
+        ? { ...column, tasks: [newTask, ...column.tasks] }
         : column
     )));
     closeModal();
   }
 
   return (
-    <AppShell active="Tasks" user="Olivia Rhye" role="Project Manager">
-      <div className="task-board-toolbar">
-        <div>
-          <span className="page-kicker">Delivery board</span>
-          <h1>Task Hub</h1>
-          <p>Organize {totalTasks} tasks, review AI-extracted work, and move execution forward.</p>
-        </div>
-        <div className="view-switch">
-          <button className="active" type="button">Board</button>
-          <button type="button">List</button>
-          <button type="button">Calendar</button>
-        </div>
-        <button className="filter-button task-filter-button" type="button">Filter</button>
-        <button className="product-button" type="button" onClick={() => setIsModalOpen(true)}>New Task</button>
-      </div>
-
-      <section className="kanban-board-modern">
-        {columns.map((column) => (
-          <div className="kanban-column" key={column.title}>
-            <div className="kanban-head">
-              <h2>{column.title} <span>{column.tasks.length}</span></h2>
-              <button className="column-menu-button" type="button" aria-label={`More actions for ${column.title}`}>...</button>
-            </div>
-            {column.tasks.map((task, index) => (
-              <article className={`kanban-task ${task.active ? "active" : ""} ${column.done ? "done" : ""}`} key={`${task.title}-${task.date}-${index}`}>
-                <h3>{task.title}</h3>
-                <div className="task-owner">
-                  <span className="mini-avatar">{initials(task.owner)}</span>
-                  <span>{task.owner}</span>
-                  <em className={`priority priority--${task.priority}`}><i />{task.priority}</em>
-                </div>
-                <span className={`task-date ${index === 0 && column.title === "Open" ? "overdue" : ""}`}>CAL Due {task.date}</span>
-                <div className="task-tags">
-                  {task.tags.map((tag) => <span key={tag}>{tag}</span>)}
-                </div>
-                <div className="task-card-meta">
-                  <span>ATT {index + 1}</span>
-                  <span>COM {2 + index}</span>
-                  <span>SUB {Math.min(index + 1, 3)}/3</span>
-                </div>
-              </article>
-            ))}
-            <button className="add-task-link add-task-button" type="button" onClick={() => setIsModalOpen(true)}>Add Task</button>
+    <AppShell active="Tasks" user="Alex Rivera" role="Lead Product Manager">
+      <div className="tasks-workspace">
+        <div className="tasks-page-head">
+          <div>
+            <h1>Project Tasks</h1>
+            <p>Manage and track Q4 Strategic AI Initiatives</p>
           </div>
-        ))}
-      </section>
+          <div className="tasks-head-actions">
+            <div className="tasks-view-toggle" aria-label="Task view">
+              <button className="active" type="button"><FiGrid aria-hidden="true" />Board</button>
+              <button type="button"><FiList aria-hidden="true" />List</button>
+            </div>
+            <button className="tasks-primary-button" type="button" onClick={() => setIsModalOpen(true)}>
+              <FiPlus aria-hidden="true" />New Task
+            </button>
+          </div>
+        </div>
+
+        <div className="tasks-filter-bar">
+          <button type="button"><FiFilter aria-hidden="true" />Priority<FiChevronDown aria-hidden="true" /></button>
+          <button type="button"><FiUser aria-hidden="true" />Assignee<FiChevronDown aria-hidden="true" /></button>
+          <button type="button"><FiCalendar aria-hidden="true" />Due Date<FiChevronDown aria-hidden="true" /></button>
+          <span>{totalTasks} tasks in total</span>
+        </div>
+
+        <section className="tasks-kanban-board">
+          {columns.map((column) => (
+            <div className={`tasks-kanban-column tasks-kanban-column--${column.tone}`} key={column.title}>
+              <div className="tasks-kanban-head">
+                <div>
+                  <i aria-hidden="true" />
+                  <h2>{column.title}</h2>
+                  <span>{column.tasks.length}</span>
+                </div>
+                <button type="button" aria-label={`More actions for ${column.title}`}><FiMoreHorizontal aria-hidden="true" /></button>
+              </div>
+              <div className="tasks-kanban-list">
+                {column.tasks.map((task, index) => (
+                  <article className={`tasks-card ${task.active ? "tasks-card--active" : ""} ${column.done ? "tasks-card--done" : ""}`} key={`${task.title}-${task.date}-${index}`}>
+                    <div className="tasks-card-top">
+                      <span className={`tasks-priority tasks-priority--${task.priority.toLowerCase()}`}>{task.priority}</span>
+                      <div>
+                        {task.ai ? <FiZap aria-hidden="true" /> : null}
+                        {task.comments ? <span className="tasks-comment-dot" aria-hidden="true" /> : null}
+                      </div>
+                    </div>
+                    <h3>{task.title}</h3>
+                    {task.description ? <p>{task.description}</p> : null}
+                    <div className="tasks-card-bottom">
+                      <div className="tasks-assignee">
+                        <span>{initials(task.owner)}</span>
+                      </div>
+                      <div className="tasks-date">
+                        <FiCalendar aria-hidden="true" />
+                        <span>{task.date}</span>
+                      </div>
+                    </div>
+                    <div className="tasks-tag-row">
+                      {task.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                    </div>
+                  </article>
+                ))}
+                {!column.done ? (
+                  <button className="tasks-add-card" type="button" onClick={() => {
+                    updateDraft("stage", column.id);
+                    setIsModalOpen(true);
+                  }}>
+                    <FiPlus aria-hidden="true" />Add Task
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
 
       {isModalOpen ? (
         <div className="modal-backdrop" role="presentation">
@@ -132,6 +209,12 @@ export default function TasksPage() {
 
             <div className="modal-grid">
               <label>
+                <span>Stage</span>
+                <select value={taskDraft.stage} onChange={(event) => updateDraft("stage", event.target.value)}>
+                  {columns.map((column) => <option value={column.id} key={column.id}>{column.title}</option>)}
+                </select>
+              </label>
+              <label>
                 <span>Priority</span>
                 <select value={taskDraft.priority} onChange={(event) => updateDraft("priority", event.target.value)}>
                   <option>High</option>
@@ -139,6 +222,9 @@ export default function TasksPage() {
                   <option>Low</option>
                 </select>
               </label>
+            </div>
+
+            <div className="modal-grid modal-grid--single">
               <label>
                 <span>Tags</span>
                 <input value={taskDraft.tags} onChange={(event) => updateDraft("tags", event.target.value)} />

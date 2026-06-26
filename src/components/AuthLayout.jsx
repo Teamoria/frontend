@@ -1,16 +1,16 @@
 import Brand from "./Brand.jsx";
 import "../styles/auth.css";
 
-export default function AuthLayout({ variant = "analytics", title, text, children }) {
+export default function AuthLayout({ variant = "analytics", title, text, children, className = "", visualContent = null }) {
   return (
-    <main className={`auth-shell auth-shell--${variant}`}>
+    <main className={`auth-shell auth-shell--${variant} ${className}`.trim()}>
       <aside className={`auth-visual auth-visual--${variant}`}>
         <Brand />
         <div className="auth-copy">
           <h1>{title}</h1>
           <p>{text}</p>
         </div>
-        {variant === "security" ? <SecurityArtwork /> : <AnalyticsArtwork />}
+        {visualContent || (variant === "security" ? <SecurityArtwork /> : <AnalyticsArtwork />)}
       </aside>
       <section className="auth-panel">{children}</section>
     </main>

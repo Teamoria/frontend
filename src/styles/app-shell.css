@@ -49,13 +49,14 @@
   align-items: center;
   border-radius: 6px;
   color: #1f2a44;
-  display: grid;
+  display: flex;
   font-size: 12px;
   font-weight: 900;
   gap: 14px;
-  grid-template-columns: 18px 1fr;
+  line-height: 1;
   min-height: 44px;
   padding: 0 14px;
+  text-decoration: none;
 }
 
 .product-sidebar nav a:hover {
@@ -68,16 +69,22 @@
   background: #cfe1fb;
   box-shadow: none;
   color: #1f2a44;
+  font-weight: 900;
 }
 
 .product-sidebar nav a span {
+  align-items: center;
   color: inherit;
+  display: inline-flex;
   font-size: 12px;
   font-weight: 900;
+  line-height: 1;
+  min-height: 18px;
 }
 
 .product-sidebar .sidebar-nav-icon {
   color: #3a4053;
+  flex: 0 0 18px;
   height: 18px;
   width: 18px;
 }
@@ -136,13 +143,13 @@
 }
 
 .product-sidebar nav a {
-  display: grid !important;
-  grid-template-columns: 18px 1fr !important;
+  align-items: center !important;
+  display: flex !important;
   width: 100% !important;
 }
 
 .product-sidebar nav a span {
-  display: inline !important;
+  display: inline-flex !important;
 }
 
 .product-sidebar .sidebar-new-project {

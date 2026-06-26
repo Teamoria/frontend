@@ -1,11 +1,15 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
-import { FiMail, FiShield, FiLock } from "react-icons/fi";
+import { FiLock, FiMail, FiShield } from "react-icons/fi";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { forgotPasswordSendOtp, forgotPasswordVerify } from "../lib/api.js";
+import "../styles/reset-access.css";
+
+const workspaceImage =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuAihiwQ5gWaPNLFXzNG-TzS2eV0pPLpvfKcuLXvwklDhAET0Ao6oujo3rL7pREHOEaeUopVHbIOXzGKlzHBOtBvUjhf4SyYBHJUaMCn46KzUgUiP8NEjIFMOH4IvWOszKDZ_3eye1Av_F6UW0eoXThSb6pg6WvvrCC2wC_TpAScoDN3ifERvRQdeQwl142mfsWhiJKDGEIwQVwYdn0VktxZL2Ra-6sMzeWtD6-hAmcwzGk26As4cT7kFlmhYZTwI1obzGuHp1EU9fJh";
 
 export default function ResetPasswordPage() {
-  const [step, setStep] = useState("email"); // "email" | "otp" | "done"
+  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [debugCode, setDebugCode] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
@@ -27,9 +31,7 @@ export default function ResetPasswordPage() {
       setStep("otp");
       setStatus({
         type: "success",
-        message: code
-          ? `تم إرسال رمز التحقق. الرمز (للاختبار): ${code}`
-          : "تم إرسال رمز التحقق إلى بريدك الإلكتروني."
+        message: code ? `Verification code sent. Test code: ${code}` : "Verification code sent to your work email."
       });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
@@ -50,7 +52,7 @@ export default function ResetPasswordPage() {
     try {
       await forgotPasswordVerify({ email, code, newPassword });
       setStep("done");
-      setStatus({ type: "success", message: "تم إعادة تعيين كلمة المرور بنجاح!" });
+      setStatus({ type: "success", message: "Password reset successfully." });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -60,30 +62,39 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthLayout
-      variant="security"
-      title="Your security, our priority."
-      text="We'll help you get back to your account in no time."
+      className="reset-access-shell"
+      variant="analytics"
+      title="Restore Your Neural Access."
+      text="Forgot your encryption key? We will help you securely reconnect to your team and meeting archives."
+      visualContent={<ResetAccessVisual />}
     >
       {step === "email" && (
-        <form className="auth-form reset-password-form" onSubmit={handleSendOtp}>
-          <h1>Reset your password</h1>
-          <p>Enter your email and we'll send you a verification code</p>
+        <form className="auth-form reset-password-form reset-access-form" onSubmit={handleSendOtp}>
+          <ResetMobileBrand />
+          <header className="reset-access-header">
+            <h1>Reset Access</h1>
+            <p>Enter your work identity to receive an access restoration link.</p>
+          </header>
           {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
           <div className="form-stack">
-            <span className="label">Email address</span>
-            <TextInput icon={<FiMail />} name="email" type="email" placeholder="you@example.com" required disabled={isSubmitting} />
+            <span className="label">Work Email</span>
+            <TextInput icon={<FiMail />} name="email" type="email" placeholder="identity@enterprise.ai" required disabled={isSubmitting} />
           </div>
           <PrimaryButton type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Sending..." : "Send Reset Code"}
+            {isSubmitting ? "Sending..." : "Send Restoration Link"}
           </PrimaryButton>
-          <a className="back-link" href="#/signin"><span aria-hidden="true">&lt;-</span> Back to Sign In</a>
+          <p className="auth-switch">Remember your key? <a href="#/signin">Back to Login</a></p>
+          <ResetAccessFooter />
         </form>
       )}
 
       {step === "otp" && (
-        <form className="auth-form reset-password-form" onSubmit={handleVerifyAndReset}>
-          <h1>Enter new password</h1>
-          <p>Enter the verification code sent to <b>{email}</b> and your new password</p>
+        <form className="auth-form reset-password-form reset-access-form" onSubmit={handleVerifyAndReset}>
+          <ResetMobileBrand />
+          <header className="reset-access-header">
+            <h1>Create New Key</h1>
+            <p>Enter the verification code sent to <b>{email}</b>, then choose a new password.</p>
+          </header>
           {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
           <div className="form-stack">
             <span className="label">Verification code</span>
@@ -94,26 +105,70 @@ export default function ResetPasswordPage() {
           <PrimaryButton type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Resetting..." : "Reset Password"}
           </PrimaryButton>
-          <button className="otp-resend-button" type="button" disabled={isSubmitting} onClick={() => { setStep("email"); setStatus({ type: "", message: "" }); }}>
+          <button
+            className="otp-resend-button"
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => {
+              setStep("email");
+              setStatus({ type: "", message: "" });
+            }}
+          >
             Use a different email
           </button>
+          <ResetAccessFooter />
         </form>
       )}
 
       {step === "done" && (
-        <div className="auth-form reset-password-form">
+        <div className="auth-form reset-password-form reset-access-form">
+          <ResetMobileBrand />
           <div className="success-card">
             <span aria-hidden="true" />
             <div>
               <h2>Password reset successful!</h2>
               <p>Your password has been updated. You can now sign in with your new password.</p>
-              <a className="primary-button" href="#/signin" style={{ display: "inline-block", marginTop: "1rem", textAlign: "center", textDecoration: "none" }}>
+              <a className="primary-button" href="#/signin">
                 Sign In
               </a>
             </div>
           </div>
+          <ResetAccessFooter />
         </div>
       )}
     </AuthLayout>
+  );
+}
+
+function ResetAccessVisual() {
+  return (
+    <div className="reset-access-visual-content" aria-hidden="true">
+      <img src={workspaceImage} alt="" />
+      <div className="reset-access-visual-brand">
+        <span>Teamoria</span>
+      </div>
+    </div>
+  );
+}
+
+function ResetMobileBrand() {
+  return (
+    <div className="reset-access-mobile-brand">
+      <span>Teamoria</span>
+      <small>Enterprise AI PM</small>
+    </div>
+  );
+}
+
+function ResetAccessFooter() {
+  return (
+    <footer className="reset-access-footer">
+      <span><i /> Grid Online</span>
+      <nav aria-label="Authentication links">
+        <a href="#/security">Security</a>
+        <a href="#/terms">Legal</a>
+        <a href="#/support">Support</a>
+      </nav>
+    </footer>
   );
 }
