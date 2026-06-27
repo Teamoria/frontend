@@ -4,20 +4,21 @@
   gap: 24px;
   grid-template-columns: minmax(0, 1fr) 400px;
   min-height: calc(100vh - 64px);
-  padding: 32px;
+  font-size: large;
 }
 
 .profile-command-main {
   display: grid;
   gap: 32px;
   align-content: start;
+  width: 112%;
 }
 
 .profile-banner {
   background: linear-gradient(120deg, #6366f1, #8b5cf6 52%, #a855f7);
   border-radius: 12px;
   box-shadow: 0 18px 42px rgba(99, 102, 241, 0.18);
-  min-height: 320px;
+  min-height: 250px;
   overflow: hidden;
   padding: 32px;
   position: relative;
@@ -128,6 +129,7 @@
 
 .profile-command-stats article {
   padding: 24px;
+  cursor: pointer;
 }
 
 .profile-command-stats strong {
@@ -257,6 +259,8 @@
   display: grid;
   gap: 28px;
   padding: 32px;
+  width: 85%;
+  margin-left: 65px;
 }
 
 .profile-control-head {
@@ -920,5 +924,3 @@
     transform: translateY(-4px);
   }
 }
-
-

@@ -27,6 +27,7 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  font-family: inter;
 }
 
 a {
@@ -6044,6 +6045,7 @@ select {
 
 .profile-save-button {
   background: linear-gradient(135deg, #4534ef, #704dff);
+  box-shadow: 1px 1px 2px gray;
 }
 
 .permission-list div {
@@ -8903,6 +8905,7 @@ select {
 }
 
 @media (max-width: 640px) {
+
   .marketing-page-v2 .marketing-hero-split,
   .marketing-page-v2 .solutions-hero,
   .marketing-page-v2 .marketing-feature-hero,
@@ -9069,6 +9072,7 @@ select {
 }
 
 @media (max-width: 760px) {
+
   .auth-shell.auth-shell--analytics .auth-panel,
   .auth-shell.auth-shell--signup .auth-panel {
     padding: 24px 16px;
@@ -9304,7 +9308,9 @@ select {
 }
 
 @keyframes auth-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Logout Button ── */
@@ -9325,4 +9331,3 @@ select {
   border-color: rgba(255, 80, 80, 0.5);
   color: #ff5252;
 }
-
