@@ -361,16 +361,32 @@
   background: var(--sa-container-high);
 }
 
-.super-admin-user {
-  align-items: center;
-  border-left: 1px solid var(--sa-line);
-  display: flex;
-  gap: 10px;
-  margin-left: 6px;
-  padding-left: 18px;
+.super-admin-profile-anchor {
+  position: relative;
 }
 
-.super-admin-user span {
+.super-admin-actions .super-admin-profile-trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--sa-line);
+  border-radius: 8px;
+  color: var(--sa-text);
+  display: inline-flex;
+  gap: 10px;
+  height: 42px;
+  justify-content: flex-start;
+  margin-left: 6px;
+  padding: 0 10px 0 18px;
+  width: auto;
+}
+
+.super-admin-actions .super-admin-profile-trigger:hover {
+  background: var(--sa-container-low);
+}
+
+.super-admin-profile-trigger span,
+.super-admin-profile-menu header > span {
   align-items: center;
   background: var(--sa-primary-soft);
   border-radius: 50%;
@@ -383,8 +399,103 @@
   width: 34px;
 }
 
-.super-admin-user b {
+.super-admin-profile-trigger b {
   font-size: 14px;
+}
+
+.super-admin-profile-trigger svg {
+  color: var(--sa-secondary);
+  height: 16px;
+  width: 16px;
+}
+
+.super-admin-profile-menu {
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-line);
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(19, 27, 46, 0.18);
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: 50px;
+  width: 282px;
+  z-index: 90;
+}
+
+.super-admin-profile-menu header {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--sa-line);
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+}
+
+.super-admin-profile-menu h2 {
+  color: var(--sa-text);
+  font-size: 16px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.super-admin-profile-menu p {
+  color: var(--sa-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 3px 0 10px;
+}
+
+.super-admin-profile-menu small {
+  background: var(--sa-container-high);
+  border-radius: 999px;
+  color: var(--sa-primary);
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 6px 9px;
+}
+
+.super-admin-profile-menu nav {
+  display: grid;
+  padding: 8px;
+}
+
+.super-admin-profile-menu a {
+  align-items: center;
+  border-radius: 7px;
+  color: var(--sa-text);
+  display: flex;
+  font-size: 14px;
+  font-weight: 850;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 10px;
+  text-decoration: none;
+}
+
+.super-admin-profile-menu a:hover {
+  background: var(--sa-container-low);
+  color: var(--sa-primary);
+}
+
+.super-admin-profile-menu a svg {
+  color: var(--sa-secondary);
+  height: 18px;
+  width: 18px;
+}
+
+.super-admin-profile-menu footer {
+  border-top: 1px solid var(--sa-line);
+  padding: 8px;
+}
+
+.super-admin-profile-menu footer a {
+  color: var(--sa-error);
+}
+
+.super-admin-profile-menu footer a:hover {
+  background: var(--sa-error-soft);
+  color: var(--sa-error);
 }
 
 .super-admin-page {
@@ -1439,6 +1550,165 @@
   padding: 0 4px;
 }
 
+.super-admin-modal-layer {
+  align-items: center;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 16px;
+  position: fixed;
+  z-index: 120;
+}
+
+.super-admin-modal-backdrop {
+  background: rgba(19, 27, 46, 0.42);
+  border: 0;
+  cursor: pointer;
+  inset: 0;
+  position: absolute;
+}
+
+.super-admin-add-user-modal {
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-line);
+  border-radius: 8px;
+  box-shadow: 0 28px 70px rgba(19, 27, 46, 0.22);
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+  position: relative;
+  width: min(100%, 480px);
+}
+
+.super-admin-register-company-modal {
+  width: min(100%, 540px);
+}
+
+.super-admin-add-user-modal>header {
+  align-items: center;
+  border-bottom: 1px solid var(--sa-line);
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 24px;
+}
+
+.super-admin-add-user-modal h2 {
+  color: var(--sa-text);
+  font-size: 24px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.super-admin-add-user-modal>header button,
+.super-admin-password-field button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--sa-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.super-admin-add-user-modal>header button:hover,
+.super-admin-password-field button:hover {
+  background: var(--sa-container-low);
+  color: var(--sa-text);
+}
+
+.super-admin-add-user-modal form {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.super-admin-modal-field {
+  display: grid;
+  gap: 6px;
+}
+
+.super-admin-modal-field label {
+  color: var(--sa-text);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.super-admin-modal-field input,
+.super-admin-modal-field select {
+  background: var(--sa-container-low);
+  border: 1px solid var(--sa-line);
+  border-radius: 8px;
+  color: var(--sa-text);
+  font-size: 15px;
+  min-height: 44px;
+  outline: 0;
+  padding: 0 14px;
+  width: 100%;
+}
+
+.super-admin-modal-field input:focus,
+.super-admin-modal-field select:focus {
+  border-color: var(--sa-primary);
+  box-shadow: 0 0 0 3px rgba(0, 45, 155, 0.12);
+}
+
+.super-admin-password-field {
+  position: relative;
+}
+
+.super-admin-password-field input {
+  padding-right: 46px;
+}
+
+.super-admin-password-field button {
+  position: absolute;
+  right: 5px;
+  top: 4px;
+}
+
+.super-admin-add-user-modal form>footer {
+  align-items: center;
+  background: var(--sa-container-low);
+  border-top: 1px solid var(--sa-line);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin: 8px -24px -24px;
+  padding: 16px 24px;
+}
+
+.super-admin-modal-cancel,
+.super-admin-modal-submit {
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 900;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.super-admin-modal-cancel {
+  background: transparent;
+  border: 0;
+  color: var(--sa-secondary);
+}
+
+.super-admin-modal-cancel:hover {
+  background: var(--sa-container-high);
+}
+
+.super-admin-modal-submit {
+  background: var(--sa-primary);
+  border: 1px solid var(--sa-primary);
+  color: #fff;
+}
+
+.super-admin-modal-submit:hover {
+  background: var(--sa-primary-2);
+}
+
 @media (max-width: 1180px) {
   .super-admin-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1467,7 +1737,7 @@
     max-width: none;
   }
 
-  .super-admin-user b {
+  .super-admin-profile-trigger b {
     display: none;
   }
 
@@ -1595,5 +1865,15 @@
 
   .super-admin-pagination nav {
     justify-content: flex-start;
+  }
+
+  .super-admin-add-user-modal form>footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .super-admin-modal-cancel,
+  .super-admin-modal-submit {
+    width: 100%;
   }
 }
