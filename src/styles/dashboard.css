@@ -396,6 +396,7 @@
   border: 1px solid var(--owner-line);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(19, 27, 46, 0.05);
+  max-height: 400px;
 }
 
 .owner-panel-head {
@@ -431,6 +432,7 @@
 
 .owner-table-wrap {
   overflow-x: auto;
+
 }
 
 .owner-table-panel table {
@@ -616,6 +618,7 @@
 .owner-right-rail {
   display: grid;
   gap: 24px;
+  margin-left: 30px;
 }
 
 .owner-ai-panel {
@@ -854,10 +857,12 @@
 }
 
 @keyframes ownerPulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.72;
   }
@@ -1718,6 +1723,7 @@
   flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
+  margin-bottom: 20px;
 }
 
 .dashboard-role-switcher button {
@@ -1743,10 +1749,12 @@
 }
 
 @keyframes execPulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.82;
   }
@@ -2606,6 +2614,7 @@
 }
 
 @media (max-width: 1180px) {
+
   .employee-task-panel,
   .employee-score-card,
   .employee-upcoming-panel,
@@ -3518,6 +3527,7 @@
 }
 
 @media (max-width: 1180px) {
+
   .manager-risks-column,
   .manager-strategic-column,
   .manager-recommendations {
@@ -3654,5 +3664,3 @@
 .employee-new-project:hover {
   background: #173dbd !important;
 }
-
-

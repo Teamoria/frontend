@@ -127,8 +127,10 @@
 
 .home-hero-inner {
   margin: 0 auto;
-  max-width: 1120px;
+  max-width: 900px;
+  /* 1120 */
   text-align: center;
+
 }
 
 .home-pill {
@@ -611,6 +613,9 @@
   gap: 48px;
   grid-template-columns: 1fr 1fr;
   padding-block: 128px;
+  padding-right: 100px;
+  padding-left: 100px;
+
 }
 
 .home-workflow-copy,
@@ -703,9 +708,10 @@
 }
 
 .home-footer {
-  background: #fff;
+  background: #1a44c2;
   border-top: 1px solid var(--home-line);
   padding-block: 32px;
+  color: #fff;
 }
 
 .home-footer-grid {
@@ -716,11 +722,13 @@
   max-width: 1280px;
 }
 
+
 .home-footer p {
   color: var(--home-muted);
   line-height: 1.55;
   margin: 16px 0 0;
   max-width: 320px;
+  color: #fff;
 }
 
 .home-footer h3 {
@@ -729,16 +737,22 @@
   margin: 0 0 20px;
 }
 
+.home-footer a {
+  color: #fff;
+}
+
 .home-footer a:not(.home-logo) {
-  color: var(--home-muted);
+  color: #fff;
   display: block;
   font-size: 14px;
   margin-bottom: 10px;
 }
 
 .home-footer a:hover {
-  color: var(--home-primary);
+  color: black;
 }
+
+
 
 .home-footer-bottom {
   align-items: center;
@@ -872,7 +886,7 @@
 
 .teamoria-home .home-logo {
   align-self: center !important;
-  color: #1a44c2 !important;
+  /* color: #1a44c2; */
   display: inline-flex !important;
   grid-column: 1 !important;
   justify-self: start !important;
@@ -983,4 +997,3 @@
     display: inline-flex !important;
   }
 }
-

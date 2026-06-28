@@ -19,6 +19,7 @@ import {
   FiZap
 } from "react-icons/fi";
 import "../styles/dashboard.css";
+import { useState } from "react";
 import {
   ActivityOverviewChart,
   AIInsightCard,
@@ -31,7 +32,6 @@ import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashbo
 import { AppSidebar } from "../components/app/AppShell.jsx";
 
 const roleProfiles = {
-  admin: { label: "Company Admin", initials: "AD", dashboard: "owner" },
   "general-manager": { label: "General Manager", initials: "GM", dashboard: "owner" },
   "project-manager": { label: "Project Manager", initials: "PM", dashboard: "execution" },
   employee: { label: "Employee", initials: "EM", dashboard: "employee" }
@@ -64,21 +64,25 @@ const overdueTasks = [
 ];
 
 export default function DashboardPage() {
-  const roleId = getDashboardRole();
+  const [roleId, setRoleId] = useState(getDashboardRole);
   const profile = roleProfiles[roleId] || roleProfiles["project-manager"];
 
+  function handleRoleChange(newRoleId) {
+    localStorage.setItem("teamoria_preview_role", newRoleId);
+    setRoleId(newRoleId);
+  }
+
   if (profile.dashboard === "owner") {
-    return <OwnerDashboard roleId={roleId} profile={profile} />;
+    return <OwnerDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
   }
 
   if (profile.dashboard === "employee") {
-    return <EmployeeDashboard roleId={roleId} profile={profile} />;
+    return <EmployeeDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
   }
 
-  return <ExecutionDashboard roleId={roleId} profile={profile} />;
+  return <ExecutionDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
 }
-
-function OwnerDashboard({ roleId, profile }) {
+function OwnerDashboard({ roleId, profile, onRoleChange }) {
   return (
     <main className="owner-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
@@ -106,7 +110,7 @@ function OwnerDashboard({ roleId, profile }) {
             </div>
           </section>
 
-          <RoleSwitcher activeRole={roleId} variant="owner" />
+          <RoleSwitcher activeRole={roleId} variant="owner" onRoleChange={onRoleChange} />
 
           <section className="owner-metrics-grid">
             {ownerMetrics.map((metric) => (
@@ -215,7 +219,7 @@ function OwnerDashboard({ roleId, profile }) {
   );
 }
 
-function ExecutionDashboard({ roleId, profile }) {
+function ExecutionDashboard({ roleId, profile, onRoleChange }) {
   return (
     <main className="execution-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
@@ -246,7 +250,7 @@ function ExecutionDashboard({ roleId, profile }) {
             </div>
           </section>
 
-          <RoleSwitcher activeRole={roleId} variant="exec" />
+          <RoleSwitcher activeRole={roleId} variant="exec" onRoleChange={onRoleChange} />
 
           <section className="manager-intel-grid">
             <section className="manager-risks-column">
@@ -401,7 +405,7 @@ function TrendBars() {
   );
 }
 
-function EmployeeDashboard({ roleId, profile }) {
+function EmployeeDashboard({ roleId, profile, onRoleChange }) {
   return (
     <main className="employee-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
@@ -420,7 +424,7 @@ function EmployeeDashboard({ roleId, profile }) {
             <p>You have 4 primary tasks to tackle today. Your productivity score is up 12% this week.</p>
           </section>
 
-          <RoleSwitcher activeRole={roleId} variant="employee" />
+          <RoleSwitcher activeRole={roleId} variant="employee" onRoleChange={onRoleChange} />
 
           <section className="employee-bento-grid">
             <article className="employee-panel employee-task-panel">
@@ -580,11 +584,11 @@ function TopActions({ avatar, classNamePrefix }) {
   );
 }
 
-function RoleSwitcher({ activeRole, variant }) {
+function RoleSwitcher({ activeRole, variant, onRoleChange }) {
   return (
     <div className={`dashboard-role-switcher dashboard-role-switcher--${variant}`} aria-label="Preview dashboard role">
       {Object.entries(roleProfiles).map(([id, role]) => (
-        <button className={activeRole === id ? "active" : ""} type="button" key={id} onClick={() => setDashboardRole(id)}>
+        <button className={activeRole === id ? "active" : ""} type="button" key={id} onClick={() => onRoleChange(id)}>
           {role.label}
         </button>
       ))}
@@ -632,7 +636,4 @@ function getDashboardRole() {
   return roleProfiles[role] ? role : "project-manager";
 }
 
-function setDashboardRole(roleId) {
-  localStorage.setItem("teamoria_preview_role", roleId);
-  window.location.hash = `/dashboard?role=${roleId}`;
-}
+
