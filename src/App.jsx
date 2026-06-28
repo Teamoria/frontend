@@ -18,6 +18,10 @@ import EmployeesPage from "./pages/EmployeesPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import SuperAdminConsolePage from "./pages/SuperAdminConsolePage.jsx";
+import SuperAdminCompaniesPage from "./pages/SuperAdminCompaniesPage.jsx";
+import SuperAdminUsersPage from "./pages/SuperAdminUsersPage.jsx";
+import SuperAdminPaymentsPage from "./pages/SuperAdminPaymentsPage.jsx";
 
 const routes = {
   "/": LandingPage,
@@ -38,7 +42,11 @@ const routes = {
   "/employees": EmployeesPage,
   "/reports": ReportsPage,
   "/settings": SettingsPage,
-  "/profile": ProfilePage
+  "/profile": ProfilePage,
+  "/super-admin": SuperAdminConsolePage,
+  "/super-admin/companies": SuperAdminCompaniesPage,
+  "/super-admin/users": SuperAdminUsersPage,
+  "/super-admin/payments": SuperAdminPaymentsPage
 };
 
 function getPath() {

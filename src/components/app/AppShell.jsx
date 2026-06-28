@@ -1,4 +1,4 @@
-import { FiBarChart2, FiBriefcase, FiCloud, FiFolder, FiHome, FiMessageCircle, FiSettings, FiUser, FiUsers, FiZap } from "react-icons/fi";
+import { FiBarChart2, FiBriefcase, FiCloud, FiFolder, FiHome, FiMessageCircle, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
 import "../../styles/app-shell.css";
@@ -13,6 +13,7 @@ const sidebarIconMap = {
   upload: FiCloud,
   users: FiUsers,
   chart: FiBarChart2,
+  system: FiShield,
   settings: FiSettings,
   profile: FiUser
 };
