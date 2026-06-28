@@ -6,12 +6,17 @@ import {
   FiBookOpen,
   FiBriefcase,
   FiCalendar,
+  FiChevronDown,
+  FiClock,
   FiCreditCard,
   FiHelpCircle,
+  FiLock,
+  FiLogOut,
   FiMoreVertical,
   FiSearch,
   FiSettings,
   FiShield,
+  FiUser,
   FiUsers
 } from "react-icons/fi";
 import "../styles/super-admin-console.css";
@@ -201,6 +206,7 @@ function SuperAdminSidebar({ active }) {
 
 function SuperAdminTopbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <header className="super-admin-topbar">
@@ -214,7 +220,10 @@ function SuperAdminTopbar() {
           type="button"
           aria-expanded={notificationsOpen}
           aria-label="Notifications"
-          onClick={() => setNotificationsOpen((open) => !open)}
+          onClick={() => {
+            setProfileOpen(false);
+            setNotificationsOpen((open) => !open);
+          }}
         >
           <FiBell aria-hidden="true" />
           <i />
@@ -227,12 +236,60 @@ function SuperAdminTopbar() {
         <button type="button" aria-label="Settings">
           <FiSettings aria-hidden="true" />
         </button>
-        <div className="super-admin-user">
-          <span>AU</span>
-          <b>Admin User</b>
+        <div className="super-admin-profile-anchor">
+          <button
+            className="super-admin-profile-trigger"
+            type="button"
+            aria-expanded={profileOpen}
+            aria-label="Open profile menu"
+            onClick={() => {
+              setNotificationsOpen(false);
+              setProfileOpen((open) => !open);
+            }}
+          >
+            <span>AU</span>
+            <b>Admin User</b>
+            <FiChevronDown aria-hidden="true" />
+          </button>
+          {profileOpen ? <ProfileContextMenu /> : null}
         </div>
       </div>
     </header>
+  );
+}
+
+function ProfileContextMenu() {
+  return (
+    <section className="super-admin-profile-menu" aria-label="Profile context menu">
+      <header>
+        <span>AU</span>
+        <div>
+          <h2>Admin User</h2>
+          <p>admin@gigem.ai</p>
+          <small>Super Admin</small>
+        </div>
+      </header>
+      <nav aria-label="Profile actions">
+        <a href="#/profile">
+          <FiUser aria-hidden="true" />
+          <span>Profile Settings</span>
+        </a>
+        <a href="#/super-admin/config">
+          <FiLock aria-hidden="true" />
+          <span>Security</span>
+        </a>
+        <a href="#/super-admin">
+          <FiClock aria-hidden="true" />
+          <span>Activity Logs</span>
+        </a>
+      </nav>
+      <footer>
+        <a href="#/signin">
+          <FiLogOut aria-hidden="true" />
+          <span>Logout</span>
+        </a>
+      </footer>
+    </section>
   );
 }
 
