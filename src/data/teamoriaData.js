@@ -1,4 +1,5 @@
 export const navItems = [
+  { label: "System", ar: "System", path: "/super-admin", icon: "system", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "Dashboard", ar: "لوحة التحكم", path: "/dashboard", icon: "grid", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "Projects", ar: "المشاريع", path: "/projects", icon: "folder", roles: ["admin", "general-manager", "project-manager", "employee"] },
   { label: "Tasks", ar: "المهام", path: "/tasks", icon: "check", roles: ["admin", "general-manager", "project-manager", "employee"] },
