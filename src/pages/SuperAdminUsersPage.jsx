@@ -1,5 +1,7 @@
+import { useState } from "react";
 import {
   FiDownload,
+  FiEye,
   FiFilter,
   FiMoreVertical,
   FiPlus,
@@ -7,6 +9,7 @@ import {
   FiUserCheck,
   FiUserPlus,
   FiUsers,
+  FiX,
   FiZap
 } from "react-icons/fi";
 import { SuperAdminShell } from "./SuperAdminConsolePage.jsx";
@@ -73,6 +76,8 @@ const users = [
 ];
 
 export default function SuperAdminUsersPage() {
+  const [addUserOpen, setAddUserOpen] = useState(false);
+
   return (
     <SuperAdminShell active="Users">
       <div className="super-admin-page">
@@ -90,7 +95,7 @@ export default function SuperAdminUsersPage() {
               <FiDownload aria-hidden="true" />
               <span>Export Users</span>
             </button>
-            <button className="super-admin-primary-action" type="button">
+            <button className="super-admin-primary-action" type="button" onClick={() => setAddUserOpen(true)}>
               <FiPlus aria-hidden="true" />
               <span>Create User</span>
             </button>
@@ -193,7 +198,72 @@ export default function SuperAdminUsersPage() {
           </footer>
         </section>
       </div>
+      {addUserOpen ? <AddUserModal onClose={() => setAddUserOpen(false)} /> : null}
     </SuperAdminShell>
+  );
+}
+
+function AddUserModal({ onClose }) {
+  return (
+    <div className="super-admin-modal-layer" role="presentation">
+      <button className="super-admin-modal-backdrop" type="button" aria-label="Close add user modal" onClick={onClose} />
+      <section className="super-admin-add-user-modal" role="dialog" aria-modal="true" aria-labelledby="add-user-title">
+        <header>
+          <h2 id="add-user-title">Add New User</h2>
+          <button type="button" aria-label="Close add user modal" onClick={onClose}>
+            <FiX aria-hidden="true" />
+          </button>
+        </header>
+
+        <form>
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-user-name">Full Name</label>
+            <input id="new-user-name" placeholder="e.g. John Doe" type="text" />
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-user-company">Company</label>
+            <select id="new-user-company" defaultValue="">
+              <option value="" disabled>Select Company</option>
+              <option>Nexus Tech Solutions</option>
+              <option>Global Reach Corp</option>
+              <option>Helios Energy</option>
+              <option>Vortex Creative</option>
+              <option>Skyline Logistics</option>
+            </select>
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-user-role">Role</label>
+            <select id="new-user-role" defaultValue="Employee">
+              <option>Employee</option>
+              <option>Manager</option>
+              <option>Company Admin</option>
+            </select>
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-user-email">Email Address</label>
+            <input id="new-user-email" placeholder="john.doe@example.com" type="email" />
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-user-password">Password</label>
+            <div className="super-admin-password-field">
+              <input id="new-user-password" placeholder="********" type="password" />
+              <button type="button" aria-label="Show password">
+                <FiEye aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <footer>
+            <button className="super-admin-modal-cancel" type="button" onClick={onClose}>Cancel</button>
+            <button className="super-admin-modal-submit" type="button">Create User</button>
+          </footer>
+        </form>
+      </section>
+    </div>
   );
 }
 

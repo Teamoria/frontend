@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   FiBriefcase,
   FiCheckCircle,
@@ -7,6 +8,7 @@ import {
   FiMoreVertical,
   FiPlus,
   FiSearch,
+  FiX,
   FiUsers
 } from "react-icons/fi";
 import { SuperAdminShell } from "./SuperAdminConsolePage.jsx";
@@ -71,6 +73,8 @@ const companies = [
 ];
 
 export default function SuperAdminCompaniesPage() {
+  const [registerCompanyOpen, setRegisterCompanyOpen] = useState(false);
+
   return (
     <SuperAdminShell active="Companies">
       <div className="super-admin-page">
@@ -80,7 +84,7 @@ export default function SuperAdminCompaniesPage() {
             <h1>Companies Management</h1>
             <p>Manage tenant accounts, subscription state, seats, and onboarding status across Teamoria.</p>
           </div>
-          <button className="super-admin-primary-action" type="button">
+          <button className="super-admin-primary-action" type="button" onClick={() => setRegisterCompanyOpen(true)}>
             <FiPlus aria-hidden="true" />
             <span>Add Company</span>
           </button>
@@ -164,7 +168,66 @@ export default function SuperAdminCompaniesPage() {
           </div>
         </section>
       </div>
+      {registerCompanyOpen ? <RegisterCompanyModal onClose={() => setRegisterCompanyOpen(false)} /> : null}
     </SuperAdminShell>
+  );
+}
+
+function RegisterCompanyModal({ onClose }) {
+  return (
+    <div className="super-admin-modal-layer" role="presentation">
+      <button className="super-admin-modal-backdrop" type="button" aria-label="Close register company modal" onClick={onClose} />
+      <section className="super-admin-add-user-modal super-admin-register-company-modal" role="dialog" aria-modal="true" aria-labelledby="register-company-title">
+        <header>
+          <h2 id="register-company-title">Register New Company</h2>
+          <button type="button" aria-label="Close register company modal" onClick={onClose}>
+            <FiX aria-hidden="true" />
+          </button>
+        </header>
+
+        <form>
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-company-name">Company Name</label>
+            <input id="new-company-name" placeholder="e.g. Acme Corp" type="text" />
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-company-industry">Industry</label>
+            <select id="new-company-industry" defaultValue="Technology">
+              <option>Technology</option>
+              <option>Healthcare</option>
+              <option>Finance</option>
+              <option>Manufacturing</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-company-website">Website</label>
+            <input id="new-company-website" placeholder="https://example.com" type="url" />
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-company-logo">Company Logo Path</label>
+            <input id="new-company-logo" placeholder="/assets/logos/company.png" type="text" />
+          </div>
+
+          <div className="super-admin-modal-field">
+            <label htmlFor="new-company-status">Initial Status</label>
+            <select id="new-company-status" defaultValue="active">
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+
+          <footer>
+            <button className="super-admin-modal-cancel" type="button" onClick={onClose}>Cancel</button>
+            <button className="super-admin-modal-submit" type="button">Register Company</button>
+          </footer>
+        </form>
+      </section>
+    </div>
   );
 }
 
