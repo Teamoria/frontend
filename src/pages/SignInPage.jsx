@@ -24,12 +24,12 @@ export default function SignInPage() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const payload = await loginWithEmail({
+      const { user } = await loginWithEmail({
         email: formData.get("email"),
         password: formData.get("password")
       });
-      login(payload?.data?.user || payload?.data || null);
-      window.location.hash = "/dashboard";
+      login(user);
+      window.location.hash = user?.role === "admin" ? "/super-admin" : "/dashboard";
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {

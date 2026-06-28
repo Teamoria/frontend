@@ -40,6 +40,48 @@ input {
   font: inherit;
 }
 
+.access-message-page {
+  align-items: center;
+  background: #f7f8fc;
+  color: var(--ink);
+  display: flex;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.access-message-page section {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin: 0 auto;
+  max-width: 460px;
+  padding: 28px;
+  width: 100%;
+}
+
+.access-message-page h1 {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+
+.access-message-page p {
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+.access-message-page a {
+  align-items: center;
+  background: var(--brand);
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  font-weight: 800;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
 select {
   background: transparent;
   border: 0;

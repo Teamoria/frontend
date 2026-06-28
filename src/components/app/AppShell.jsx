@@ -1,6 +1,7 @@
 import { FiBarChart2, FiBriefcase, FiCloud, FiFolder, FiHome, FiMessageCircle, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
+import { useAuth } from "../../lib/AuthContext.jsx";
 import "../../styles/app-shell.css";
 
 const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
@@ -25,8 +26,15 @@ const rolePreviewProfiles = {
 };
 
 export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
+  const { user: authUser } = useAuth();
   const previewRole = new URLSearchParams(window.location.search).get("role");
-  const profile = rolePreviewProfiles[previewRole] || { user, role, roleId };
+  const profile =
+    rolePreviewProfiles[previewRole] ||
+    {
+      user: authUser?.name || user,
+      role: authUser?.role || role,
+      roleId: authUser?.role || roleId
+    };
   return (
     <main className="product-shell" dir="ltr">
       <AppSidebar active={active} roleId={profile.roleId} />
@@ -39,7 +47,14 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
 }
 
 export function AppSidebar({ active = "Dashboard", roleId = "project-manager" }) {
-  const visibleNav = navItems;
+  const { isAdmin } = useAuth();
+  const visibleNav = navItems.filter((item) => {
+    if (item.path.startsWith("/super-admin")) {
+      return isAdmin;
+    }
+
+    return !item.roles || item.roles.includes(roleId) || item.roles.includes("employee");
+  });
 
   return (
     <aside className="product-sidebar">

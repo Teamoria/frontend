@@ -14,10 +14,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    getCurrentUser()
-      .then((payload) => {
-        setUser(payload?.data?.user || payload?.data || null);
-      })
+    refreshUser()
       .catch(() => {
         clearAccessToken();
         setUser(null);
@@ -26,6 +23,13 @@ export function AuthProvider({ children }) {
         setIsLoading(false);
       });
   }, []);
+
+  async function refreshUser() {
+    const payload = await getCurrentUser();
+    const nextUser = payload?.data?.user || payload?.data || payload?.user || payload || null;
+    setUser(nextUser);
+    return nextUser;
+  }
 
   function login(userData) {
     setUser(userData);
@@ -42,8 +46,10 @@ export function AuthProvider({ children }) {
     window.location.hash = "/signin";
   }
 
+  const isAdmin = user?.role === "admin";
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, isLoading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

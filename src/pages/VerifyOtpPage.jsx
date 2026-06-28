@@ -53,11 +53,11 @@ export default function VerifyOtpPage() {
       });
 
       if (pendingSignup.password) {
-        const payload = await loginWithEmail({
+        const { user } = await loginWithEmail({
           email: pendingSignup.email,
           password: pendingSignup.password
         });
-        login(payload?.data?.user || payload?.data || null);
+        login(user);
       }
 
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
@@ -79,7 +79,7 @@ export default function VerifyOtpPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      const payload = await sendOtp({ email: pendingSignup.email, type: "register" });
+      await sendOtp({ email: pendingSignup.email, type: "register" });
       setStatus({ type: "success", message: "A new verification code was sent." });
     } catch (error) {
       setStatus({ type: "error", message: error.message });

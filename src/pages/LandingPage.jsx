@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiArrowRight,
   FiGrid,
@@ -6,11 +6,13 @@ import {
   FiUsers,
   FiZap
 } from "react-icons/fi";
+import logoImage from "../assets/teamoria-logo.png";
 import "../styles/landing.css";
 
 const copy = {
   en: {
     dir: "ltr",
+    home: "Home",
     features: "Features",
     how: "How it Works",
     pricing: "Pricing",
@@ -34,6 +36,7 @@ const copy = {
   },
   ar: {
     dir: "rtl",
+    home: "الرئيسية",
     features: "الميزات",
     how: "كيف يعمل",
     pricing: "الأسعار",
@@ -136,12 +139,34 @@ export default function LandingPage() {
   const [lang, setLang] = useState("en");
   const t = copy[lang];
 
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+
+    if (!hash || hash === "/") {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, []);
+
+  function goHome(event) {
+    event.preventDefault();
+    window.location.hash = "/";
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    });
+  }
+
   return (
     <main className="teamoria-home" dir={t.dir}>
       <header className="home-topbar">
         <nav>
-          <a className="home-logo" href="#/">Teamoria</a>
+          <a className="home-logo" href="#/" onClick={goHome}>
+            <span className="home-logo-mark" aria-hidden="true">
+              <img src={logoImage} alt="" />
+            </span>
+            <span className="home-logo-text">Teamoria</span>
+          </a>
           <div className="home-links">
+            <a href="#/" onClick={goHome}>{t.home}</a>
             <a href="#features">{t.features}</a>
             <a href="#workflow">{t.how}</a>
             <a href="#pricing">{t.pricing}</a>
@@ -157,7 +182,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <section className="home-hero">
+      <section className="home-hero" id="home">
         <div className="home-hero-inner">
           <span className="home-pill"><FiZap aria-hidden="true" />{t.badge}</span>
           <h1>
@@ -243,7 +268,12 @@ export default function LandingPage() {
       <footer className="home-footer">
         <div className="home-footer-grid">
           <div>
-            <a className="home-logo" href="#/">Teamoria</a>
+            <a className="home-logo" href="#/" onClick={goHome}>
+              <span className="home-logo-mark" aria-hidden="true">
+                <img src={logoImage} alt="" />
+              </span>
+              <span className="home-logo-text">Teamoria</span>
+            </a>
             <p>{footerCopy[lang].description}</p>
           </div>
           <FooterColumn title={footerCopy[lang].product} items={["Features", "Security", "Integrations", "Roadmap"]} />

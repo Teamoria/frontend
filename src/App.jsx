@@ -22,6 +22,34 @@ import SuperAdminConsolePage from "./pages/SuperAdminConsolePage.jsx";
 import SuperAdminCompaniesPage from "./pages/SuperAdminCompaniesPage.jsx";
 import SuperAdminUsersPage from "./pages/SuperAdminUsersPage.jsx";
 import SuperAdminPaymentsPage from "./pages/SuperAdminPaymentsPage.jsx";
+import SuperAdminProfilePage, { SuperAdminProfileSettingsPage } from "./pages/SuperAdminProfilePage.jsx";
+import { useAuth } from "./lib/AuthContext.jsx";
+
+const adminRoutes = new Set([
+  "/super-admin",
+  "/super-admin/companies",
+  "/super-admin/users",
+  "/super-admin/payments",
+  "/super-admin/profile-settings",
+  "/super-admin/profile"
+]);
+
+const workspaceRoutes = new Set([
+  "/dashboard",
+  "/projects",
+  "/tasks",
+  "/meetings",
+  "/workspace",
+  "/uploads",
+  "/ai-chat",
+  "/agent-runs",
+  "/agent-run-details",
+  "/workspace-graph",
+  "/employees",
+  "/reports",
+  "/settings",
+  "/profile"
+]);
 
 const routes = {
   "/": LandingPage,
@@ -46,7 +74,9 @@ const routes = {
   "/super-admin": SuperAdminConsolePage,
   "/super-admin/companies": SuperAdminCompaniesPage,
   "/super-admin/users": SuperAdminUsersPage,
-  "/super-admin/payments": SuperAdminPaymentsPage
+  "/super-admin/payments": SuperAdminPaymentsPage,
+  "/super-admin/profile-settings": SuperAdminProfileSettingsPage,
+  "/super-admin/profile": SuperAdminProfilePage
 };
 
 function getPath() {
@@ -57,6 +87,7 @@ function getPath() {
 
 export default function App() {
   const [path, setPath] = useState(getPath);
+  const { isAdmin, isLoading, user } = useAuth();
 
   useEffect(() => {
     const onHashChange = () => setPath(getPath());
@@ -66,5 +97,43 @@ export default function App() {
 
   const Page = useMemo(() => routes[path] || LandingPage, [path]);
 
+  if (workspaceRoutes.has(path)) {
+    if (isLoading) {
+      return <AccessMessage title="Loading..." message="Checking your permissions." />;
+    }
+
+    if (isAdmin) {
+      window.location.hash = path === "/profile" ? "/super-admin/profile" : "/super-admin";
+      return null;
+    }
+  }
+
+  if (adminRoutes.has(path)) {
+    if (isLoading) {
+      return <AccessMessage title="Loading..." message="Checking your permissions." />;
+    }
+
+    if (!user) {
+      window.location.hash = "/signin";
+      return null;
+    }
+
+    if (!isAdmin) {
+      return <AccessMessage title="You are not authorized" message="Admin pages are only available for admin users." />;
+    }
+  }
+
   return <Page />;
+}
+
+function AccessMessage({ title, message }) {
+  return (
+    <main className="access-message-page">
+      <section>
+        <h1>{title}</h1>
+        <p>{message}</p>
+        <a href="#/dashboard">Back to dashboard</a>
+      </section>
+    </main>
+  );
 }

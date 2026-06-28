@@ -1,16 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FiAlertTriangle,
   FiBarChart2,
   FiBell,
-  FiBookOpen,
   FiBriefcase,
   FiCalendar,
   FiChevronDown,
-  FiClock,
   FiCreditCard,
-  FiHelpCircle,
-  FiLock,
+  FiMenu,
   FiLogOut,
   FiMoreVertical,
   FiSearch,
@@ -19,46 +16,15 @@ import {
   FiUser,
   FiUsers
 } from "react-icons/fi";
+import { listCompanies, listUsers } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/super-admin-console.css";
 
 const navItems = [
   { label: "Dashboard", icon: FiBarChart2, path: "/super-admin" },
-  { label: "Companies", icon: FiBriefcase, path: "/super-admin/companies" },
-  { label: "Users", icon: FiUsers, path: "/super-admin/users" },
-  { label: "Payments", icon: FiCreditCard, path: "/super-admin/payments" },
-  { label: "System Config", icon: FiSettings, path: "/super-admin/config" }
-];
-
-const metrics = [
-  {
-    label: "Total Companies",
-    value: "1,284",
-    detail: "(42 Pending)",
-    change: "+12% vs LW",
-    icon: FiBriefcase,
-    tone: "primary"
-  },
-  {
-    label: "Total Users",
-    value: "84,520",
-    change: "+8% vs LW",
-    icon: FiUsers,
-    tone: "secondary"
-  },
-  {
-    label: "Monthly Revenue",
-    value: "$1.42M",
-    change: "+24% vs LM",
-    icon: FiBarChart2,
-    tone: "neutral"
-  },
-  {
-    label: "System Health",
-    value: "Stable",
-    change: "Uptime: 99.9%",
-    icon: FiShield,
-    tone: "alert"
-  }
+  { label: "Companies Management", icon: FiBriefcase, path: "/super-admin/companies" },
+  { label: "User Management", icon: FiUsers, path: "/super-admin/users" },
+  { label: "Profile / Settings", icon: FiSettings, path: "/super-admin/profile-settings" }
 ];
 
 const adoptionBars = [
@@ -129,6 +95,76 @@ const notifications = [
 ];
 
 export default function SuperAdminConsolePage() {
+  const [stats, setStats] = useState({ users: null, companies: null });
+  const [status, setStatus] = useState({ loading: true, error: "" });
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadStats() {
+      setStatus({ loading: true, error: "" });
+      try {
+        const [usersPayload, companiesPayload] = await Promise.all([
+          listUsers(),
+          listCompanies()
+        ]);
+        const usersPagination = usersPayload?.data?.pagination || {};
+        const companiesPagination = companiesPayload?.data?.pagination || {};
+
+        if (!ignore) {
+          setStats({
+            users: usersPagination.total ?? usersPayload?.data?.users?.length ?? 0,
+            companies: companiesPagination.total ?? companiesPayload?.data?.companies?.length ?? 0
+          });
+          setStatus({ loading: false, error: "" });
+        }
+      } catch (error) {
+        if (!ignore) {
+          setStatus({ loading: false, error: error.message });
+        }
+      }
+    }
+
+    loadStats();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const metrics = [
+    {
+      label: "Total Companies",
+      value: status.loading ? "..." : formatNumber(stats.companies),
+      detail: "From companies pagination",
+      change: "Live API",
+      icon: FiBriefcase,
+      tone: "primary"
+    },
+    {
+      label: "Total Users",
+      value: status.loading ? "..." : formatNumber(stats.users),
+      detail: "From users pagination",
+      change: "Live API",
+      icon: FiUsers,
+      tone: "secondary"
+    },
+    {
+      label: "Monthly Revenue",
+      value: "Placeholder",
+      change: "Waiting for API",
+      icon: FiBarChart2,
+      tone: "neutral"
+    },
+    {
+      label: "System Health",
+      value: "Placeholder",
+      change: "Waiting for API",
+      icon: FiShield,
+      tone: "alert"
+    }
+  ];
+
   return (
     <SuperAdminShell active="Dashboard">
       <div className="super-admin-page">
@@ -148,6 +184,7 @@ export default function SuperAdminConsolePage() {
             <MetricCard key={metric.label} {...metric} />
           ))}
         </section>
+        {status.error ? <p className="super-admin-state super-admin-state--error">{status.error}</p> : null}
 
         <section className="super-admin-bento">
           <PlatformAdoptionChart />
@@ -172,6 +209,8 @@ export function SuperAdminShell({ active = "Dashboard", children }) {
 }
 
 function SuperAdminSidebar({ active }) {
+  const { logout } = useAuth();
+
   return (
     <aside className="super-admin-sidebar">
       <a className="super-admin-brand" href="#/super-admin">
@@ -188,28 +227,34 @@ function SuperAdminSidebar({ active }) {
         ))}
       </nav>
 
-      <button className="super-admin-report-button" type="button">Generate Reports</button>
-
       <div className="super-admin-sidebar-footer">
-        <a href="#/super-admin">
-          <FiBookOpen aria-hidden="true" />
-          <span>Documentation</span>
-        </a>
-        <a href="#/signin">
-          <FiSettings aria-hidden="true" />
+        <button type="button" onClick={logout}>
+          <FiLogOut aria-hidden="true" />
           <span>Logout</span>
-        </a>
+        </button>
       </div>
     </aside>
   );
 }
 
 function SuperAdminTopbar() {
+  const { user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const initials = getInitials(user?.name || user?.email || "Admin User");
 
   return (
     <header className="super-admin-topbar">
+      <button
+        className="super-admin-mobile-menu-button"
+        type="button"
+        aria-expanded={mobileMenuOpen}
+        aria-label="Open admin menu"
+        onClick={() => setMobileMenuOpen((open) => !open)}
+      >
+        <FiMenu aria-hidden="true" />
+      </button>
       <label className="super-admin-search">
         <FiSearch aria-hidden="true" />
         <input placeholder="Search systems, companies or users..." />
@@ -230,12 +275,6 @@ function SuperAdminTopbar() {
         </button>
         {notificationsOpen ? <NotificationsOverlay /> : null}
         </div>
-        <button type="button" aria-label="Help">
-          <FiHelpCircle aria-hidden="true" />
-        </button>
-        <button type="button" aria-label="Settings">
-          <FiSettings aria-hidden="true" />
-        </button>
         <div className="super-admin-profile-anchor">
           <button
             className="super-admin-profile-trigger"
@@ -247,48 +286,68 @@ function SuperAdminTopbar() {
               setProfileOpen((open) => !open);
             }}
           >
-            <span>AU</span>
-            <b>Admin User</b>
+            <span>{initials}</span>
+            <b>{user?.name || "Admin User"}</b>
             <FiChevronDown aria-hidden="true" />
           </button>
-          {profileOpen ? <ProfileContextMenu /> : null}
+          {profileOpen ? <ProfileContextMenu user={user} initials={initials} /> : null}
         </div>
       </div>
+      {mobileMenuOpen ? <SuperAdminMobileMenu onClose={() => setMobileMenuOpen(false)} /> : null}
     </header>
   );
 }
 
-function ProfileContextMenu() {
+function SuperAdminMobileMenu({ onClose }) {
+  const { logout } = useAuth();
+
+  function handleLogout() {
+    onClose();
+    logout();
+  }
+
+  return (
+    <div className="super-admin-mobile-menu-layer" role="presentation">
+      <button className="super-admin-mobile-menu-backdrop" type="button" aria-label="Close admin menu" onClick={onClose} />
+      <section className="super-admin-mobile-menu" aria-label="Admin mobile navigation">
+        <header>
+          <span>Teamoria</span>
+          <small>Super Admin Console</small>
+        </header>
+        <nav>
+          {navItems.map(({ icon: Icon, label, path }) => (
+            <a href={`#${path}`} key={label} onClick={onClose}>
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+            </a>
+          ))}
+        </nav>
+        <button type="button" onClick={handleLogout}>
+          <FiLogOut aria-hidden="true" />
+          <span>Logout</span>
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function ProfileContextMenu({ user, initials }) {
   return (
     <section className="super-admin-profile-menu" aria-label="Profile context menu">
       <header>
-        <span>AU</span>
+        <span>{initials}</span>
         <div>
-          <h2>Admin User</h2>
-          <p>admin@gigem.ai</p>
-          <small>Super Admin</small>
+          <h2>{user?.name || "Admin User"}</h2>
+          <p>{user?.email || "admin@example.com"}</p>
+          <small>{user?.role || "admin"}</small>
         </div>
       </header>
       <nav aria-label="Profile actions">
-        <a href="#/profile">
+        <a href="#/super-admin/profile-settings">
           <FiUser aria-hidden="true" />
           <span>Profile Settings</span>
         </a>
-        <a href="#/super-admin/config">
-          <FiLock aria-hidden="true" />
-          <span>Security</span>
-        </a>
-        <a href="#/super-admin">
-          <FiClock aria-hidden="true" />
-          <span>Activity Logs</span>
-        </a>
       </nav>
-      <footer>
-        <a href="#/signin">
-          <FiLogOut aria-hidden="true" />
-          <span>Logout</span>
-        </a>
-      </footer>
     </section>
   );
 }
@@ -449,4 +508,18 @@ function RecentOnboardingTable() {
       </div>
     </section>
   );
+}
+
+function formatNumber(value) {
+  if (value === null || value === undefined) return "0";
+  return Number(value).toLocaleString();
+}
+
+function getInitials(value) {
+  return String(value)
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "AU";
 }

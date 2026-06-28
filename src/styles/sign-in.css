@@ -426,3 +426,70 @@
     gap: 14px 18px;
   }
 }
+
+/* Desktop viewport lock: keep sign in fixed at 100% zoom without hidden overflow below the fold. */
+@media (min-width: 1101px) {
+  .auth-shell.sign-in-shell {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .auth-shell.sign-in-shell .auth-visual,
+  .auth-shell.sign-in-shell .auth-panel {
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .auth-shell.sign-in-shell .auth-visual {
+    padding: clamp(24px, 3.2vw, 48px);
+  }
+
+  .auth-shell.sign-in-shell .auth-visual > .brand {
+    left: clamp(32px, 4vw, 72px);
+    top: clamp(28px, 4vw, 52px);
+  }
+
+  .auth-shell.sign-in-shell .auth-copy {
+    bottom: clamp(26px, 3.4vw, 48px);
+    left: clamp(32px, 4vw, 72px);
+  }
+
+  .auth-shell.sign-in-shell .auth-copy h1 {
+    font-size: clamp(32px, 3vw, 44px);
+    max-width: 560px;
+  }
+
+  .sign-in-visual-content {
+    transform: translateY(-34px);
+    width: min(58%, 640px);
+  }
+
+  .auth-shell.sign-in-shell .auth-panel {
+    padding: clamp(22px, 3vw, 44px) clamp(28px, 4vw, 72px);
+  }
+
+  .auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .sign-in-form {
+    max-height: calc(100dvh - 72px);
+  }
+
+  .auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .sign-in-header p {
+    margin-bottom: 26px !important;
+  }
+
+  .auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .form-row {
+    margin: 16px 0 20px !important;
+  }
+
+  .auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .divider {
+    margin: 22px 0 16px !important;
+  }
+
+  .auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .auth-switch {
+    margin-top: 18px !important;
+  }
+
+  .sign-in-footer {
+    display: none;
+  }
+}

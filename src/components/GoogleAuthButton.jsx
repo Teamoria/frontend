@@ -19,9 +19,9 @@ export default function GoogleAuthButton({ children, disabled = false, onError, 
           throw new Error("Google did not return an access token.");
         }
 
-        const payload = await loginWithGoogle(tokenResponse.access_token);
-        login(payload?.data?.user || payload?.data || null);
-        window.location.hash = "/dashboard";
+        const { user } = await loginWithGoogle(tokenResponse.access_token);
+        login(user);
+        window.location.hash = user?.role === "admin" ? "/super-admin" : "/dashboard";
       } catch (error) {
         onError?.(error.message);
       } finally {

@@ -997,3 +997,282 @@
     display: inline-flex !important;
   }
 }
+
+/* Landing 100% scale refinement */
+.teamoria-home .home-topbar {
+  min-height: 64px !important;
+}
+
+.teamoria-home {
+  padding-top: 64px !important;
+}
+
+.teamoria-home .home-topbar nav {
+  height: 64px !important;
+  max-width: 1220px !important;
+  padding: 0 22px !important;
+}
+
+.teamoria-home .home-logo {
+  font-size: 28px !important;
+  line-height: 1 !important;
+}
+
+.teamoria-home .home-logo {
+  align-items: center !important;
+  display: inline-flex !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+}
+
+.teamoria-home .home-logo-mark {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.teamoria-home .home-logo-mark img {
+  display: block;
+  height: 40px;
+  object-fit: contain;
+  width: 40px;
+}
+
+.teamoria-home .home-logo-text {
+  color: var(--home-primary);
+  font-family: "Be Vietnam Pro", "Noto Sans Arabic", sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.teamoria-home .home-footer .home-logo {
+  margin-bottom: 18px;
+}
+
+.teamoria-home .home-footer .home-logo-text {
+  color: #ffffff;
+}
+
+.teamoria-home .home-links a {
+  font-size: 12px !important;
+  min-height: 34px !important;
+  padding: 0 12px !important;
+}
+
+.teamoria-home .home-lang-toggle button {
+  min-height: 28px !important;
+  padding: 0 11px !important;
+}
+
+.teamoria-home .home-login,
+.teamoria-home .home-start {
+  min-height: 38px !important;
+}
+
+.teamoria-home .home-start {
+  min-width: 124px !important;
+  padding: 0 20px !important;
+}
+
+.teamoria-home .home-hero {
+  padding: 34px 24px 96px !important;
+}
+
+.teamoria-home .home-hero-inner {
+  max-width: 1040px !important;
+}
+
+.teamoria-home .home-pill {
+  font-size: 12px !important;
+  padding: 8px 16px !important;
+}
+
+.teamoria-home .home-hero h1 {
+  font-size: 58px !important;
+  line-height: 1.08 !important;
+  margin: 28px auto 18px !important;
+  max-width: 960px !important;
+}
+
+.teamoria-home .home-hero p {
+  font-size: 17px !important;
+  line-height: 1.55 !important;
+  max-width: 760px !important;
+}
+
+.teamoria-home .home-hero-actions {
+  gap: 14px !important;
+  margin-top: 28px !important;
+}
+
+.teamoria-home .home-primary-cta,
+.teamoria-home .home-secondary-cta {
+  font-size: 17px !important;
+  min-height: 52px !important;
+  padding: 0 28px !important;
+}
+
+.teamoria-home .home-product-preview {
+  margin-top: 46px !important;
+  max-width: 1080px !important;
+}
+
+.teamoria-home .home-preview-frame {
+  border-radius: 10px !important;
+  box-shadow: 0 28px 72px rgba(23, 27, 44, 0.16) !important;
+}
+
+@media (max-width: 1200px) {
+  .teamoria-home .home-hero h1 {
+    font-size: 50px !important;
+    max-width: 860px !important;
+  }
+
+  .teamoria-home .home-hero {
+    padding-bottom: 84px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .teamoria-home {
+    padding-top: 0 !important;
+  }
+
+  .teamoria-home .home-topbar {
+    position: sticky !important;
+  }
+
+  .teamoria-home .home-topbar nav {
+    height: auto !important;
+    padding: 14px 18px !important;
+  }
+
+  .teamoria-home .home-logo {
+    font-size: 26px !important;
+  }
+
+  .teamoria-home .home-logo-mark,
+  .teamoria-home .home-logo-mark img {
+    height: 36px;
+    width: 36px;
+  }
+
+  .teamoria-home .home-logo-text {
+    font-size: 26px;
+  }
+
+  .teamoria-home .home-hero {
+    padding: 38px 18px 70px !important;
+  }
+
+  .teamoria-home .home-hero h1 {
+    font-size: 38px !important;
+    line-height: 1.12 !important;
+    margin-top: 24px !important;
+  }
+
+  .teamoria-home .home-hero p {
+    font-size: 15px !important;
+  }
+
+  .teamoria-home .home-product-preview {
+    margin-top: 34px !important;
+  }
+}
+
+/* Anchor navigation refinement: keep section jumps tight under the fixed topbar. */
+.teamoria-home section[id] {
+  scroll-margin-top: 68px !important;
+}
+
+.teamoria-home .home-features {
+  padding-top: 72px !important;
+  padding-bottom: 108px !important;
+}
+
+.teamoria-home .home-workflow {
+  padding-top: 72px !important;
+  padding-bottom: 108px !important;
+}
+
+.teamoria-home .home-cta {
+  padding-top: 72px !important;
+  padding-bottom: 108px !important;
+}
+
+@media (max-width: 980px) {
+  .teamoria-home section[id] {
+    scroll-margin-top: 96px !important;
+  }
+
+  .teamoria-home .home-features,
+  .teamoria-home .home-workflow,
+  .teamoria-home .home-cta {
+    padding-top: 56px !important;
+    padding-bottom: 80px !important;
+  }
+}
+
+/* First viewport fit: keep the hero preview visible on 100% desktop zoom. */
+@media (min-width: 1201px) {
+  .teamoria-home .home-hero {
+    min-height: calc(100dvh - 64px);
+    padding-top: 28px !important;
+    padding-bottom: 34px !important;
+  }
+
+  .teamoria-home .home-pill {
+    padding: 7px 14px !important;
+  }
+
+  .teamoria-home .home-hero h1 {
+    font-size: 48px !important;
+    line-height: 1.08 !important;
+    margin: 22px auto 14px !important;
+    max-width: 900px !important;
+  }
+
+  .teamoria-home .home-hero p {
+    font-size: 16px !important;
+    line-height: 1.45 !important;
+    max-width: 720px !important;
+  }
+
+  .teamoria-home .home-hero-actions {
+    margin-top: 22px !important;
+  }
+
+  .teamoria-home .home-primary-cta,
+  .teamoria-home .home-secondary-cta {
+    font-size: 16px !important;
+    min-height: 48px !important;
+    padding: 0 26px !important;
+  }
+
+  .teamoria-home .home-product-preview {
+    margin-top: 30px !important;
+    max-width: 640px !important;
+  }
+
+  .teamoria-home .home-preview-frame {
+    align-items: center;
+    background: transparent !important;
+    border: 0 !important;
+    display: flex;
+    height: auto;
+    justify-content: center;
+    overflow: visible !important;
+  }
+
+  .teamoria-home .home-platform-image {
+    border-radius: 10px;
+    box-shadow: 0 28px 72px rgba(23, 27, 44, 0.16);
+    height: auto;
+    object-fit: cover;
+    width: 100%;
+  }
+}

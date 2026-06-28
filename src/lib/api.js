@@ -1,11 +1,20 @@
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:8000";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_ORIGIN ||
+  "http://localhost:8000";
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const TOKEN_KEY = "teamoria_access_token";
 
 function buildUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `${API_ORIGIN}/api/${API_VERSION}${cleanPath}`;
+  const cleanBaseUrl = API_BASE_URL.replace(/\/$/, "");
+
+  if (cleanBaseUrl.endsWith(`/api/${API_VERSION}`)) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
+
+  return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
 }
 
 export function getAccessToken() {
@@ -22,7 +31,28 @@ export function clearAccessToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-export async function apiRequest(path, { method = "GET", body, auth = false } = {}) {
+export class ApiError extends Error {
+  constructor(message, { status, payload } = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
+function normalizeData(payload) {
+  return payload?.data ?? payload;
+}
+
+function extractToken(payload) {
+  return payload?.token || payload?.data?.token || payload?.access_token || payload?.data?.access_token || "";
+}
+
+function getProfileFromPayload(payload) {
+  return payload?.data?.user || payload?.data || payload?.user || payload || null;
+}
+
+export async function apiRequest(path, { method = "GET", body, auth = false, query } = {}) {
   const headers = {
     Accept: "application/json"
   };
@@ -42,7 +72,17 @@ export async function apiRequest(path, { method = "GET", body, auth = false } = 
     }
   }
 
-  const response = await fetch(buildUrl(path), {
+  const url = new URL(buildUrl(path));
+
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, value);
+      }
+    });
+  }
+
+  const response = await fetch(url.toString(), {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined
@@ -66,7 +106,17 @@ export async function apiRequest(path, { method = "GET", body, auth = false } = 
       }
     }
 
-    throw new Error(message);
+    if (response.status === 401) {
+      clearAccessToken();
+      window.location.hash = "/signin";
+      throw new ApiError(message || "Session expired. Please sign in again.", { status: response.status, payload });
+    }
+
+    if (response.status === 403) {
+      throw new ApiError("You are not authorized", { status: response.status, payload });
+    }
+
+    throw new ApiError(message, { status: response.status, payload });
   }
 
   return payload;
@@ -78,8 +128,10 @@ export async function loginWithEmail({ email, password }) {
     body: { email, password }
   });
 
-  setAccessToken(payload?.data?.token);
-  return payload;
+  const token = extractToken(payload);
+  setAccessToken(token);
+  const profilePayload = await getCurrentUser();
+  return { token, user: getProfileFromPayload(profilePayload), payload };
 }
 
 export async function loginWithGoogle(providerToken) {
@@ -90,8 +142,10 @@ export async function loginWithGoogle(providerToken) {
     }
   });
 
-  setAccessToken(payload?.data?.token);
-  return payload;
+  const token = extractToken(payload);
+  setAccessToken(token);
+  const profilePayload = await getCurrentUser();
+  return { token, user: getProfileFromPayload(profilePayload), payload };
 }
 
 export async function registerWithEmail({ name, email, password }) {
@@ -134,7 +188,7 @@ export async function verifyOtp({ email, code, type = "register", newPassword })
 }
 
 export async function getCurrentUser() {
-  return apiRequest("/test-if-logged-in", { auth: true });
+  return apiRequest("/profile", { auth: true });
 }
 
 export async function logoutUser() {
@@ -151,4 +205,81 @@ export async function forgotPasswordSendOtp({ email }) {
 
 export async function forgotPasswordVerify({ email, code, newPassword }) {
   return verifyOtp({ email, code, type: "forgot-password", newPassword });
+}
+
+export async function resetPassword({ old_password, new_password, new_password_confirmation }) {
+  return apiRequest("/auth/reset-password", {
+    method: "POST",
+    auth: true,
+    body: { old_password, new_password, new_password_confirmation }
+  });
+}
+
+export async function updateProfile(body) {
+  const allowedFields = ["name", "email", "phone", "timezone", "password", "password_confirmation"];
+  const cleanBody = {};
+
+  allowedFields.forEach((field) => {
+    if (body[field] !== undefined && body[field] !== "") {
+      cleanBody[field] = body[field];
+    }
+  });
+
+  return apiRequest("/profile", {
+    method: "PATCH",
+    auth: true,
+    body: cleanBody
+  });
+}
+
+export function listUsers({ page, archived } = {}) {
+  return apiRequest("/users", { auth: true, query: { page, archived: archived ? "true" : undefined } });
+}
+
+export function createUser(body) {
+  return apiRequest("/users", { method: "POST", auth: true, body });
+}
+
+export function updateUser(id, body) {
+  return apiRequest(`/users/${id}`, { method: "PUT", auth: true, body });
+}
+
+export function deleteUser(id) {
+  return apiRequest(`/users/${id}`, { method: "DELETE", auth: true });
+}
+
+export function restoreUser(id) {
+  return apiRequest(`/users/${id}/restore`, { method: "PATCH", auth: true });
+}
+
+export function forceDeleteUser(id) {
+  return apiRequest(`/users/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function listCompanies({ page, archived } = {}) {
+  return apiRequest("/companies", { auth: true, query: { page, archived: archived ? "true" : undefined } });
+}
+
+export function createCompany(body) {
+  return apiRequest("/companies", { method: "POST", auth: true, body });
+}
+
+export function updateCompany(id, body) {
+  return apiRequest(`/companies/${id}`, { method: "PUT", auth: true, body });
+}
+
+export function deleteCompany(id) {
+  return apiRequest(`/companies/${id}`, { method: "DELETE", auth: true });
+}
+
+export function restoreCompany(id) {
+  return apiRequest(`/companies/${id}/restore`, { method: "PATCH", auth: true });
+}
+
+export function forceDeleteCompany(id) {
+  return apiRequest(`/companies/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function getPayloadData(payload) {
+  return normalizeData(payload);
 }
