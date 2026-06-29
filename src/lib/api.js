@@ -76,7 +76,13 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item !== undefined && item !== null && item !== "") {
+            url.searchParams.append(key, item);
+          }
+        });
+      } else if (value !== undefined && value !== null && value !== "") {
         url.searchParams.set(key, value);
       }
     });
@@ -113,7 +119,7 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
     }
 
     if (response.status === 403) {
-      throw new ApiError("You are not authorized", { status: response.status, payload });
+      throw new ApiError(message || "You are not authorized", { status: response.status, payload });
     }
 
     throw new ApiError(message, { status: response.status, payload });
@@ -130,8 +136,13 @@ export async function loginWithEmail({ email, password }) {
 
   const token = extractToken(payload);
   setAccessToken(token);
-  const profilePayload = await getCurrentUser();
-  return { token, user: getProfileFromPayload(profilePayload), payload };
+  try {
+    const profilePayload = await getCurrentUser();
+    return { token, user: getProfileFromPayload(profilePayload), payload };
+  } catch (error) {
+    clearAccessToken();
+    throw error;
+  }
 }
 
 export async function loginWithGoogle(providerToken) {
@@ -144,8 +155,13 @@ export async function loginWithGoogle(providerToken) {
 
   const token = extractToken(payload);
   setAccessToken(token);
-  const profilePayload = await getCurrentUser();
-  return { token, user: getProfileFromPayload(profilePayload), payload };
+  try {
+    const profilePayload = await getCurrentUser();
+    return { token, user: getProfileFromPayload(profilePayload), payload };
+  } catch (error) {
+    clearAccessToken();
+    throw error;
+  }
 }
 
 export async function registerWithEmail({ name, email, password }) {
@@ -280,6 +296,59 @@ export function forceDeleteCompany(id) {
   return apiRequest(`/companies/${id}/force-delete`, { method: "DELETE", auth: true });
 }
 
+export function listStaff({ page, archived, roles, statuses } = {}) {
+  return apiRequest("/staff", {
+    auth: true,
+    query: {
+      page,
+      archived: archived ? "true" : undefined,
+      "roles[]": roles,
+      "statuses[]": statuses
+    }
+  });
+}
+
+export function getStaffMember(id) {
+  return apiRequest(`/staff/${id}`, { auth: true });
+}
+
+export function createStaffMember(body) {
+  return apiRequest("/staff", { method: "POST", auth: true, body: normalizeStaffBody(body) });
+}
+
+export function updateStaffMember(id, body) {
+  return apiRequest(`/staff/${id}`, { method: "PUT", auth: true, body: normalizeStaffBody(body, { partial: true }) });
+}
+
+export function deleteStaffMember(id) {
+  return apiRequest(`/staff/${id}`, { method: "DELETE", auth: true });
+}
+
+export function restoreStaffMember(id) {
+  return apiRequest(`/staff/${id}/restore`, { method: "PATCH", auth: true });
+}
+
+export function forceDeleteStaffMember(id) {
+  return apiRequest(`/staff/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
 export function getPayloadData(payload) {
   return normalizeData(payload);
+}
+
+function normalizeStaffBody(body, { partial = false } = {}) {
+  const allowedFields = ["name", "email", "password", "password_confirmation", "role", "status"];
+  const cleanBody = {};
+
+  allowedFields.forEach((field) => {
+    if (body[field] !== undefined && body[field] !== "") {
+      cleanBody[field] = body[field];
+    }
+  });
+
+  if (!partial && cleanBody.password && !cleanBody.password_confirmation) {
+    cleanBody.password_confirmation = cleanBody.password;
+  }
+
+  return cleanBody;
 }

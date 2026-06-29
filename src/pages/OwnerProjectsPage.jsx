@@ -68,7 +68,7 @@ export default function OwnerProjectsPage() {
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
 
   return (
-    <AppShell active="Owner Projects" role="Company Owner" roleId="owner" user="Company Owner">
+    <AppShell active="Projects" role="Company Owner" roleId="owner" user="Company Owner">
       <div className="owner-projects-toolbar">
         <label className="owner-projects-search">
           <FiSearch aria-hidden="true" />

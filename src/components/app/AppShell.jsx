@@ -28,16 +28,58 @@ const rolePreviewProfiles = {
 };
 
 const ownerNavItems = [
-  { label: "Owner Projects", path: "/owner/projects", icon: "folder" },
+  { label: "Dashboard", path: "/dashboard", icon: "grid" },
+  { label: "Employees", path: "/employees", icon: "users" },
+  { label: "Projects", path: "/owner/projects", icon: "folder" },
+  { label: "Tasks", path: "/tasks", icon: "check" },
   { label: "Operations Board", path: "/owner/operations", icon: "check" },
   { label: "Upload Center", path: "/owner/uploads", icon: "upload" },
-  { label: "Team Performance", path: "/owner/team-performance", icon: "chart" }
+  { label: "AI Chat", path: "/ai-chat", icon: "spark" },
+  { label: "Settings", path: "/settings", icon: "settings" },
+  { label: "Profile", path: "/profile", icon: "profile" }
 ];
 
+const managerNavItems = [
+  { label: "Dashboard", path: "/dashboard", icon: "grid" },
+  { label: "Projects", path: "/projects", icon: "folder" },
+  { label: "Tasks", path: "/tasks", icon: "check" },
+  { label: "Upload Center", path: "/uploads", icon: "upload" },
+  { label: "AI Chat", path: "/ai-chat", icon: "spark" },
+  { label: "Profile", path: "/profile", icon: "profile" }
+];
+
+const memberNavItems = [
+  { label: "Dashboard", path: "/dashboard", icon: "grid" },
+  { label: "My Tasks", path: "/tasks", icon: "check" },
+  { label: "Upload Center", path: "/uploads", icon: "upload" },
+  { label: "AI Chat", path: "/ai-chat", icon: "spark" },
+  { label: "Profile", path: "/profile", icon: "profile" }
+];
+
+const apiRoleToShellRole = {
+  admin: "admin",
+  company_owner: "owner",
+  company_manager: "general-manager",
+  company_member: "employee"
+};
+
+const apiRoleLabel = {
+  admin: "Platform Admin",
+  company_owner: "Company Owner",
+  company_manager: "Company Manager",
+  company_member: "Company Member"
+};
+
 export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
-  const { user: authUser } = useAuth();
+  const { user: authUser, normalizedRole } = useAuth();
   const previewRole = new URLSearchParams(window.location.search).get("role");
+  const mappedAuthRole = apiRoleToShellRole[normalizedRole];
   const profile =
+    (authUser ? {
+      user: authUser.name || authUser.email || user,
+      role: apiRoleLabel[normalizedRole] || normalizedRole || role,
+      roleId: mappedAuthRole || roleId
+    } : null) ||
     rolePreviewProfiles[previewRole] ||
     rolePreviewProfiles[roleId] ||
     {
@@ -57,8 +99,8 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
 }
 
 export function AppSidebar({ active = "Dashboard", roleId = "project-manager" }) {
-  const { isAdmin } = useAuth();
-  const visibleNav = roleId === "owner" ? ownerNavItems : getWorkspaceNavItems(isAdmin, roleId);
+  const { isAdmin, normalizedRole } = useAuth();
+  const visibleNav = getRoleNavItems(normalizedRole, isAdmin, roleId);
 
   return (
     <aside className="product-sidebar">
@@ -76,9 +118,19 @@ export function AppSidebar({ active = "Dashboard", roleId = "project-manager" })
           );
         })}
       </nav>
-      <a className="sidebar-new-project" href={roleId === "owner" ? "#/owner/projects" : "#/projects"}>+ <span>New Project</span></a>
+      {normalizedRole === "company_member" ? null : (
+        <a className="sidebar-new-project" href={normalizedRole === "company_owner" ? "#/owner/projects" : "#/projects"}>+ <span>New Project</span></a>
+      )}
     </aside>
   );
+}
+
+function getRoleNavItems(role, isAdmin, roleId) {
+  if (role === "company_owner") return ownerNavItems;
+  if (role === "company_manager") return managerNavItems;
+  if (role === "company_member") return memberNavItems;
+  if (roleId === "owner") return ownerNavItems;
+  return getWorkspaceNavItems(isAdmin, roleId);
 }
 
 function getWorkspaceNavItems(isAdmin, roleId) {
@@ -102,6 +154,7 @@ function getWorkspaceNavItems(isAdmin, roleId) {
 export function Topbar({ user, role }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const { logout } = useAuth();
   const initials = (user || "U").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   useEffect(() => {
@@ -173,7 +226,15 @@ export function Topbar({ user, role }) {
                     <FiBell /> Notifications
                   </a>
                   <hr className="pd-divider" />
-                  <button className="pd-item pd-danger" type="button" role="menuitem" onClick={() => setOpen(false)}>
+                  <button
+                    className="pd-item pd-danger"
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpen(false);
+                      logout();
+                    }}
+                  >
                     <FiLogOut /> Sign Out
                   </button>
                 </div>

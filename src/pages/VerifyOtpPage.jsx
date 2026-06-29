@@ -8,6 +8,18 @@ import { useAuth } from "../lib/AuthContext.jsx";
 const PENDING_SIGNUP_KEY = "teamoria_pending_signup";
 
 function getPendingSignup() {
+  const hashQuery = window.location.hash.split("?")[1] || "";
+  const params = new URLSearchParams(hashQuery);
+  const email = params.get("email");
+  const type = params.get("type");
+
+  if (email) {
+    return {
+      email,
+      type: type || "register"
+    };
+  }
+
   try {
     return JSON.parse(sessionStorage.getItem(PENDING_SIGNUP_KEY) || "null");
   } catch {
@@ -18,6 +30,7 @@ function getPendingSignup() {
 export default function VerifyOtpPage() {
   const { login } = useAuth();
   const [pendingSignup, setPendingSignup] = useState(getPendingSignup);
+  const [hasAutoSent, setHasAutoSent] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -30,6 +43,29 @@ export default function VerifyOtpPage() {
       });
     }
   }, [pendingSignup]);
+
+  useEffect(() => {
+    if (!pendingSignup?.email || hasAutoSent || pendingSignup.password) return;
+
+    setHasAutoSent(true);
+    setIsResending(true);
+    sendOtp({ email: pendingSignup.email, type: pendingSignup.type || "register" })
+      .then((payload) => {
+        const developmentCode = extractOtpCode(payload);
+        setStatus({
+          type: "success",
+          message: developmentCode
+            ? `A verification code was sent to your email. Development OTP: ${developmentCode}`
+            : "A verification code was sent to your email."
+        });
+      })
+      .catch((error) => {
+        setStatus({ type: "error", message: error.message });
+      })
+      .finally(() => {
+        setIsResending(false);
+      });
+  }, [hasAutoSent, pendingSignup]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -49,7 +85,7 @@ export default function VerifyOtpPage() {
       await verifyOtp({
         email: pendingSignup.email,
         code,
-        type: "register"
+        type: pendingSignup.type || "register"
       });
 
       if (pendingSignup.password) {
@@ -58,10 +94,13 @@ export default function VerifyOtpPage() {
           password: pendingSignup.password
         });
         login(user);
+        sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+        window.location.hash = "/dashboard";
+        return;
       }
 
       sessionStorage.removeItem(PENDING_SIGNUP_KEY);
-      window.location.hash = "/dashboard";
+      window.location.hash = "/signin";
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -79,8 +118,14 @@ export default function VerifyOtpPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      await sendOtp({ email: pendingSignup.email, type: "register" });
-      setStatus({ type: "success", message: "A new verification code was sent." });
+      const payload = await sendOtp({ email: pendingSignup.email, type: pendingSignup.type || "register" });
+      const developmentCode = extractOtpCode(payload);
+      setStatus({
+        type: "success",
+        message: developmentCode
+          ? `A new verification code was sent. Development OTP: ${developmentCode}`
+          : "A new verification code was sent."
+      });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -129,6 +174,18 @@ export default function VerifyOtpPage() {
         <a className="back-link" href="#/signup"><span aria-hidden="true">&lt;-</span> Back to Sign Up</a>
       </form>
     </AuthLayout>
+  );
+}
+
+function extractOtpCode(payload) {
+  return (
+    payload?.data?.code ||
+    payload?.data?.otp ||
+    payload?.data?.otp_code ||
+    payload?.code ||
+    payload?.otp ||
+    payload?.otp_code ||
+    ""
   );
 }
 

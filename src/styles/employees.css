@@ -295,6 +295,24 @@
   color: #d23b4a;
 }
 
+.employees-status--pending {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.employees-status--suspended {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.employees-empty-cell {
+  color: var(--product-muted);
+  font-size: 14px;
+  font-weight: 850;
+  padding: 34px 20px !important;
+  text-align: center;
+}
+
 .employees-actions {
   display: flex;
   gap: 8px;
@@ -636,7 +654,8 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.employee-profile-actions button {
+.employee-profile-actions button,
+.employee-profile-actions a {
   align-items: center;
   background: #ffffff;
   border: 1px solid var(--product-line);
@@ -647,11 +666,14 @@
   flex-direction: column;
   font-weight: 900;
   gap: 10px;
+  justify-content: center;
   min-height: 108px;
   padding: 18px 10px;
+  text-decoration: none;
 }
 
-.employee-profile-actions button svg {
+.employee-profile-actions button svg,
+.employee-profile-actions a svg {
   color: #1a44c2;
   height: 22px;
   width: 22px;

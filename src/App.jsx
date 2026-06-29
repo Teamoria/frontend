@@ -62,6 +62,35 @@ const workspaceRoutes = new Set([
   "/profile"
 ]);
 
+const companyOwnerRoutes = new Set([
+  "/dashboard",
+  "/employees",
+  "/owner/projects",
+  "/tasks",
+  "/owner/operations",
+  "/owner/uploads",
+  "/ai-chat",
+  "/settings",
+  "/profile"
+]);
+
+const companyManagerRoutes = new Set([
+  "/dashboard",
+  "/projects",
+  "/tasks",
+  "/uploads",
+  "/ai-chat",
+  "/profile"
+]);
+
+const companyMemberRoutes = new Set([
+  "/dashboard",
+  "/tasks",
+  "/uploads",
+  "/ai-chat",
+  "/profile"
+]);
+
 const routes = {
   "/": LandingPage,
   "/signin": SignInPage,
@@ -105,7 +134,7 @@ function getPath() {
 
 export default function App() {
   const [path, setPath] = useState(getPath);
-  const { isAdmin, isLoading, user } = useAuth();
+  const { isAdmin, isCompanyOwner, isCompanyUser, isLoading, normalizedRole, user } = useAuth();
 
   useEffect(() => {
     const onHashChange = () => setPath(getPath());
@@ -122,6 +151,17 @@ export default function App() {
 
     if (isAdmin) {
       window.location.hash = path === "/profile" ? "/super-admin/profile" : "/super-admin";
+      return null;
+    }
+
+    if (!user) {
+      window.location.hash = "/signin";
+      return null;
+    }
+
+    const allowedRoutes = getAllowedWorkspaceRoutes(normalizedRole);
+    if (isCompanyUser && allowedRoutes && !allowedRoutes.has(path)) {
+      window.location.hash = "/dashboard";
       return null;
     }
   }
@@ -142,6 +182,13 @@ export default function App() {
   }
 
   return <Page />;
+}
+
+function getAllowedWorkspaceRoutes(role) {
+  if (role === "company_owner") return companyOwnerRoutes;
+  if (role === "company_manager") return companyManagerRoutes;
+  if (role === "company_member") return companyMemberRoutes;
+  return null;
 }
 
 function AccessMessage({ title, message }) {

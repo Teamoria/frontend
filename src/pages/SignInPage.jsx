@@ -31,7 +31,17 @@ export default function SignInPage() {
       login(user);
       window.location.hash = user?.role === "admin" ? "/super-admin" : "/dashboard";
     } catch (error) {
-      setStatus({ type: "error", message: error.message });
+      const errorCode = error.payload?.error_code;
+      if (errorCode === "EMAIL_NOT_VERIFIED") {
+        const email = encodeURIComponent(String(formData.get("email") || ""));
+        sessionStorage.setItem("teamoria_pending_signup", JSON.stringify({
+          email: formData.get("email"),
+          type: "register"
+        }));
+        window.location.hash = `/verify-otp?email=${email}&type=register`;
+        return;
+      }
+      setStatus({ type: "error", message: errorCode ? `${error.message} (${errorCode})` : error.message });
     } finally {
       setIsSubmitting(false);
     }

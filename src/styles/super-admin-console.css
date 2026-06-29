@@ -1785,6 +1785,8 @@
   border: 1px solid var(--sa-line);
   border-radius: 8px;
   box-shadow: 0 28px 70px rgba(19, 27, 46, 0.22);
+  display: flex;
+  flex-direction: column;
   max-height: calc(100vh - 32px);
   overflow: hidden;
   position: relative;
@@ -1833,6 +1835,7 @@
 .super-admin-add-user-modal form {
   display: grid;
   gap: 16px;
+  overflow-y: auto;
   padding: 24px;
 }
 
@@ -1889,6 +1892,8 @@
   justify-content: flex-end;
   margin: 8px -24px -24px;
   padding: 16px 24px;
+  position: sticky;
+  bottom: -24px;
 }
 
 .super-admin-modal-cancel,

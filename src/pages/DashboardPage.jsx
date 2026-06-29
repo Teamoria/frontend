@@ -19,7 +19,7 @@ import {
   FiZap
 } from "react-icons/fi";
 import "../styles/dashboard.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityOverviewChart,
   AIInsightCard,
@@ -30,8 +30,10 @@ import {
 } from "../components/dashboard/DashboardComponents.jsx";
 import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashboardInsights.js";
 import { AppSidebar } from "../components/app/AppShell.jsx";
+import { useAuth } from "../lib/AuthContext.jsx";
 
 const roleProfiles = {
+  owner: { label: "Company Owner", initials: "CO", dashboard: "owner" },
   "general-manager": { label: "General Manager", initials: "GM", dashboard: "owner" },
   "project-manager": { label: "Project Manager", initials: "PM", dashboard: "execution" },
   employee: { label: "Employee", initials: "EM", dashboard: "employee" }
@@ -45,16 +47,16 @@ const execMetrics = [
 ];
 
 const ownerMetrics = [
-  { label: "Total Budget Utilization", value: "$142.8M", detail: "+12.4%", icon: FiCreditCard, tone: "primary", progress: 65 },
-  { label: "Global Project Health", value: "94.2%", detail: "Optimal", icon: FiShield, tone: "secondary", progress: 75 },
-  { label: "Total Workforce", value: "3,842", detail: "+42 hires", icon: FiUsers, tone: "neutral", progress: 84 },
-  { label: "AI Efficiency ROI", value: "$24.5M Saved", detail: "3.2x Yield", icon: FiZap, tone: "ai", progress: 92 }
+  { label: "Company Spend Utilization", value: "$142.8K", detail: "Mock data", icon: FiCreditCard, tone: "primary", progress: 65 },
+  { label: "Company Project Health", value: "94.2%", detail: "Mock data", icon: FiShield, tone: "secondary", progress: 75 },
+  { label: "Company Workforce", value: "43", detail: "Mock data", icon: FiUsers, tone: "neutral", progress: 84 },
+  { label: "AI Efficiency Estimate", value: "128h Saved", detail: "Mock data", icon: FiZap, tone: "ai", progress: 92 }
 ];
 
 const ownerTeams = [
-  ["AI-R", "AI Research Lab", "Zurich Office", "142 pts", "Elite", "primary", 3],
-  ["SaaS", "SaaS Products", "Palo Alto", "118 pts", "Stable", "green", 2],
-  ["Fin", "Finance Operations", "London Center", "94 pts", "Caution", "amber", 1]
+  ["ENG", "Engineering", "Company workspace", "142 pts", "Elite", "primary", 3],
+  ["OPS", "Operations", "Company workspace", "118 pts", "Stable", "green", 2],
+  ["FIN", "Finance", "Company workspace", "94 pts", "Caution", "amber", 1]
 ];
 
 const overdueTasks = [
@@ -64,8 +66,16 @@ const overdueTasks = [
 ];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [roleId, setRoleId] = useState(getDashboardRole);
   const profile = roleProfiles[roleId] || roleProfiles["project-manager"];
+
+  useEffect(() => {
+    const dashboardRole = mapApiRoleToDashboardRole(user?.role);
+    if (dashboardRole) {
+      setRoleId(dashboardRole);
+    }
+  }, [user?.role]);
 
   function handleRoleChange(newRoleId) {
     localStorage.setItem("teamoria_preview_role", newRoleId);
@@ -73,7 +83,7 @@ export default function DashboardPage() {
   }
 
   if (profile.dashboard === "owner") {
-    return <OwnerDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
+    return <OwnerDashboard authUser={user} roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
   }
 
   if (profile.dashboard === "employee") {
@@ -82,7 +92,10 @@ export default function DashboardPage() {
 
   return <ExecutionDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
 }
-function OwnerDashboard({ roleId, profile, onRoleChange }) {
+function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
+  const isPreview = !authUser;
+  const companyName = authUser?.company?.name || "Your Company";
+
   return (
     <main className="owner-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
@@ -90,7 +103,7 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
         <header className="owner-topbar">
           <label className="owner-search">
             <FiSearch aria-hidden="true" />
-            <input placeholder="Search organization data..." />
+            <input placeholder="Search company data..." />
           </label>
           <TopActions avatar={profile.initials} classNamePrefix="owner" />
         </header>
@@ -98,10 +111,10 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
         <div className="owner-page">
           <section className="owner-hero-row">
             <div>
-              <h2>Organization Overview</h2>
+              <h2>{companyName} Overview</h2>
               <p>
-                Enterprise-wide analytics for Teamoria Group. Synchronized AI oversight
-                across departments, regions, budgets, and project health.
+                Company workspace overview for members, projects, tasks, uploads, and AI activity.
+                Some sections use mock data until their backend APIs are ready.
               </p>
             </div>
             <div className="owner-period">
@@ -110,7 +123,7 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
             </div>
           </section>
 
-          <RoleSwitcher activeRole={roleId} variant="owner" onRoleChange={onRoleChange} />
+          {isPreview ? <RoleSwitcher activeRole={roleId} variant="owner" onRoleChange={onRoleChange} /> : null}
 
           <section className="owner-metrics-grid">
             {ownerMetrics.map((metric) => (
@@ -171,7 +184,7 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
                   classNamePrefix="owner"
                   icon={<FiAlertTriangle />}
                   text="Legacy Cloud Migration project in EMEA region has exceeded allocated monthly spend by 18%."
-                  title="Budget Overrun Risk"
+                  title="Project Spend Risk"
                   tone="error"
                 />
                 <RiskCard
@@ -180,7 +193,7 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
                   classNamePrefix="owner"
                   icon={<FiBriefcase />}
                   text="Full-stack engineering capacity is at 104% across 4 projects. Estimated 2 week delay if not mitigated."
-                  title="Resource Bottleneck"
+                  title="Team Capacity Bottleneck"
                   tone="secondary"
                 />
               </section>
@@ -191,8 +204,8 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
                 <div className="owner-ai-head">
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
-                    <h3>AI Growth Hub</h3>
-                    <p>Strategic Suggestions</p>
+                  <h3>AI Company Hub</h3>
+                    <p>Mock strategic suggestions</p>
                   </div>
                 </div>
                 <div className="owner-ai-suggestions">
@@ -202,8 +215,8 @@ function OwnerDashboard({ roleId, profile, onRoleChange }) {
                 </div>
                 <article className="owner-projection-card">
                   <span>Projection</span>
-                  <h4>2025 Headcount Plan</h4>
-                  <p>Model predicts needing 80+ additional Data Engineers to maintain current scaling trajectory.</p>
+                  <h4>Staffing Plan</h4>
+                  <p>Mock model predicts hiring needs based on project and task activity.</p>
                   <button type="button">Generate HR Roadmap</button>
                 </article>
               </section>
@@ -634,6 +647,13 @@ function getDashboardRole() {
   const storedRole = localStorage.getItem("teamoria_preview_role");
   const role = hashRole || urlRole || storedRole || "project-manager";
   return roleProfiles[role] ? role : "project-manager";
+}
+
+function mapApiRoleToDashboardRole(role) {
+  if (role === "company_owner") return "owner";
+  if (role === "company_manager") return "general-manager";
+  if (role === "company_member") return "employee";
+  return "";
 }
 
 

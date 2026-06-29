@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import AppShell from "../components/app/AppShell.jsx";
 import { FiCalendar, FiChevronDown, FiFilter, FiGrid, FiList, FiMoreHorizontal, FiPlus, FiUser, FiZap } from "react-icons/fi";
+import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/tasks.css";
 
 const emptyTask = {
@@ -59,9 +60,11 @@ const initialColumns = [
 ];
 
 export default function TasksPage() {
+  const { normalizedRole } = useAuth();
   const [columns, setColumns] = useState(initialColumns);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskDraft, setTaskDraft] = useState(emptyTask);
+  const isMember = normalizedRole === "company_member";
 
   const totalTasks = useMemo(
     () => columns.reduce((total, column) => total + column.tasks.length, 0),
@@ -99,7 +102,7 @@ export default function TasksPage() {
   }
 
   return (
-    <AppShell active="Tasks" user="Alex Rivera" role="Lead Product Manager">
+    <AppShell active={isMember ? "My Tasks" : "Tasks"} user="Alex Rivera" role="Lead Product Manager">
       <div className="tasks-workspace">
         <div className="tasks-page-head">
           <div>
@@ -111,9 +114,11 @@ export default function TasksPage() {
               <button className="active" type="button"><FiGrid aria-hidden="true" />Board</button>
               <button type="button"><FiList aria-hidden="true" />List</button>
             </div>
-            <button className="tasks-primary-button" type="button" onClick={() => setIsModalOpen(true)}>
-              <FiPlus aria-hidden="true" />New Task
-            </button>
+            {isMember ? null : (
+              <button className="tasks-primary-button" type="button" onClick={() => setIsModalOpen(true)}>
+                <FiPlus aria-hidden="true" />New Task
+              </button>
+            )}
           </div>
         </div>
 

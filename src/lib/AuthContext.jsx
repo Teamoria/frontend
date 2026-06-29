@@ -3,6 +3,16 @@ import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken } from "./
 
 const AuthContext = createContext(null);
 
+function normalizeRole(role) {
+  const cleanRole = String(role || "").toLowerCase().replace(/[\s-]+/g, "_");
+
+  if (cleanRole === "owner" || cleanRole === "company_admin") return "company_owner";
+  if (cleanRole === "manager") return "company_manager";
+  if (cleanRole === "member") return "company_member";
+
+  return cleanRole;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,10 +56,13 @@ export function AuthProvider({ children }) {
     window.location.hash = "/signin";
   }
 
-  const isAdmin = user?.role === "admin";
+  const normalizedRole = normalizeRole(user?.role);
+  const isAdmin = normalizedRole === "admin";
+  const isCompanyOwner = normalizedRole === "company_owner";
+  const isCompanyUser = ["company_owner", "company_manager", "company_member"].includes(normalizedRole);
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, isLoading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, normalizedRole, isAdmin, isCompanyOwner, isCompanyUser, isLoading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
