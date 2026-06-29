@@ -1,4 +1,5 @@
-import { FiBarChart2, FiBriefcase, FiCloud, FiFolder, FiHome, FiMessageCircle, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
+import { useState, useRef, useEffect } from "react";
+import { FiBarChart2, FiBriefcase, FiBell, FiCloud, FiChevronDown, FiFolder, FiHome, FiLogOut, FiMessageCircle, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
@@ -98,24 +99,33 @@ function getWorkspaceNavItems(isAdmin, roleId) {
     return !item.roles || item.roles.includes(roleId) || item.roles.includes("employee");
   });
 }
-
 export function Topbar({ user, role }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const initials = (user || "U").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (!ref.current?.contains(e.target)) setOpen(false);
+    }
+    function handleEsc(e) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
+
   return (
     <header className="product-topbar">
       <label className="product-search">
         <span className="search-icon" aria-hidden="true" />
         <input placeholder="Search everywhere..." />
       </label>
-      <div className="command-strip">
-        <button type="button">Create</button>
-        <button type="button">Ask AI</button>
-        <button type="button">Upload</button>
-      </div>
       <div className="topbar-cluster">
-        <div className="icon-control-group" aria-label="Language and appearance">
-          <button className="icon-button active" type="button" title="Language">GL</button>
-          <button className="icon-button" type="button" title="Light mode">SUN</button>
-        </div>
         <button className="notification-button" type="button" aria-label="Notifications">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V10a6 6 0 1 0-12 0v4.2a2 2 0 0 1-.6 1.4L4 17h5" />
@@ -129,7 +139,47 @@ export function Topbar({ user, role }) {
             <b>{user}</b>
             <small>{role}</small>
           </div>
-          <button className="profile-caret" type="button" aria-label="Open profile menu">v</button>
+          <div className="pd-wrap" ref={ref}>
+            <button
+              className="profile-caret"
+              type="button"
+              aria-label="Open profile menu"
+              aria-expanded={open}
+              aria-haspopup="true"
+              onClick={() => setOpen((v) => !v)}
+            >
+              <FiChevronDown style={{ transition: "transform .18s", transform: open ? "rotate(180deg)" : "none" }} />
+            </button>
+            {open && (
+              <div className="pd-menu" role="menu">
+                <div className="pd-header">
+                  <div className="pd-avatar">{initials}</div>
+                  <div>
+                    <b>{user}</b>
+                    <small>{role}</small>
+                  </div>
+                </div>
+                <div className="pd-items">
+                  <a className="pd-item" href="#/profile" role="menuitem" onClick={() => setOpen(false)}>
+                    <FiUser /> View Profile
+                  </a>
+                  <a className="pd-item" href="#/settings" role="menuitem" onClick={() => setOpen(false)}>
+                    <FiSettings /> Settings
+                  </a>
+                  <a className="pd-item" href="#/settings" role="menuitem" onClick={() => setOpen(false)}>
+                    <FiShield /> Security
+                  </a>
+                  <a className="pd-item" href="#/settings" role="menuitem" onClick={() => setOpen(false)}>
+                    <FiBell /> Notifications
+                  </a>
+                  <hr className="pd-divider" />
+                  <button className="pd-item pd-danger" type="button" role="menuitem" onClick={() => setOpen(false)}>
+                    <FiLogOut /> Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

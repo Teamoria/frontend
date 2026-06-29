@@ -17,9 +17,9 @@ import {
   FiTrendingUp,
   FiUsers,
   FiX,
-  FiZap
+  FiZap,
 } from "react-icons/fi";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import AppShell, { PageHeader } from "../components/app/AppShell.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/owner-projects.css";
@@ -372,3 +372,4 @@ function AiObjectivesStep() {
     </section>
   );
 }
+

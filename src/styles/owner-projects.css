@@ -95,7 +95,7 @@
   padding: 20px;
 }
 
-.owner-projects-summary-card > div {
+.owner-projects-summary-card>div {
   align-items: flex-start;
   display: flex;
   justify-content: space-between;
@@ -203,7 +203,7 @@
   margin-bottom: 5px;
 }
 
-.owner-projects-table td > span:not(.owner-projects-priority):not(.owner-projects-health):not(.owner-projects-status) {
+.owner-projects-table td>span:not(.owner-projects-priority):not(.owner-projects-health):not(.owner-projects-status) {
   color: #505f76;
   font-size: 12px;
 }
@@ -665,7 +665,7 @@
   padding: 20px 24px;
 }
 
-.initialize-project-footer > div {
+.initialize-project-footer>div {
   display: flex;
   gap: 12px;
 }
@@ -739,6 +739,7 @@
 }
 
 @media (max-width: 760px) {
+
   .owner-projects-summary-grid,
   .owner-projects-table-panel,
   .owner-projects-bottom-grid {
@@ -764,7 +765,7 @@
     flex-direction: column;
   }
 
-  .initialize-project-footer > div {
+  .initialize-project-footer>div {
     flex-direction: column;
   }
 
