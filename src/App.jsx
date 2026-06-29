@@ -16,6 +16,10 @@ import AgentRunDetailsPage from "./pages/AgentRunDetailsPage.jsx";
 import WorkspaceGraphPage from "./pages/WorkspaceGraphPage.jsx";
 import EmployeesPage from "./pages/EmployeesPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
+import TeamPerformanceOversightPage from "./pages/TeamPerformanceOversightPage.jsx";
+import OwnerProjectsPage from "./pages/OwnerProjectsPage.jsx";
+import OwnerOperationsPage from "./pages/OwnerOperationsPage.jsx";
+import OwnerUploadCenterPage from "./pages/OwnerUploadCenterPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import SuperAdminConsolePage from "./pages/SuperAdminConsolePage.jsx";
@@ -46,6 +50,13 @@ const workspaceRoutes = new Set([
   "/agent-run-details",
   "/workspace-graph",
   "/employees",
+  "/owner/projects",
+  "/owner/operations",
+  "/owner/uploads",
+  "/team-performance",
+  "/owner/team-performance",
+  "/ower/team-performance",
+  "/ower /team-performance",
   "/reports",
   "/settings",
   "/profile"
@@ -68,6 +79,13 @@ const routes = {
   "/agent-run-details": AgentRunDetailsPage,
   "/workspace-graph": WorkspaceGraphPage,
   "/employees": EmployeesPage,
+  "/owner/projects": OwnerProjectsPage,
+  "/owner/operations": OwnerOperationsPage,
+  "/owner/uploads": OwnerUploadCenterPage,
+  "/team-performance": TeamPerformanceOversightPage,
+  "/owner/team-performance": TeamPerformanceOversightPage,
+  "/ower/team-performance": TeamPerformanceOversightPage,
+  "/ower /team-performance": TeamPerformanceOversightPage,
   "/reports": ReportsPage,
   "/settings": SettingsPage,
   "/profile": ProfilePage,

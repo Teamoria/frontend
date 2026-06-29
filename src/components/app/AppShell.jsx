@@ -19,17 +19,26 @@ const sidebarIconMap = {
   profile: FiUser
 };
 const rolePreviewProfiles = {
+  owner: { user: "Company Owner", role: "Company Owner", roleId: "owner" },
   admin: { user: "Ahmed Alyazouri", role: "Company Admin", roleId: "admin" },
   "general-manager": { user: "Aseel Harazeen", role: "General Manager", roleId: "general-manager" },
   "project-manager": { user: "Fares Namlah", role: "Project Manager", roleId: "project-manager" },
   employee: { user: "Sarah Johnson", role: "Employee", roleId: "employee" }
 };
 
+const ownerNavItems = [
+  { label: "Owner Projects", path: "/owner/projects", icon: "folder" },
+  { label: "Operations Board", path: "/owner/operations", icon: "check" },
+  { label: "Upload Center", path: "/owner/uploads", icon: "upload" },
+  { label: "Team Performance", path: "/owner/team-performance", icon: "chart" }
+];
+
 export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
   const { user: authUser } = useAuth();
   const previewRole = new URLSearchParams(window.location.search).get("role");
   const profile =
     rolePreviewProfiles[previewRole] ||
+    rolePreviewProfiles[roleId] ||
     {
       user: authUser?.name || user,
       role: authUser?.role || role,
@@ -48,13 +57,7 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
 
 export function AppSidebar({ active = "Dashboard", roleId = "project-manager" }) {
   const { isAdmin } = useAuth();
-  const visibleNav = navItems.filter((item) => {
-    if (item.path.startsWith("/super-admin")) {
-      return isAdmin;
-    }
-
-    return !item.roles || item.roles.includes(roleId) || item.roles.includes("employee");
-  });
+  const visibleNav = roleId === "owner" ? ownerNavItems : getWorkspaceNavItems(isAdmin, roleId);
 
   return (
     <aside className="product-sidebar">
@@ -72,9 +75,28 @@ export function AppSidebar({ active = "Dashboard", roleId = "project-manager" })
           );
         })}
       </nav>
-      <a className="sidebar-new-project" href="#/projects">+ <span>New Project</span></a>
+      <a className="sidebar-new-project" href={roleId === "owner" ? "#/owner/projects" : "#/projects"}>+ <span>New Project</span></a>
     </aside>
   );
+}
+
+function getWorkspaceNavItems(isAdmin, roleId) {
+  const navWithPerformance = navItems.flatMap((item) => {
+    if (item.path === "/reports") {
+      return [
+        item
+      ];
+    }
+
+    return [item];
+  });
+  return navWithPerformance.filter((item) => {
+    if (item.path.startsWith("/super-admin")) {
+      return isAdmin;
+    }
+
+    return !item.roles || item.roles.includes(roleId) || item.roles.includes("employee");
+  });
 }
 
 export function Topbar({ user, role }) {
