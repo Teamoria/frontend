@@ -1,3 +1,5 @@
+import { isDemoMode } from "./demoMode.js";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_ORIGIN ||
@@ -5,6 +7,91 @@ const API_BASE_URL =
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const TOKEN_KEY = "teamoria_access_token";
+
+const demoCompanies = [
+  {
+    id: "demo-company-1",
+    name: "NexuTech Solutions",
+    industry: "Enterprise Software",
+    website: "https://nexutech.example",
+    address: "San Francisco, CA",
+    status: "active",
+    created_at: "2026-04-12T09:00:00Z",
+    updated_at: "2026-06-18T14:30:00Z"
+  },
+  {
+    id: "demo-company-2",
+    name: "Quantum Labs",
+    industry: "AI Research",
+    website: "https://quantumlabs.example",
+    address: "Austin, TX",
+    status: "active",
+    created_at: "2026-03-04T11:20:00Z",
+    updated_at: "2026-06-22T10:15:00Z"
+  },
+  {
+    id: "demo-company-3",
+    name: "Velo Analytics",
+    industry: "Business Intelligence",
+    website: "https://velo.example",
+    address: "London, UK",
+    status: "suspended",
+    created_at: "2026-02-17T08:45:00Z",
+    updated_at: "2026-06-08T16:10:00Z"
+  }
+];
+
+const demoUsers = [
+  {
+    id: "demo-user-1",
+    name: "Super Admin",
+    email: "superadmin@teamoria.demo",
+    role: "admin",
+    status: "active",
+    company: null,
+    last_login_at: "2026-06-30T09:20:00Z"
+  },
+  {
+    id: "demo-user-2",
+    name: "Ahmed Alyazouri",
+    email: "admin@teamoria.demo",
+    role: "company_owner",
+    status: "active",
+    company: demoCompanies[0],
+    company_id: demoCompanies[0].id,
+    last_login_at: "2026-06-29T18:10:00Z"
+  },
+  {
+    id: "demo-user-3",
+    name: "Aseel Harazeen",
+    email: "manager@teamoria.demo",
+    role: "company_manager",
+    status: "active",
+    company: demoCompanies[1],
+    company_id: demoCompanies[1].id,
+    last_login_at: "2026-06-28T12:35:00Z"
+  },
+  {
+    id: "demo-user-4",
+    name: "Sarah Johnson",
+    email: "employee@teamoria.demo",
+    role: "company_member",
+    status: "pending",
+    company: demoCompanies[0],
+    company_id: demoCompanies[0].id,
+    last_login_at: null
+  }
+];
+
+function demoPagination(items, page = 1) {
+  return {
+    current_page: Number(page || 1),
+    last_page: 1,
+    per_page: items.length,
+    total: items.length,
+    has_more: false
+  };
+}
 
 function buildUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
@@ -249,50 +336,110 @@ export async function updateProfile(body) {
 }
 
 export function listUsers({ page, archived } = {}) {
+  if (isDemoMode()) {
+    return Promise.resolve({
+      success: true,
+      data: {
+        users: archived ? [] : demoUsers,
+        pagination: demoPagination(archived ? [] : demoUsers, page)
+      }
+    });
+  }
+
   return apiRequest("/users", { auth: true, query: { page, archived: archived ? "true" : undefined } });
 }
 
 export function createUser(body) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { user: { id: `demo-user-${Date.now()}`, ...body } } });
+  }
+
   return apiRequest("/users", { method: "POST", auth: true, body });
 }
 
 export function updateUser(id, body) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { user: { id, ...body } } });
+  }
+
   return apiRequest(`/users/${id}`, { method: "PUT", auth: true, body });
 }
 
 export function deleteUser(id) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { id } });
+  }
+
   return apiRequest(`/users/${id}`, { method: "DELETE", auth: true });
 }
 
 export function restoreUser(id) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { id } });
+  }
+
   return apiRequest(`/users/${id}/restore`, { method: "PATCH", auth: true });
 }
 
 export function forceDeleteUser(id) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { id } });
+  }
+
   return apiRequest(`/users/${id}/force-delete`, { method: "DELETE", auth: true });
 }
 
 export function listCompanies({ page, archived } = {}) {
+  if (isDemoMode()) {
+    return Promise.resolve({
+      success: true,
+      data: {
+        companies: archived ? [] : demoCompanies,
+        pagination: demoPagination(archived ? [] : demoCompanies, page)
+      }
+    });
+  }
+
   return apiRequest("/companies", { auth: true, query: { page, archived: archived ? "true" : undefined } });
 }
 
 export function createCompany(body) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { company: { id: `demo-company-${Date.now()}`, ...body } } });
+  }
+
   return apiRequest("/companies", { method: "POST", auth: true, body });
 }
 
 export function updateCompany(id, body) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { company: { id, ...body } } });
+  }
+
   return apiRequest(`/companies/${id}`, { method: "PUT", auth: true, body });
 }
 
 export function deleteCompany(id) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { id } });
+  }
+
   return apiRequest(`/companies/${id}`, { method: "DELETE", auth: true });
 }
 
 export function restoreCompany(id) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { id } });
+  }
+
   return apiRequest(`/companies/${id}/restore`, { method: "PATCH", auth: true });
 }
 
 export function forceDeleteCompany(id) {
+  if (isDemoMode()) {
+    return Promise.resolve({ success: true, data: { id } });
+  }
+
   return apiRequest(`/companies/${id}/force-delete`, { method: "DELETE", auth: true });
 }
 

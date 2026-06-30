@@ -58,6 +58,15 @@ const roleAliases = {
 };
 const DEMO_ROLE_KEY = "teamoria_demo_role";
 
+function getHashPath() {
+  const hash = window.location.hash.replace("#", "");
+  return hash.split("?")[0] || "/";
+}
+
+function isSuperAdminPath() {
+  return getHashPath().startsWith("/super-admin");
+}
+
 export function getHashSearchParams() {
   const hashQuery = window.location.hash.split("?")[1] || "";
   const pageQuery = window.location.search.replace(/^\?/, "");
@@ -89,6 +98,10 @@ export function isDemoMode() {
 
 export function getDemoUser() {
   const role = getDemoRole();
+  if (isSuperAdminPath() && role === "admin") {
+    return demoUsers["super-admin"];
+  }
+
   return demoUsers[role] || demoUsers.admin;
 }
 
