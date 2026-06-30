@@ -193,6 +193,206 @@
   width: 36px;
 }
 
+.dashboard-profile-menu-wrap {
+  align-items: center;
+  border-left: 1px solid rgba(196, 197, 214, 0.7);
+  display: flex;
+  gap: 12px;
+  margin-left: 4px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.dashboard-avatar-button.dashboard-avatar-button {
+  background: #ffffff;
+  border: 1px solid rgba(196, 197, 214, 0.8);
+  color: #2d3248;
+  font-size: 0;
+  height: 34px;
+  padding: 0;
+  position: relative;
+  width: 34px;
+}
+
+.dashboard-avatar-button::before,
+.dashboard-avatar-button::after {
+  background: #596174;
+  border-radius: 999px;
+  content: "";
+  height: 2px;
+  position: absolute;
+  top: 16px;
+  width: 7px;
+}
+
+.dashboard-avatar-button::before {
+  left: 10px;
+  transform: rotate(45deg);
+}
+
+.dashboard-avatar-button::after {
+  right: 10px;
+  transform: rotate(-45deg);
+}
+
+.dashboard-account-summary {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dashboard-account-summary .avatar-image {
+  flex: 0 0 44px;
+  height: 44px;
+  width: 44px;
+}
+
+.dashboard-account-summary b,
+.dashboard-account-summary small {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-account-summary b {
+  color: #10142f;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.dashboard-account-summary small {
+  color: #596174;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-profile-menu {
+  background: #ffffff;
+  border: 1px solid rgba(196, 197, 214, 0.65);
+  border-radius: 8px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+  display: grid;
+  gap: 4px;
+  min-width: 230px;
+  padding: 8px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 80;
+}
+
+.dashboard-profile-menu::before {
+  background: #ffffff;
+  border-left: 1px solid rgba(196, 197, 214, 0.65);
+  border-top: 1px solid rgba(196, 197, 214, 0.65);
+  content: "";
+  height: 10px;
+  position: absolute;
+  right: 13px;
+  top: -6px;
+  transform: rotate(45deg);
+  width: 10px;
+}
+
+.dashboard-menu-header {
+  align-items: center;
+  background: #fbfcff;
+  border-radius: 7px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 10px;
+}
+
+.dashboard-menu-avatar {
+  align-items: center;
+  background: #f1eeff;
+  border-radius: 50%;
+  color: #4d35ef;
+  display: flex;
+  flex: 0 0 36px;
+  font-size: 12px;
+  font-weight: 950;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.dashboard-menu-header b,
+.dashboard-menu-header small {
+  display: block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-menu-header b {
+  color: #10142f;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.dashboard-menu-header small {
+  color: #697286;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-profile-menu .dashboard-menu-item.dashboard-menu-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: #1d2438;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  gap: 10px;
+  height: auto;
+  justify-content: flex-start;
+  min-height: 38px;
+  padding: 0 10px;
+  text-decoration: none;
+  width: 100%;
+}
+
+.dashboard-profile-menu .dashboard-menu-item svg {
+  color: #596174;
+  height: 17px;
+  width: 17px;
+}
+
+.dashboard-profile-menu .dashboard-menu-item:hover {
+  background: #f5f6fb;
+}
+
+.dashboard-profile-menu .dashboard-menu-item--danger {
+  color: #d23b4a;
+}
+
+.dashboard-profile-menu .dashboard-menu-item--danger svg {
+  color: #d23b4a;
+}
+
+@media (max-width: 900px) {
+  .dashboard-account-summary {
+    display: none;
+  }
+
+  .dashboard-profile-menu-wrap {
+    border-left: 0;
+    margin-left: 0;
+    padding-left: 0;
+  }
+}
+
 .owner-page {
   margin: 0 auto;
   max-width: 1440px;
@@ -3663,4 +3863,48 @@
 .exec-new-project:hover,
 .employee-new-project:hover {
   background: #173dbd !important;
+}
+
+/* Keep dashboard top search aligned with the shared product shell search. */
+.owner-search,
+.exec-search,
+.employee-search {
+  background: #ffffff !important;
+  border: 1px solid #dfe3ef !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: #8a93a6 !important;
+  gap: 14px !important;
+  max-width: 576px !important;
+  min-height: 54px !important;
+  padding: 0 18px !important;
+}
+
+.owner-search svg,
+.exec-search svg,
+.employee-search svg {
+  color: #8a93a6 !important;
+  height: 24px !important;
+  width: 24px !important;
+}
+
+.owner-search input,
+.exec-search input,
+.employee-search input {
+  color: #283044 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+.owner-search input::placeholder,
+.exec-search input::placeholder,
+.employee-search input::placeholder {
+  color: #7b8190 !important;
+}
+
+.owner-search:focus-within,
+.exec-search:focus-within,
+.employee-search:focus-within {
+  border-color: #bfc7f5 !important;
+  box-shadow: 0 0 0 3px rgba(77, 53, 239, 0.1) !important;
 }

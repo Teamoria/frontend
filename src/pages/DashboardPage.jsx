@@ -10,16 +10,18 @@ import {
   FiCreditCard,
   FiDownload,
   FiHelpCircle,
+  FiLogOut,
   FiPlus,
   FiSearch,
   FiShield,
   FiStar,
   FiTrendingUp,
+  FiUser,
   FiUsers,
   FiZap
 } from "react-icons/fi";
 import "../styles/dashboard.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityOverviewChart,
   AIInsightCard,
@@ -70,6 +72,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [roleId, setRoleId] = useState(getDashboardRole);
   const profile = roleProfiles[roleId] || roleProfiles["project-manager"];
+  const isPreview = !user;
 
   useEffect(() => {
     const dashboardRole = mapApiRoleToDashboardRole(user?.role);
@@ -79,6 +82,7 @@ export default function DashboardPage() {
   }, [user?.role]);
 
   function handleRoleChange(newRoleId) {
+    if (!isPreview) return;
     localStorage.setItem("teamoria_preview_role", newRoleId);
     setRoleId(newRoleId);
   }
@@ -88,10 +92,10 @@ export default function DashboardPage() {
   }
 
   if (profile.dashboard === "employee") {
-    return <EmployeeDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
+    return <EmployeeDashboard authUser={user} isPreview={isPreview} roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
   }
 
-  return <ExecutionDashboard roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
+  return <ExecutionDashboard isPreview={isPreview} roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
 }
 function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   const isPreview = !authUser;
@@ -104,9 +108,9 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
         <header className="owner-topbar">
           <label className="owner-search">
             <FiSearch aria-hidden="true" />
-            <input placeholder="Search company data..." />
+            <input placeholder="Search everywhere..." />
           </label>
-          <TopActions avatar={profile.initials} classNamePrefix="owner" />
+          <TopActions classNamePrefix="owner" profile={profile} />
         </header>
 
         <div className="owner-page">
@@ -233,7 +237,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   );
 }
 
-function ExecutionDashboard({ roleId, profile, onRoleChange }) {
+function ExecutionDashboard({ isPreview, roleId, profile, onRoleChange }) {
   return (
     <main className="execution-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
@@ -241,9 +245,9 @@ function ExecutionDashboard({ roleId, profile, onRoleChange }) {
         <header className="exec-topbar">
           <label className="exec-search">
             <FiSearch aria-hidden="true" />
-            <input placeholder="Search tasks, teams, or AI insights..." />
+            <input placeholder="Search everywhere..." />
           </label>
-          <TopActions avatar={profile.initials} classNamePrefix="exec" />
+          <TopActions classNamePrefix="exec" profile={profile} />
         </header>
 
         <div className="exec-page">
@@ -264,7 +268,7 @@ function ExecutionDashboard({ roleId, profile, onRoleChange }) {
             </div>
           </section>
 
-          <RoleSwitcher activeRole={roleId} variant="exec" onRoleChange={onRoleChange} />
+          {isPreview ? <RoleSwitcher activeRole={roleId} variant="exec" onRoleChange={onRoleChange} /> : null}
 
           <section className="manager-intel-grid">
             <section className="manager-risks-column">
@@ -419,7 +423,9 @@ function TrendBars() {
   );
 }
 
-function EmployeeDashboard({ roleId, profile, onRoleChange }) {
+function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange }) {
+  const firstName = (authUser?.name || authUser?.email || "there").split(/\s|@/).filter(Boolean)[0];
+
   return (
     <main className="employee-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
@@ -427,18 +433,18 @@ function EmployeeDashboard({ roleId, profile, onRoleChange }) {
         <header className="employee-topbar">
           <label className="employee-search">
             <FiSearch aria-hidden="true" />
-            <input placeholder="Search projects or AI insights..." />
+            <input placeholder="Search everywhere..." />
           </label>
-          <TopActions avatar={profile.initials} classNamePrefix="employee" />
+          <TopActions classNamePrefix="employee" profile={profile} />
         </header>
 
         <div className="employee-page">
           <section className="employee-hero">
-            <h2>Welcome back, Alex.</h2>
+            <h2>Welcome back, {firstName}.</h2>
             <p>You have 4 primary tasks to tackle today. Your productivity score is up 12% this week.</p>
           </section>
 
-          <RoleSwitcher activeRole={roleId} variant="employee" onRoleChange={onRoleChange} />
+          {isPreview ? <RoleSwitcher activeRole={roleId} variant="employee" onRoleChange={onRoleChange} /> : null}
 
           <section className="employee-bento-grid">
             <article className="employee-panel employee-task-panel">
@@ -587,15 +593,97 @@ function EmployeeDashboard({ roleId, profile, onRoleChange }) {
   );
 }
 
-function TopActions({ avatar, classNamePrefix }) {
+function TopActions({ classNamePrefix, profile }) {
+  const { logout, user } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const displayName = user?.name || user?.email || profile.label;
+  const displayRole = profile.label;
+  const initials = getInitials(displayName || profile.initials);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    function handleEsc(event) {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
+
   return (
     <div className={`${classNamePrefix}-top-actions`}>
       <button type="button" aria-label="Notifications"><FiBell /></button>
       <button type="button" aria-label="History"><FiClock /></button>
       <button type="button" aria-label="Help"><FiHelpCircle /></button>
-      <div className={`${classNamePrefix}-avatar`}>{avatar}</div>
+      <div className="dashboard-profile-menu-wrap" ref={menuRef}>
+        <div className="dashboard-account-summary">
+          <div className="avatar-image" aria-hidden="true" />
+          <div>
+            <b>{displayName}</b>
+            <small>{displayRole}</small>
+          </div>
+        </div>
+        <button
+          className={`${classNamePrefix}-avatar dashboard-avatar-button`}
+          type="button"
+          aria-label="Open account menu"
+          aria-expanded={isMenuOpen}
+          aria-haspopup="true"
+          onClick={() => setIsMenuOpen((current) => !current)}
+        >
+          {initials}
+        </button>
+        {isMenuOpen ? (
+          <div className="dashboard-profile-menu" role="menu">
+            <div className="dashboard-menu-header">
+              <div className="dashboard-menu-avatar">{initials}</div>
+              <div>
+                <b>{displayName}</b>
+                <small>{displayRole}</small>
+              </div>
+            </div>
+            <a className="dashboard-menu-item" href="#/profile" role="menuitem" onClick={() => setIsMenuOpen(false)}>
+              <FiUser aria-hidden="true" />
+              <span>Profile</span>
+            </a>
+            <button
+              className="dashboard-menu-item dashboard-menu-item--danger"
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setIsMenuOpen(false);
+                logout();
+              }}
+            >
+              <FiLogOut aria-hidden="true" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
+}
+
+function getInitials(value) {
+  return String(value || "U")
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
 }
 
 function RoleSwitcher({ activeRole, variant, onRoleChange }) {

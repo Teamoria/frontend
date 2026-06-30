@@ -6,7 +6,9 @@ import {
   FiUsers,
   FiZap
 } from "react-icons/fi";
+import heroImage from "../assets/Future.webp";
 import logoImage from "../assets/teamoria-logo.png";
+import workflowImage from "../assets/wallpaper.webp";
 import "../styles/landing.css";
 
 const copy = {
@@ -199,7 +201,7 @@ export default function LandingPage() {
             <div className="home-preview-frame">
               <img
                 className="home-platform-image"
-                src="https://lh3.googleusercontent.com/aida/AP1WRLtDr0YtGWyr1Y3O62vzdW0xrlCZqsYOee0LMcEUP8Dst3dJFZvNfn4fbMpBz4dZSPRCUyIGSgKOxReipffqjMHxB8YWe1SvPQl8WHD1QvIj4Rrb7fROQmtHNpHlBng2ZrQb2iofXY7NSRffN0hy4H3uf9IpHYNMfPYB5iF8r3EU-M9gnLacfdQX494YcSIykRUYiN0BQKHfTQkSQ38jVEDINNh_ssdNvAo2IGAdAsyFZK8uKu6m14Yv0t8"
+                src={heroImage}
                 alt="Teamoria AI Command Center"
               />
             </div>
@@ -248,7 +250,7 @@ export default function LandingPage() {
         </div>
         <div className="home-workflow-visual">
           <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe3ALd40yLMQMKDT5nH-wbMcQ9S8oqJJu9HLuAsTVJmIbyWecrcAjGcnD2WPxE637n0ch8ag50UhoVTRnb9y0VaKMMQx7Tn6vBl3g9F63XOyOZWWb_lDG09kb3dxqUXlGEVIjZ1GMo9h3rZDkvmt8ct4P_vLsMKESiXVDdM-IJ6K5_cihP2UBn3P5O3pDqBKEHsDwxuLqxcNeOMFqndC4Bwz_S1kLfH82jMA_f2uC0ZCdGWwSgMAwukiKLXKRQJPEWn_FxsX8PgJCv"
+            src={workflowImage}
             alt="Teamoria workflow"
           />
         </div>
