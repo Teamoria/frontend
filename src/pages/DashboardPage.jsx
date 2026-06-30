@@ -31,6 +31,7 @@ import {
 import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashboardInsights.js";
 import { AppSidebar } from "../components/app/AppShell.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { normalizeRole } from "../lib/authRoles.js";
 
 const roleProfiles = {
   owner: { label: "Company Owner", initials: "CO", dashboard: "owner" },
@@ -650,9 +651,11 @@ function getDashboardRole() {
 }
 
 function mapApiRoleToDashboardRole(role) {
-  if (role === "company_owner") return "owner";
-  if (role === "company_manager") return "general-manager";
-  if (role === "company_member") return "employee";
+  const normalizedRole = normalizeRole(role);
+
+  if (normalizedRole === "company_owner") return "owner";
+  if (normalizedRole === "company_manager") return "general-manager";
+  if (normalizedRole === "company_member") return "employee";
   return "";
 }
 

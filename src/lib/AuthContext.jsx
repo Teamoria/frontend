@@ -1,17 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken } from "./api.js";
+import { normalizeRole } from "./authRoles.js";
 
 const AuthContext = createContext(null);
-
-function normalizeRole(role) {
-  const cleanRole = String(role || "").toLowerCase().replace(/[\s-]+/g, "_");
-
-  if (cleanRole === "owner" || cleanRole === "company_admin") return "company_owner";
-  if (cleanRole === "manager") return "company_manager";
-  if (cleanRole === "member") return "company_member";
-
-  return cleanRole;
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

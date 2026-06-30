@@ -3,6 +3,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { GoogleButton } from "./FormControls.jsx";
 import { loginWithGoogle } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { getPostLoginPath } from "../lib/authRoles.js";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
@@ -21,7 +22,7 @@ export default function GoogleAuthButton({ children, disabled = false, onError, 
 
         const { user } = await loginWithGoogle(tokenResponse.access_token);
         login(user);
-        window.location.hash = user?.role === "admin" ? "/super-admin" : "/dashboard";
+        window.location.hash = getPostLoginPath(user);
       } catch (error) {
         onError?.(error.message);
       } finally {

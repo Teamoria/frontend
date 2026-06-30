@@ -4,6 +4,7 @@ import { FiMail, FiShield } from "react-icons/fi";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { loginWithEmail, sendOtp, verifyOtp } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { getPostLoginPath } from "../lib/authRoles.js";
 
 const PENDING_SIGNUP_KEY = "teamoria_pending_signup";
 
@@ -95,7 +96,7 @@ export default function VerifyOtpPage() {
         });
         login(user);
         sessionStorage.removeItem(PENDING_SIGNUP_KEY);
-        window.location.hash = "/dashboard";
+        window.location.hash = getPostLoginPath(user);
         return;
       }
 

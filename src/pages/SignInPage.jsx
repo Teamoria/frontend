@@ -5,6 +5,7 @@ import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { loginWithEmail } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { getPostLoginPath } from "../lib/authRoles.js";
 import "../styles/sign-in.css";
 
 const workspaceImage =
@@ -29,7 +30,7 @@ export default function SignInPage() {
         password: formData.get("password")
       });
       login(user);
-      window.location.hash = user?.role === "admin" ? "/super-admin" : "/dashboard";
+      window.location.hash = getPostLoginPath(user);
     } catch (error) {
       const errorCode = error.payload?.error_code;
       if (errorCode === "EMAIL_NOT_VERIFIED") {
