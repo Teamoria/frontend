@@ -3,6 +3,7 @@ import { FiBarChart2, FiBriefcase, FiBell, FiCloud, FiChevronDown, FiFolder, FiH
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
+import { getDemoRole } from "../../lib/demoMode.js";
 import "../../styles/app-shell.css";
 
 const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
@@ -72,7 +73,7 @@ const apiRoleLabel = {
 
 export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
   const { user: authUser, normalizedRole } = useAuth();
-  const previewRole = new URLSearchParams(window.location.search).get("role");
+  const previewRole = getDemoRole();
   const mappedAuthRole = apiRoleToShellRole[normalizedRole];
   const profile =
     (authUser ? {

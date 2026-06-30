@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken } from "./api.js";
 import { normalizeRole } from "./authRoles.js";
+import { clearDemoMode, getDemoUser, isDemoMode } from "./demoMode.js";
 
 const AuthContext = createContext(null);
 
@@ -9,23 +10,42 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      setIsLoading(false);
-      return;
+    function loadUser() {
+      if (isDemoMode()) {
+        setUser(getDemoUser());
+        setIsLoading(false);
+        return;
+      }
+
+      const token = getAccessToken();
+      if (!token) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      refreshUser()
+        .catch(() => {
+          clearAccessToken();
+          setUser(null);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
 
-    refreshUser()
-      .catch(() => {
-        clearAccessToken();
-        setUser(null);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    loadUser();
+    window.addEventListener("hashchange", loadUser);
+    return () => window.removeEventListener("hashchange", loadUser);
   }, []);
 
   async function refreshUser() {
+    if (isDemoMode()) {
+      const nextUser = getDemoUser();
+      setUser(nextUser);
+      return nextUser;
+    }
+
     const payload = await getCurrentUser();
     const nextUser = payload?.data?.user || payload?.data || payload?.user || payload || null;
     setUser(nextUser);
@@ -37,6 +57,14 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    if (isDemoMode()) {
+      clearDemoMode();
+      clearAccessToken();
+      setUser(null);
+      window.location.hash = "/";
+      return;
+    }
+
     try {
       await logoutUser();
     } catch {

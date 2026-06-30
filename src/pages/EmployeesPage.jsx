@@ -24,6 +24,7 @@ import {
   updateStaffMember
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { isDemoMode } from "../lib/demoMode.js";
 import "../styles/employees.css";
 
 const emptyForm = {
@@ -47,9 +48,69 @@ const statusOptions = [
   { value: "suspended", label: "Suspended" }
 ];
 
+const demoStaff = [
+  {
+    id: "demo-staff-1",
+    name: "Aseel Harazeen",
+    email: "aseel@teamoria.demo",
+    phone: "+970 59 000 1101",
+    role: "company_manager",
+    status: "active",
+    timezone: "Asia/Hebron",
+    is_email_verified: true,
+    created_at: "2026-05-14T09:00:00Z"
+  },
+  {
+    id: "demo-staff-2",
+    name: "Fares Namlah",
+    email: "fares@teamoria.demo",
+    phone: "+970 59 000 1102",
+    role: "company_manager",
+    status: "active",
+    timezone: "Asia/Hebron",
+    is_email_verified: true,
+    created_at: "2026-05-18T10:30:00Z"
+  },
+  {
+    id: "demo-staff-3",
+    name: "Sarah Johnson",
+    email: "sarah@teamoria.demo",
+    phone: "+1 415 555 0188",
+    role: "company_member",
+    status: "active",
+    timezone: "America/Los_Angeles",
+    is_email_verified: true,
+    created_at: "2026-06-02T13:15:00Z"
+  },
+  {
+    id: "demo-staff-4",
+    name: "Fatima Ali",
+    email: "fatima@teamoria.demo",
+    phone: "+970 59 000 1104",
+    role: "company_member",
+    status: "pending",
+    timezone: "Asia/Hebron",
+    is_email_verified: false,
+    created_at: "2026-06-12T08:45:00Z"
+  },
+  {
+    id: "demo-staff-5",
+    name: "Leon Rivera",
+    email: "leon@teamoria.demo",
+    phone: "+1 646 555 0174",
+    role: "company_member",
+    status: "inactive",
+    timezone: "America/New_York",
+    is_email_verified: true,
+    created_at: "2026-04-29T11:20:00Z"
+  }
+];
+
 export default function EmployeesPage() {
   const { user } = useAuth();
+  const isDemo = isDemoMode();
   const [rows, setRows] = useState([]);
+  const [demoRows, setDemoRows] = useState(demoStaff);
   const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, per_page: 10, total: 0, has_more: false });
   const [filters, setFilters] = useState({ role: "all", status: "all", archived: false });
   const [page, setPage] = useState(1);
@@ -72,10 +133,29 @@ export default function EmployeesPage() {
 
   useEffect(() => {
     loadStaff();
-  }, [page, filters.role, filters.status, filters.archived]);
+  }, [page, filters.role, filters.status, filters.archived, demoRows]);
 
   async function loadStaff() {
     setIsLoading(true);
+
+    if (isDemo) {
+      const filteredRows = demoRows
+        .filter((employee) => filters.role === "all" || employee.role === filters.role)
+        .filter((employee) => filters.status === "all" || employee.status === filters.status)
+        .map(normalizeEmployee);
+
+      setRows(filteredRows);
+      setPagination({
+        current_page: 1,
+        last_page: 1,
+        per_page: filteredRows.length,
+        total: filteredRows.length,
+        has_more: false
+      });
+      setStatus({ type: "", message: "" });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const payload = await listStaff({
@@ -98,6 +178,7 @@ export default function EmployeesPage() {
 
   function openCreateModal() {
     setForm(emptyForm);
+    setSelectedEmployee(null);
     setModalMode("create");
     setStatus({ type: "", message: "" });
   }
@@ -131,6 +212,31 @@ export default function EmployeesPage() {
     setIsSaving(true);
     setStatus({ type: "", message: "" });
 
+    if (isDemo) {
+      const nextEmployee = normalizeEmployee({
+        id: selectedEmployee?.id || `demo-staff-${Date.now()}`,
+        ...selectedEmployee,
+        ...form,
+        phone: selectedEmployee?.phone || "+970 59 000 1199",
+        is_email_verified: selectedEmployee?.is_email_verified ?? false,
+        created_at: selectedEmployee?.created_at || new Date().toISOString()
+      });
+
+      setDemoRows((current) => (
+        modalMode === "edit"
+          ? current.map((employee) => employee.id === nextEmployee.id ? nextEmployee : employee)
+          : [nextEmployee, ...current]
+      ));
+      setPagination((current) => ({
+        ...current,
+        total: modalMode === "edit" ? current.total : current.total + 1
+      }));
+      setStatus({ type: "success", message: modalMode === "edit" ? "Demo employee updated locally." : "Demo employee added locally." });
+      closeModal();
+      setIsSaving(false);
+      return;
+    }
+
     try {
       if (modalMode === "edit" && selectedEmployee?.id) {
         await updateStaffMember(selectedEmployee.id, form);
@@ -151,6 +257,13 @@ export default function EmployeesPage() {
 
   async function runAction(action, successMessage) {
     setStatus({ type: "", message: "" });
+
+    if (isDemo) {
+      setStatus({ type: "success", message: `${successMessage} Demo mode only.` });
+      setSelectedEmployee(null);
+      return;
+    }
+
     try {
       await action();
       setStatus({ type: "success", message: successMessage });
@@ -170,7 +283,7 @@ export default function EmployeesPage() {
     <AppShell active="Employees" user={user?.name || "Company Owner"} role="Company Owner" roleId="owner">
       <PageHeader
         title="Team Directory"
-        eyebrow="Manage company managers and members through the Staff API."
+        eyebrow={isDemo ? "Demo staff directory for frontend edits without backend." : "Manage company managers and members through the Staff API."}
         actions={(
           <button className="product-button" type="button" onClick={openCreateModal}>
             <FiUserPlus aria-hidden="true" />
@@ -180,7 +293,7 @@ export default function EmployeesPage() {
       />
 
       <section className="employees-summary-grid" aria-label="Employee overview">
-        <SummaryCard label="Total Staff" value={summary.total} note={filters.archived ? "Archived view" : "Live API"} />
+        <SummaryCard label="Total Staff" value={summary.total} note={isDemo ? "Demo data" : filters.archived ? "Archived view" : "Live API"} />
         <SummaryCard label="Active" value={summary.active} note="Current page" />
         <SummaryCard label="Pending" value={summary.pending} note="Awaiting action" muted />
       </section>
@@ -244,7 +357,7 @@ export default function EmployeesPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                  <MessageRow text="Loading staff from API..." />
+                  <MessageRow text={isDemo ? "Loading demo staff..." : "Loading staff from API..."} />
                 ) : rows.length === 0 ? (
                   <MessageRow text="No staff members found." />
                 ) : rows.map((employee) => (

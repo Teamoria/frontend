@@ -28,6 +28,8 @@ import SuperAdminUsersPage from "./pages/SuperAdminUsersPage.jsx";
 import SuperAdminPaymentsPage from "./pages/SuperAdminPaymentsPage.jsx";
 import SuperAdminProfilePage, { SuperAdminProfileSettingsPage } from "./pages/SuperAdminProfilePage.jsx";
 import { useAuth } from "./lib/AuthContext.jsx";
+import { getDemoUser, isDemoMode } from "./lib/demoMode.js";
+import { normalizeRole } from "./lib/authRoles.js";
 
 const adminRoutes = new Set([
   "/super-admin",
@@ -134,7 +136,13 @@ function getPath() {
 
 export default function App() {
   const [path, setPath] = useState(getPath);
-  const { isAdmin, isCompanyOwner, isCompanyUser, isLoading, normalizedRole, user } = useAuth();
+  const auth = useAuth();
+  const demoUser = isDemoMode() ? getDemoUser() : null;
+  const user = auth.user || demoUser;
+  const normalizedRole = normalizeRole(user?.role);
+  const isAdmin = normalizedRole === "admin";
+  const isCompanyUser = ["company_owner", "company_manager", "company_member"].includes(normalizedRole);
+  const isLoading = auth.isLoading && !demoUser;
 
   useEffect(() => {
     const onHashChange = () => setPath(getPath());

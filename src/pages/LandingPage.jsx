@@ -6,10 +6,16 @@ import {
   FiUsers,
   FiZap
 } from "react-icons/fi";
-import heroImage from "../assets/Future.webp";
 import logoImage from "../assets/teamoria-logo.png";
-import workflowImage from "../assets/wallpaper.webp";
 import "../styles/landing.css";
+
+const landingImages = {
+  hero: "https://lh3.googleusercontent.com/aida-public/AB6AXuDLlct6wdloPz2cybi7ltzUaN5Kzoo0XM062E4rbPQChMnFHgAlY_GLfOI3MRpHR4eQEE7axK6byu5udWe2IJHFUIqiMPvnNXmJ2TAg27hpjAsKzsh5GGE0rZYh77bvR6vIM07dNs8MwxqGnhUfTVZKtkGygX8MV-R2_g5wVuoFvLgf8Wrq9SLu33B3sGFU-dCMoiVQnVY55b7g_5ZBW2thzfCJEnoaXUWaeLqin8fBunHJgoeuQuvYxtKgvPcWPYZtnutoCaYCpNo7",
+  assistant: "https://lh3.googleusercontent.com/aida/AP1WRLvTNdW9wtVlcOLLTushfE2w3w3lNSMtBs-nyFnVJom2XeLRDBVz8WfK33qNiHkVNsQlpw5OpsMScMvMTj6iTdPETA57PNdMIJUJIDMLMCCRU5bqI6ln6oXkrF1LxSyFQzfCm78aZu3Ozz0G2Hc6numUMfXrZ6A6HEcGvEqmUw4fv8aRLZNFnB8BYZ2xSDpTEAEz25mRQqBkdk0Gr_1gLmQLXZ5LU3waV_ie9wX6h5h_1Ar5WM3liXw_0hUx",
+  kanban: "https://lh3.googleusercontent.com/aida-public/AB6AXuCueVIYYsrvacofCChZ42yRhD-UyQXKwOx8vAoWR7Dcn2qba5sGixI_k_XWOREFp4dmXYtXpFgAr4n1AYslqrAUt7HL0PTpLdKX5x7t25ionOafaU9wTIKe-Jv7TXDVKhY_cmMhHg44Qul-u7Q2RzyF0YrJCi3tLdpurMuB8EMv872qdDyno-a4teLujTYSgGEkfbsva-_CaKEqLlbBvF41BpRR9CPSjA0EP5tqrfdoB6XgeFblBRSK5O8TXp5BfeW_ELVnFM1mE6vE",
+  meetings: "https://lh3.googleusercontent.com/aida/AP1WRLsbfOtDRMrLyDwHn1GXmlDk8PMHu1FN8mpHhKE1SxDDkEFm91SbbAgO2Iw_u9v53u_Rah9mw4weLKCy7qAfA1b3UfulcFSYRc7WSFePd3vScs5EjQpD-JMtdw4baC0Yx_zHFHqqXhk4kXIrnejZ8ztjF_MDgrvvzV8LJeoDtrcq8ofrqqUsjqVPjlHTxUQ21dKMeMlbxFOvY0hXJdjHNVG8uNIxFFSlyhRPGk76xprcc_0iTxiW0exz9Bk",
+  workflow: "https://lh3.googleusercontent.com/aida-public/AB6AXuBe3ALd40yLMQMKDT5nH-wbMcQ9S8oqJJu9HLuAsTVJmIbyWecrcAjGcnD2WPxE637n0ch8ag50UhoVTRnb9y0VaKMMQx7Tn6vBl3g9F63XOyOZWWb_lDG09kb3dxqUXlGEVIjZ1GMo9h3rZDkvmt8ct4P_vLsMKESiXVDdM-IJ6K5_cihP2UBn3P5O3pDqBKEHsDwxuLqxcNeOMFqndC4Bwz_S1kLfH82jMA_f2uC0ZCdGWwSgMAwukiKLXKRQJPEWn_FxsX8PgJCv"
+};
 
 const copy = {
   en: {
@@ -89,7 +95,8 @@ const features = [
       en: "Ask any question about your projects, and the assistant will analyze files and messages to give you a precise answer with direct links to sources.",
       ar: "اسأل عن أي تفاصيل في مشاريعك، وسيحلل المساعد الملفات والرسائل ليعطيك إجابة دقيقة مع روابط مباشرة للمصادر."
     },
-    visual: "chat"
+    image: landingImages.assistant,
+    imageAlt: "AI assistant interface scanning documents"
   },
   {
     icon: FiGrid,
@@ -98,7 +105,8 @@ const features = [
       en: "Advanced Kanban boards, timeline tracking, and intelligent delivery date predictions based on historical team performance.",
       ar: "لوحات كانبان متقدمة، تتبع للجداول الزمنية، وتوقعات ذكية لمواعيد التسليم بناءً على أداء الفريق السابق."
     },
-    visual: "kanban"
+    image: landingImages.kanban,
+    imageAlt: "Advanced Kanban board and project management interface illustration"
   },
   {
     icon: FiUsers,
@@ -107,7 +115,8 @@ const features = [
       en: "No more manual note-taking. Teamoria summarizes meetings, extracts required tasks automatically, and distributes them.",
       ar: "لا حاجة لتدوين الملاحظات يدوياً. يلخص Teamoria الاجتماعات، ويستخرج المهام المطلوبة تلقائياً، ويوزعها على الفريق."
     },
-    visual: "summary"
+    image: landingImages.meetings,
+    imageAlt: "Automated meeting summary interface"
   }
 ];
 
@@ -201,7 +210,7 @@ export default function LandingPage() {
             <div className="home-preview-frame">
               <img
                 className="home-platform-image"
-                src={heroImage}
+                src={landingImages.hero}
                 alt="Teamoria AI Command Center"
               />
             </div>
@@ -222,12 +231,12 @@ export default function LandingPage() {
           <p>{t.featureText}</p>
         </div>
         <div className="home-feature-grid">
-          {features.map(({ icon: Icon, title, text, visual }) => (
+          {features.map(({ icon: Icon, title, text, image, imageAlt }) => (
             <article key={localize(title, "en")}>
               <span><Icon aria-hidden="true" /></span>
               <h3>{localize(title, lang)}</h3>
               <p>{localize(text, lang)}</p>
-              <FeatureVisual type={visual} />
+              <img className="home-feature-image" src={image} alt={imageAlt} />
             </article>
           ))}
         </div>
@@ -250,7 +259,7 @@ export default function LandingPage() {
         </div>
         <div className="home-workflow-visual">
           <img
-            src={workflowImage}
+            src={landingImages.workflow}
             alt="Teamoria workflow"
           />
         </div>
@@ -300,35 +309,6 @@ function FooterColumn({ title, items }) {
     <div>
       <h3>{title}</h3>
       {items.map((item) => <a href="#/" key={item}>{item}</a>)}
-    </div>
-  );
-}
-
-function FeatureVisual({ type }) {
-  if (type === "kanban") {
-    return (
-      <div className="home-feature-visual home-feature-visual--kanban" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-      </div>
-    );
-  }
-
-  if (type === "summary") {
-    return (
-      <div className="home-feature-visual home-feature-visual--summary" aria-hidden="true">
-        <div><b>Summarized</b><span>5 mins ago</span></div>
-        <i />
-        <i />
-      </div>
-    );
-  }
-
-  return (
-    <div className="home-feature-visual home-feature-visual--chat" aria-hidden="true">
-      <div><span /><i /></div>
-      <div><span /><p><i /><i /><b>#1</b><b>#2</b></p></div>
     </div>
   );
 }

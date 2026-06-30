@@ -34,6 +34,7 @@ import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashbo
 import { AppSidebar } from "../components/app/AppShell.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { normalizeRole } from "../lib/authRoles.js";
+import { getDemoRole, getHashSearchParams, isDemoMode } from "../lib/demoMode.js";
 
 const roleProfiles = {
   owner: { label: "Company Owner", initials: "CO", dashboard: "owner" },
@@ -72,9 +73,15 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [roleId, setRoleId] = useState(getDashboardRole);
   const profile = roleProfiles[roleId] || roleProfiles["project-manager"];
-  const isPreview = !user;
+  const isPreview = !user || isDemoMode();
 
   useEffect(() => {
+    const previewRole = mapDemoRoleToDashboardRole(getDemoRole());
+    if (previewRole) {
+      setRoleId(previewRole);
+      return;
+    }
+
     const dashboardRole = mapApiRoleToDashboardRole(user?.role);
     if (dashboardRole) {
       setRoleId(dashboardRole);
@@ -730,12 +737,22 @@ function AiHelper({ classNamePrefix }) {
 }
 
 function getDashboardRole() {
-  const hashQuery = window.location.hash.split("?")[1] || "";
-  const hashRole = new URLSearchParams(hashQuery).get("role");
+  const params = getHashSearchParams();
+  const hashRole = params.get("role");
   const urlRole = new URLSearchParams(window.location.search).get("role");
   const storedRole = localStorage.getItem("teamoria_preview_role");
-  const role = hashRole || urlRole || storedRole || "project-manager";
+  const role = mapDemoRoleToDashboardRole(hashRole || urlRole) || storedRole || "project-manager";
   return roleProfiles[role] ? role : "project-manager";
+}
+
+function mapDemoRoleToDashboardRole(role) {
+  const normalizedRole = String(role || "").toLowerCase();
+
+  if (["admin", "owner", "company-admin", "company_admin", "company-owner", "company_owner"].includes(normalizedRole)) return "owner";
+  if (["manager", "general-manager", "general_manager"].includes(normalizedRole)) return "general-manager";
+  if (["project-manager", "project_manager"].includes(normalizedRole)) return "project-manager";
+  if (["employee", "member", "company_member"].includes(normalizedRole)) return "employee";
+  return "";
 }
 
 function mapApiRoleToDashboardRole(role) {
