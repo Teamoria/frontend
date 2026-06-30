@@ -51,13 +51,10 @@ export default function VerifyOtpPage() {
     setHasAutoSent(true);
     setIsResending(true);
     sendOtp({ email: pendingSignup.email, type: pendingSignup.type || "register" })
-      .then((payload) => {
-        const developmentCode = extractOtpCode(payload);
+      .then(() => {
         setStatus({
           type: "success",
-          message: developmentCode
-            ? `A verification code was sent to your email. Development OTP: ${developmentCode}`
-            : "A verification code was sent to your email."
+          message: "A verification code was sent to your email."
         });
       })
       .catch((error) => {
@@ -119,13 +116,10 @@ export default function VerifyOtpPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      const payload = await sendOtp({ email: pendingSignup.email, type: pendingSignup.type || "register" });
-      const developmentCode = extractOtpCode(payload);
+      await sendOtp({ email: pendingSignup.email, type: pendingSignup.type || "register" });
       setStatus({
         type: "success",
-        message: developmentCode
-          ? `A new verification code was sent. Development OTP: ${developmentCode}`
-          : "A new verification code was sent."
+        message: "A new verification code was sent."
       });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
@@ -175,18 +169,6 @@ export default function VerifyOtpPage() {
         <a className="back-link" href="#/signup"><span aria-hidden="true">&lt;-</span> Back to Sign Up</a>
       </form>
     </AuthLayout>
-  );
-}
-
-function extractOtpCode(payload) {
-  return (
-    payload?.data?.code ||
-    payload?.data?.otp ||
-    payload?.data?.otp_code ||
-    payload?.code ||
-    payload?.otp ||
-    payload?.otp_code ||
-    ""
   );
 }
 

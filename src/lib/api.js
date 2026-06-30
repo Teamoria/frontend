@@ -3,7 +3,6 @@ const API_BASE_URL =
   import.meta.env.VITE_API_ORIGIN ||
   "http://localhost:8000";
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
-const API_KEY = import.meta.env.VITE_API_KEY || "";
 const TOKEN_KEY = "teamoria_access_token";
 
 function buildUrl(path) {
@@ -59,10 +58,6 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
 
   if (body) {
     headers["Content-Type"] = "application/json";
-  }
-
-  if (API_KEY) {
-    headers["x-api-key"] = API_KEY;
   }
 
   if (auth) {
