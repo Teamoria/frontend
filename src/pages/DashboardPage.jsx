@@ -9,7 +9,6 @@ import {
   FiClock,
   FiCreditCard,
   FiDownload,
-  FiHelpCircle,
   FiLogOut,
   FiPlus,
   FiSearch,
@@ -632,8 +631,6 @@ function TopActions({ classNamePrefix, profile }) {
   return (
     <div className={`${classNamePrefix}-top-actions`}>
       <button type="button" aria-label="Notifications"><FiBell /></button>
-      <button type="button" aria-label="History"><FiClock /></button>
-      <button type="button" aria-label="Help"><FiHelpCircle /></button>
       <div className="dashboard-profile-menu-wrap" ref={menuRef}>
         <div className="dashboard-account-summary">
           <div className="avatar-image" aria-hidden="true" />
