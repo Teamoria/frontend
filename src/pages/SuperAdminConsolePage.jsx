@@ -272,6 +272,7 @@ function SuperAdminTopbar() {
         >
           <FiBell aria-hidden="true" />
           <i />
+          <span className="super-admin-notification-count">3</span>
         </button>
         {notificationsOpen ? <NotificationsOverlay /> : null}
         </div>
@@ -287,7 +288,10 @@ function SuperAdminTopbar() {
             }}
           >
             <span>{initials}</span>
-            <b>{user?.name || "Admin User"}</b>
+            <strong>
+              <b>{user?.name || "Admin User"}</b>
+              <small>{formatRole(user?.role || "admin")}</small>
+            </strong>
             <FiChevronDown aria-hidden="true" />
           </button>
           {profileOpen ? <ProfileContextMenu user={user} initials={initials} /> : null}
@@ -513,6 +517,11 @@ function RecentOnboardingTable() {
 function formatNumber(value) {
   if (value === null || value === undefined) return "0";
   return Number(value).toLocaleString();
+}
+
+function formatRole(value) {
+  if (value === "admin") return "Platform Admin";
+  return String(value || "User").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function getInitials(value) {
