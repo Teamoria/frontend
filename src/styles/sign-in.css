@@ -33,7 +33,7 @@
   display: none;
 }
 
-.auth-shell.sign-in-shell .auth-visual > .brand {
+.auth-shell.sign-in-shell .auth-visual>.brand {
   left: clamp(28px, 4vw, 64px);
   position: absolute;
   top: clamp(24px, 4vw, 56px);
@@ -54,6 +54,7 @@
   position: absolute;
   transform: none;
   z-index: 4;
+  margin-top: 50px;
 }
 
 .auth-shell.sign-in-shell .auth-copy h1 {
@@ -445,7 +446,7 @@
     padding: clamp(24px, 3.2vw, 48px);
   }
 
-  .auth-shell.sign-in-shell .auth-visual > .brand {
+  .auth-shell.sign-in-shell .auth-visual>.brand {
     left: clamp(32px, 4vw, 72px);
     top: clamp(28px, 4vw, 52px);
   }
