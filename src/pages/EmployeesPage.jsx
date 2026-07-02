@@ -281,6 +281,7 @@ export default function EmployeesPage() {
 
   return (
     <AppShell active="Employees" user={user?.name || "Company Owner"} role="Company Owner" roleId="owner">
+      <div className="employees-page">
       <PageHeader
         title="Team Directory"
         eyebrow={isDemo ? "Demo staff directory for frontend edits without backend." : "Manage company managers and members through the Staff API."}
@@ -502,6 +503,7 @@ export default function EmployeesPage() {
           showArchive={!filters.archived}
         />
       ) : null}
+      </div>
     </AppShell>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { FiBarChart2, FiBriefcase, FiBell, FiCloud, FiChevronDown, FiFolder, FiHome, FiLogOut, FiMessageCircle, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
+import { FiBarChart2, FiBriefcase, FiBell, FiCloud, FiChevronDown, FiFolder, FiHome, FiLogOut, FiMessageCircle, FiSearch, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
@@ -176,7 +176,7 @@ export function Topbar({ user, role }) {
   return (
     <header className="product-topbar">
       <label className="product-search">
-        <span className="search-icon" aria-hidden="true" />
+        <FiSearch className="search-icon" aria-hidden="true" />
         <input placeholder="Search everywhere..." />
       </label>
       <div className="topbar-cluster">

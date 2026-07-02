@@ -441,3 +441,125 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Unified task board colors */
+.tasks-workspace {
+  background: var(--ui-bg);
+}
+
+.tasks-page-head h1,
+.tasks-kanban-head h2,
+.tasks-workspace .tasks-card h3 {
+  color: var(--ui-text);
+}
+
+.tasks-page-head p,
+.tasks-filter-bar > span,
+.tasks-workspace .tasks-card p,
+.tasks-date {
+  color: var(--ui-muted);
+}
+
+.tasks-view-toggle,
+.tasks-filter-bar button,
+.tasks-kanban-head span,
+.tasks-kanban-head button:hover,
+.tasks-tag-row span,
+.tasks-card-top > div {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.tasks-view-toggle,
+.tasks-filter-bar,
+.tasks-filter-bar button,
+.tasks-kanban-list,
+.tasks-workspace .tasks-card {
+  border-color: var(--ui-line);
+}
+
+.tasks-filter-bar,
+.tasks-workspace .tasks-card,
+.tasks-view-toggle button.active {
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+}
+
+.tasks-primary-button,
+.tasks-kanban-column--blue .tasks-kanban-head i,
+.tasks-workspace .tasks-card--active {
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: #ffffff;
+}
+
+.tasks-primary-button:hover {
+  background: var(--ui-primary-hover);
+}
+
+.tasks-workspace .tasks-card--active {
+  background: var(--ui-surface);
+  border-left-color: var(--ui-primary);
+  box-shadow: var(--ui-shadow-strong);
+}
+
+.tasks-kanban-column--purple .tasks-kanban-head i {
+  background: var(--ui-primary);
+}
+
+.tasks-kanban-list {
+  background: var(--ui-surface-soft);
+}
+
+.tasks-priority--medium {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.tasks-priority--high {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+.tasks-priority--low {
+  background: var(--ui-success-soft);
+  color: var(--ui-success);
+}
+
+/* Final visible tasks brand lock */
+.tasks-workspace {
+  background: #f6f8fc !important;
+}
+
+.tasks-filter-bar,
+.tasks-workspace .tasks-card,
+.tasks-view-toggle button.active {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.tasks-kanban-list,
+.tasks-view-toggle,
+.tasks-filter-bar button,
+.tasks-kanban-head span {
+  background: #f3f6fc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.tasks-primary-button,
+.tasks-kanban-column--blue .tasks-kanban-head i,
+.tasks-kanban-column--purple .tasks-kanban-head i {
+  background: var(--ui-primary) !important;
+  color: #ffffff !important;
+}
+
+.tasks-workspace .tasks-card--active {
+  background: #ffffff !important;
+  border-left-color: var(--ui-primary) !important;
+}
+
+.tasks-tag-row span,
+.tasks-priority--medium {
+  background: var(--ui-primary-soft) !important;
+  color: var(--ui-primary) !important;
+}

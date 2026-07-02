@@ -351,3 +351,106 @@
     flex: 1;
   }
 }
+
+/* Unified upload center colors */
+.owner-upload-page {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+.owner-upload-header h1,
+.owner-upload-dropzone > svg,
+.owner-upload-section-head > span,
+.owner-upload-table td:first-child svg {
+  color: var(--ui-primary);
+}
+
+.owner-upload-header p,
+.owner-upload-dropzone p,
+.owner-upload-processing-card small,
+.owner-upload-actions button,
+.owner-upload-table th,
+.owner-upload-table td {
+  color: var(--ui-muted);
+}
+
+.owner-upload-search,
+.owner-upload-processing-card,
+.owner-upload-table th {
+  background: var(--ui-surface-soft);
+  border-color: var(--ui-line);
+}
+
+.owner-upload-dropzone,
+.owner-upload-table-wrap {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+}
+
+.owner-upload-dropzone:hover {
+  background: var(--ui-primary-soft);
+  border-color: var(--ui-primary);
+}
+
+.owner-upload-dropzone button,
+.owner-upload-table td button,
+.owner-upload-progress-row strong {
+  background: var(--ui-primary);
+}
+
+.owner-upload-processing-card-head span,
+.owner-upload-processing-card em,
+.owner-upload-tags span {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.owner-upload-progress-row i {
+  background: var(--ui-primary-soft);
+}
+
+.owner-upload-actions button {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+}
+
+.owner-upload-actions button:hover {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+/* Final visible upload center brand lock */
+.owner-upload-page {
+  background: #f6f8fc !important;
+}
+
+.owner-upload-search,
+.owner-upload-processing-card {
+  background: #f3f6fc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.owner-upload-dropzone,
+.owner-upload-table-wrap {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.owner-upload-dropzone > svg,
+.owner-upload-header h1,
+.owner-upload-section-head > span {
+  color: var(--ui-primary) !important;
+}
+
+.owner-upload-dropzone button,
+.owner-upload-table td button,
+.owner-upload-progress-row strong {
+  background: var(--ui-primary) !important;
+}
+
+.owner-upload-processing-card-head span,
+.owner-upload-processing-card em,
+.owner-upload-tags span {
+  background: var(--ui-primary-soft) !important;
+  color: var(--ui-primary) !important;
+}
