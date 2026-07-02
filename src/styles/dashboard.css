@@ -1,16 +1,16 @@
 ﻿/* Owner Dashboard from UI brief */
 .owner-dashboard {
-  --owner-primary: #002d9b;
-  --owner-primary-2: #1a44c2;
-  --owner-bg: #faf8ff;
-  --owner-surface: #ffffff;
-  --owner-container: #eaedff;
-  --owner-container-low: #f2f3ff;
-  --owner-container-high: #e2e7ff;
-  --owner-line: #c4c5d6;
-  --owner-text: #131b2e;
-  --owner-muted: #444654;
-  --owner-secondary: #505f76;
+  --owner-primary: var(--ui-primary);
+  --owner-primary-2: var(--ui-primary-hover);
+  --owner-bg: var(--ui-bg);
+  --owner-surface: var(--ui-surface);
+  --owner-container: var(--ui-primary-soft);
+  --owner-container-low: var(--ui-surface-soft);
+  --owner-container-high: var(--ui-primary-soft-strong);
+  --owner-line: var(--ui-line);
+  --owner-text: var(--ui-text);
+  --owner-muted: var(--ui-muted-strong);
+  --owner-secondary: var(--ui-muted);
   background: var(--owner-bg);
   color: var(--owner-text);
   display: grid;
@@ -4159,6 +4159,157 @@
   font-weight: 500 !important;
 }
 
+/* Absolute final search field correction */
+.owner-search,
+.exec-search,
+.employee-search {
+  align-items: center !important;
+  display: flex !important;
+  gap: 14px !important;
+  height: 44px !important;
+  padding: 0 22px !important;
+}
+
+.owner-search svg,
+.exec-search svg,
+.employee-search svg {
+  display: block !important;
+  flex: 0 0 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  min-height: 18px !important;
+  min-width: 18px !important;
+  width: 18px !important;
+}
+
+.owner-search input,
+.exec-search input,
+.employee-search input {
+  align-self: center !important;
+  flex: 1 1 auto !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Dashboard search contract: these numbers are the source of truth for every top search. */
+.owner-topbar .owner-search,
+.exec-topbar .exec-search,
+.employee-topbar .employee-search {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  color: #8390a6 !important;
+  display: flex !important;
+  flex: 0 0 460px !important;
+  gap: 14px !important;
+  height: 44px !important;
+  max-width: 460px !important;
+  min-height: 44px !important;
+  padding: 0 22px !important;
+  width: 460px !important;
+}
+
+.owner-topbar .owner-search svg,
+.exec-topbar .exec-search svg,
+.employee-topbar .employee-search svg {
+  color: #8390a6 !important;
+  display: block !important;
+  flex: 0 0 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  min-height: 18px !important;
+  min-width: 18px !important;
+  stroke-width: 2.15 !important;
+  width: 18px !important;
+}
+
+.owner-topbar .owner-search input,
+.exec-topbar .exec-search input,
+.employee-topbar .employee-search input {
+  background: transparent !important;
+  border: 0 !important;
+  color: #22283a !important;
+  display: block !important;
+  flex: 1 1 auto !important;
+  font-family: Inter, "Noto Sans Arabic", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+}
+
+.owner-topbar .owner-search input::placeholder,
+.exec-topbar .exec-search input::placeholder,
+.employee-topbar .employee-search input::placeholder {
+  color: #667085 !important;
+  opacity: 1 !important;
+}
+
+/* Final search inner alignment lock to match AppShell pages exactly. */
+.owner-search,
+.exec-search,
+.employee-search {
+  align-items: center !important;
+  column-gap: 18px !important;
+  display: grid !important;
+  grid-template-columns: 18px minmax(0, 1fr) !important;
+  padding: 0 20px !important;
+}
+
+.owner-search svg,
+.exec-search svg,
+.employee-search svg {
+  color: #8390a6 !important;
+  display: block !important;
+  flex: none !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  min-width: 18px !important;
+  stroke-width: 2.15 !important;
+  width: 18px !important;
+}
+
+.owner-search input,
+.exec-search input,
+.employee-search input {
+  align-self: stretch !important;
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  height: 100% !important;
+  line-height: 44px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Search micro-alignment: keep the icon and placeholder on the same visual baseline. */
+.owner-search,
+.exec-search,
+.employee-search {
+  column-gap: 14px !important;
+  grid-template-columns: 18px minmax(0, 1fr) !important;
+  padding: 0 20px !important;
+}
+
+.owner-search input,
+.exec-search input,
+.employee-search input {
+  align-self: center !important;
+  height: auto !important;
+  line-height: 20px !important;
+}
+
 .owner-search input::placeholder,
 .exec-search input::placeholder,
 .employee-search input::placeholder {
@@ -4625,6 +4776,7 @@
   font-size: 14px !important;
 }
 
+<<<<<<< HEAD
 
 @media (max-width: 1024px) {
 
@@ -4665,3 +4817,221 @@
   }
 
 }
+=======
+/* Unified dashboard workspace colors */
+.owner-page,
+.exec-page,
+.employee-page {
+  background: var(--ui-bg);
+}
+
+.owner-hero-row h2,
+.owner-ai-head h3,
+.manager-strategic-card h4,
+.manager-text-link,
+.owner-panel-head a,
+.owner-ai-actions a,
+.exec-ai-actions a,
+.employee-ai-actions a {
+  color: var(--ui-primary);
+}
+
+.owner-metric-card,
+.owner-panel,
+.owner-ai-panel,
+.manager-risk-card,
+.manager-strategic-card,
+.manager-recommendation-card,
+.owner-ai-suggestions article,
+.owner-ai-insight-card,
+.exec-ai-insight-card {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-shadow);
+}
+
+.owner-panel-head,
+.owner-table-panel th,
+.manager-trend-bars,
+.workspace-activity-title-row em,
+.owner-ai-insight-head>span,
+.exec-ai-insight-head>span,
+.employee-ai-insight-head>span {
+  background: var(--ui-surface-soft);
+}
+
+.owner-metric-head span,
+.owner-team-code,
+.owner-ai-head>span,
+.manager-hub-title>span,
+.manager-recommendation-card>span {
+  background: var(--ui-primary);
+  color: #ffffff;
+}
+
+.owner-metric-card.tone-secondary .owner-metric-head span,
+.owner-metric-card.tone-neutral .owner-metric-head span,
+.owner-metric-card.tone-ai .owner-metric-head span,
+.owner-team-code.tone-green,
+.owner-team-code.tone-amber {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.owner-metric-head em,
+.owner-ai-insight-head em,
+.exec-ai-insight-head em,
+.employee-ai-insight-head em {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.owner-progress,
+.owner-segments i,
+.manager-risk-progress {
+  background: var(--ui-primary-soft);
+}
+
+.owner-progress i,
+.owner-segments i.active,
+.manager-risk-progress i,
+.owner-bars span,
+.manager-trend-bars i {
+  background: var(--ui-primary);
+}
+
+/* Final visible dashboard brand lock */
+.owner-dashboard,
+.exec-dashboard,
+.employee-dashboard,
+.owner-page,
+.exec-page,
+.employee-page {
+  background: #f6f8fc !important;
+}
+
+.owner-metric-card strong,
+.owner-ai-head h3,
+.manager-strategic-card h4 {
+  color: var(--ui-primary) !important;
+}
+
+.owner-metric-card,
+.owner-panel,
+.owner-ai-panel,
+.manager-risk-card,
+.manager-strategic-card,
+.manager-recommendation-card {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.owner-panel-head,
+.owner-table-panel th,
+.owner-ai-suggestions article,
+.owner-ai-insight-card,
+.exec-ai-insight-card {
+  background: #f3f6fc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.owner-metric-head span,
+.owner-team-code,
+.owner-ai-head>span,
+.owner-progress i,
+.owner-segments i.active {
+  background: var(--ui-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Align owner dashboard with the shared workspace page grid */
+.owner-content {
+  background: #f6f8fc !important;
+  min-width: 0 !important;
+}
+
+.owner-page {
+  margin: 0 !important;
+  max-width: none !important;
+  padding: 24px 34px 48px !important;
+  width: 100% !important;
+}
+
+.owner-hero-row {
+  margin-bottom: 24px !important;
+}
+
+.owner-hero-row h2 {
+  color: var(--ui-text) !important;
+  font-size: 32px !important;
+  line-height: 1.2 !important;
+}
+
+.owner-metrics-grid,
+.owner-insights-grid {
+  gap: 18px !important;
+}
+
+.owner-metric-card {
+  min-height: 176px !important;
+  padding: 28px 32px !important;
+}
+
+.owner-right-rail {
+  margin-left: 18px !important;
+}
+
+/* Keep dashboard top search identical to the shared workspace topbar */
+.owner-topbar,
+.exec-topbar,
+.employee-topbar {
+  align-items: center !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #d7dfec !important;
+  box-shadow: none !important;
+  display: flex !important;
+  gap: 24px !important;
+  height: 68px !important;
+  justify-content: space-between !important;
+  padding: 0 30px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+}
+
+.owner-search,
+.exec-search,
+.employee-search {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: #8390a6 !important;
+  display: flex !important;
+  flex: 0 0 460px !important;
+  gap: 18px !important;
+  height: 44px !important;
+  max-width: 460px !important;
+  min-height: 44px !important;
+  padding: 0 17px !important;
+  width: 460px !important;
+}
+
+.owner-search svg,
+.exec-search svg,
+.employee-search svg {
+  color: #8390a6 !important;
+  flex: 0 0 18px !important;
+  height: 18px !important;
+  width: 18px !important;
+}
+
+.owner-search input,
+.exec-search input,
+.employee-search input {
+  color: #22283a !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+>>>>>>> 0b2a913c5655085fcdc5a8b7833b1da6a45f10ce

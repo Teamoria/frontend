@@ -476,6 +476,7 @@
   }
 }
 
+<<<<<<< HEAD
 @media (max-width: 820px) {
   .ai-chat-header {
     align-items: flex-start;
@@ -531,3 +532,128 @@
     justify-content: center;
   }
 }
+=======
+/* Unified AI chat colors */
+.ai-chat-command {
+  color: var(--ui-text);
+}
+
+.ai-chat-header h1,
+.ai-history-list b,
+.ai-source-list b,
+.ai-empty-greeting h2,
+.ai-message-card h3,
+.ai-suggestion-list b {
+  color: var(--ui-text);
+}
+
+.ai-chat-header p,
+.ai-history-list button,
+.ai-history-list span,
+.ai-source-list small,
+.ai-empty-greeting,
+.ai-health-score span,
+.ai-composer-panel small,
+.ai-suggestion-list span {
+  color: var(--ui-muted);
+}
+
+.ai-context-rail,
+.ai-insight-rail,
+.ai-chat-surface,
+.ai-message-window,
+.ai-source-list article,
+.ai-suggestion-list article,
+.ai-tool-list button,
+.ai-chat-header-actions button {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-shadow);
+}
+
+.ai-chat-search,
+.ai-health-score,
+.ai-history-list button.active,
+.ai-prompt-strip button,
+.ai-message-actions button,
+.ai-empty-greeting span,
+.ai-tool-list button:first-child {
+  background: var(--ui-primary-soft);
+  border-color: var(--ui-primary-soft-strong);
+  color: var(--ui-primary);
+}
+
+.ai-context-rail h2,
+.ai-insight-rail h2,
+.ai-health-score strong,
+.ai-dashed-action,
+.ai-prompt-strip button,
+.ai-message-actions button {
+  color: var(--ui-primary);
+}
+
+.ai-chat-header-actions button.primary,
+.ai-user-message,
+.ai-composer-panel button {
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: #ffffff;
+}
+
+.ai-chat-header-actions button.primary:hover,
+.ai-composer-panel button:hover {
+  background: var(--ui-primary-hover);
+}
+
+.source-type--doc,
+.source-type--pdf,
+.source-type--sheet {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.ai-dashed-action {
+  background: var(--ui-surface);
+  border-color: var(--ui-line-strong);
+}
+
+/* Final visible AI chat brand lock */
+.ai-context-rail,
+.ai-insight-rail,
+.ai-chat-surface,
+.ai-message-window,
+.ai-source-list article,
+.ai-suggestion-list article,
+.ai-tool-list button,
+.ai-chat-header-actions button {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.ai-chat-search,
+.ai-health-score,
+.ai-history-list button.active,
+.ai-prompt-strip button,
+.ai-message-actions button,
+.ai-empty-greeting span,
+.ai-tool-list button:first-child {
+  background: var(--ui-primary-soft) !important;
+  border-color: var(--ui-primary-soft-strong) !important;
+  color: var(--ui-primary) !important;
+}
+
+.ai-chat-header-actions button.primary,
+.ai-user-message,
+.ai-composer-panel button {
+  background: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
+  color: #ffffff !important;
+}
+
+.ai-context-rail h2,
+.ai-insight-rail h2,
+.ai-health-score strong,
+.ai-dashed-action {
+  color: var(--ui-primary) !important;
+}
+>>>>>>> 0b2a913c5655085fcdc5a8b7833b1da6a45f10ce

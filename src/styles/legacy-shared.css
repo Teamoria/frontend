@@ -640,11 +640,11 @@
 }
 
 .product-shell {
-  --product-bg: #fafbff;
-  --product-card: #fff;
-  --product-ink: #10142f;
-  --product-muted: #697286;
-  --product-line: #e7e9f3;
+  --product-bg: var(--ui-bg);
+  --product-card: var(--ui-surface);
+  --product-ink: var(--ui-text);
+  --product-muted: var(--ui-muted);
+  --product-line: var(--ui-line);
   background: var(--product-bg);
   color: var(--product-ink);
   display: grid;
@@ -653,7 +653,7 @@
 }
 
 .product-shell--dark {
-  --product-bg: #f8f9ff;
+  --product-bg: var(--ui-bg);
 }
 
 .product-sidebar {
@@ -5076,6 +5076,7 @@
 
 .modal-backdrop {
   align-items: center;
+  animation: modalBackdropIn var(--modal-open-dur) var(--modal-ease) both;
   backdrop-filter: blur(10px);
   background: rgba(9, 13, 37, 0.34);
   display: flex;
@@ -5087,7 +5088,7 @@
 }
 
 .task-modal {
-  animation: fadeUp 0.24s ease both;
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both;
   background: #fff;
   border: 1px solid rgba(229, 232, 241, 0.9);
   border-radius: 12px;
@@ -5097,6 +5098,13 @@
   max-width: 620px;
   padding: 26px;
   width: min(100%, 620px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .task-modal {
+    animation: none;
+  }
 }
 
 .modal-head {

@@ -9,9 +9,7 @@ import {
   FiFilter,
   FiFolder,
   FiInfo,
-  FiLogOut,
   FiPlus,
-  FiSearch,
   FiSliders,
   FiTarget,
   FiTrendingUp,
@@ -21,7 +19,6 @@ import {
 } from "react-icons/fi";
 import { useState, useRef, useEffect } from "react";
 import AppShell, { PageHeader } from "../components/app/AppShell.jsx";
-import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/owner-projects.css";
 
 const summaryCards = [
@@ -64,33 +61,20 @@ const ownerProjects = [
 ];
 
 export default function OwnerProjectsPage() {
-  const { logout } = useAuth();
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
 
   return (
     <AppShell active="Projects" role="Company Owner" roleId="owner" user="Company Owner">
-      <div className="owner-projects-toolbar">
-        <label className="owner-projects-search">
-          <FiSearch aria-hidden="true" />
-          <input placeholder="Search projects, tasks, or personnel..." />
-        </label>
-        <div className="owner-projects-toolbar-actions">
-          <button className="owner-projects-primary" type="button" onClick={() => setIsProjectModalOpen(true)}>
-            <FiPlus aria-hidden="true" />
-            New Project
-          </button>
-          <span className="owner-projects-ai-status">
-            <FiZap aria-hidden="true" />
-            AI Status
-          </span>
-        </div>
-      </div>
-
+      <div className="owner-projects-page">
       <PageHeader
         title="Projects Directory"
         eyebrow="Manage and track enterprise initiatives across all departments."
         actions={(
           <>
+            <button className="owner-projects-primary" type="button" onClick={() => setIsProjectModalOpen(true)}>
+              <FiPlus aria-hidden="true" />
+              New Project
+            </button>
             <button className="filter-button" type="button">
               <FiFilter aria-hidden="true" />
               Filters
@@ -98,10 +82,6 @@ export default function OwnerProjectsPage() {
             <button className="filter-button" type="button">
               <FiSliders aria-hidden="true" />
               Sort By
-            </button>
-            <button className="owner-projects-logout" type="button" onClick={logout}>
-              <FiLogOut aria-hidden="true" />
-              Logout
             </button>
           </>
         )}
@@ -198,6 +178,7 @@ export default function OwnerProjectsPage() {
       </section>
 
       {isProjectModalOpen ? <InitializeProjectModal onClose={() => setIsProjectModalOpen(false)} /> : null}
+      </div>
     </AppShell>
   );
 }

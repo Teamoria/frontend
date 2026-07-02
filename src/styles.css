@@ -9,6 +9,31 @@
   --amber: #ffc448;
   --danger: #ef476f;
   --shadow: 0 24px 70px rgba(49, 39, 150, 0.18);
+  --ui-bg: #f7f9fc;
+  --ui-sidebar: #eef3ff;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #f4f7ff;
+  --ui-surface-muted: #edf3ff;
+  --ui-line: #d9e2f1;
+  --ui-line-strong: #bfcee5;
+  --ui-text: #101828;
+  --ui-muted: #667085;
+  --ui-muted-strong: #475467;
+  --ui-primary: #0f3fbf;
+  --ui-primary-hover: #0b349f;
+  --ui-primary-soft: #e7efff;
+  --ui-primary-soft-strong: #cfe0ff;
+  --ui-success: #16a34a;
+  --ui-success-soft: #e8f7ee;
+  --ui-warning: #d97706;
+  --ui-warning-soft: #fff3df;
+  --ui-danger: #dc2626;
+  --ui-danger-soft: #fee8e8;
+  --ui-shadow: 0 14px 34px rgba(16, 24, 40, 0.06);
+  --ui-shadow-strong: 0 18px 42px rgba(15, 63, 191, 0.14);
+  --modal-open-dur: 250ms;
+  --modal-scale: 0.96;
+  --modal-ease: cubic-bezier(0.22, 1, 0.36, 1);
   color: var(--ink);
   font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
@@ -2128,11 +2153,11 @@ select {
 }
 
 .product-shell {
-  --product-bg: #fafbff;
-  --product-card: #fff;
-  --product-ink: #10142f;
-  --product-muted: #697286;
-  --product-line: #e7e9f3;
+  --product-bg: var(--ui-bg);
+  --product-card: var(--ui-surface);
+  --product-ink: var(--ui-text);
+  --product-muted: var(--ui-muted);
+  --product-line: var(--ui-line);
   background: var(--product-bg);
   color: var(--product-ink);
   display: grid;
@@ -2141,7 +2166,7 @@ select {
 }
 
 .product-shell--dark {
-  --product-bg: #f8f9ff;
+  --product-bg: var(--ui-bg);
 }
 
 .product-sidebar {
@@ -4421,6 +4446,28 @@ select {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes modalBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalDialogIn {
+  from {
+    opacity: 0;
+    transform: scale(var(--modal-scale));
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -7639,6 +7686,7 @@ select {
 
 .modal-backdrop {
   align-items: center;
+  animation: modalBackdropIn var(--modal-open-dur) var(--modal-ease) both;
   backdrop-filter: blur(10px);
   background: rgba(9, 13, 37, 0.34);
   display: flex;
@@ -7650,7 +7698,7 @@ select {
 }
 
 .task-modal {
-  animation: fadeUp 0.24s ease both;
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both;
   background: #fff;
   border: 1px solid rgba(229, 232, 241, 0.9);
   border-radius: 12px;
@@ -9372,4 +9420,79 @@ select {
   background: rgba(255, 80, 80, 0.1);
   border-color: rgba(255, 80, 80, 0.5);
   color: #ff5252;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .task-modal {
+    animation: none;
+  }
+}
+
+/* Unified workspace surface and action colors */
+.product-main {
+  background: var(--ui-bg);
+}
+
+.page-kicker,
+.section-kicker {
+  color: var(--ui-primary);
+}
+
+.product-button {
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-shadow-strong);
+  color: #ffffff;
+}
+
+.product-button:hover {
+  background: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
+}
+
+.filter-button,
+.select-button {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  color: var(--ui-text);
+}
+
+.filter-button:hover,
+.select-button:hover {
+  background: var(--ui-primary-soft);
+  border-color: var(--ui-primary-soft-strong);
+  color: var(--ui-primary);
+}
+
+.product-panel,
+.premium-card,
+.project-hub-card,
+.panel,
+.chart-panel,
+.graph-panel,
+.chat-panel {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-shadow);
+}
+
+.product-panel:hover,
+.premium-card:hover,
+.project-hub-card:hover {
+  border-color: var(--ui-primary-soft-strong);
+  box-shadow: var(--ui-shadow-strong);
+}
+
+.progress-track,
+.owner-progress,
+.employee-ai-progress,
+.employee-project-progress p {
+  background: var(--ui-primary-soft);
+}
+
+.progress-track span,
+.owner-progress i,
+.employee-project-progress i {
+  background: var(--ui-primary);
 }

@@ -487,6 +487,7 @@
 
 .create-owner-task-backdrop {
   align-items: center;
+  animation: modalBackdropIn var(--modal-open-dur) var(--modal-ease) both;
   background: rgba(19, 27, 46, 0.44);
   backdrop-filter: blur(6px);
   display: flex;
@@ -498,6 +499,7 @@
 }
 
 .create-owner-task-modal {
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both;
   background: #faf8ff;
   border: 1px solid #c4c5d6;
   border-radius: 8px;
@@ -508,6 +510,13 @@
   max-width: 720px;
   overflow: hidden;
   width: min(100%, 720px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .create-owner-task-backdrop,
+  .create-owner-task-modal {
+    animation: none;
+  }
 }
 
 .create-owner-task-modal > header {
@@ -776,4 +785,142 @@
   .create-owner-task-priority {
     flex-direction: column;
   }
+}
+
+/* Unified operations board colors */
+.owner-operations-page {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+.owner-operations-titlebar h1,
+.owner-kanban-column h2,
+.owner-task-card h3,
+.create-owner-task-modal h2,
+.create-owner-task-ai-toggle b {
+  color: var(--ui-text);
+}
+
+.owner-operations-titlebar p,
+.owner-operations-sync,
+.owner-operations-filterbar label > span,
+.owner-operations-assignees > span,
+.owner-task-card p,
+.owner-task-meta,
+.owner-task-due,
+.owner-task-card footer small,
+.create-owner-task-body label span,
+.create-owner-task-priority legend,
+.create-owner-task-ai-toggle small {
+  color: var(--ui-muted);
+}
+
+.owner-operations-search,
+.owner-operations-view-toggle,
+.owner-kanban-task-list,
+.create-owner-task-modal,
+.create-owner-task-modal > header,
+.create-owner-task-modal > footer,
+.create-owner-task-body input,
+.create-owner-task-body select,
+.create-owner-task-body textarea {
+  background: var(--ui-surface-soft);
+  border-color: var(--ui-line);
+}
+
+.owner-task-card {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+  box-shadow: var(--ui-shadow);
+}
+
+.owner-operations-view-toggle button.active,
+.create-owner-task-priority button {
+  background: var(--ui-surface);
+  color: var(--ui-primary);
+}
+
+.owner-operations-new-task,
+.owner-operations-ai-button,
+.owner-kanban-column.tone-primary > header b,
+.owner-task-progress i,
+.create-owner-task-ai-toggle.active i,
+.create-owner-task-modal > footer button:last-child {
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: #ffffff;
+}
+
+.owner-kanban-column.tone-primary > header span:first-child,
+.owner-kanban-column.tone-dark > header span:first-child,
+.owner-kanban-column.tone-done > header span:first-child {
+  background: var(--ui-primary);
+}
+
+.owner-task-category,
+.owner-task-priority.priority-medium,
+.owner-task-priority.priority-low,
+.owner-task-done,
+.owner-task-avatars span,
+.owner-operations-assignees i {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.owner-task-priority.priority-high,
+.create-owner-task-priority button.active:first-of-type,
+.owner-task-insight.insight-risk {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+.owner-task-insight.insight-positive,
+.create-owner-task-ai-toggle {
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.owner-task-progress,
+.owner-kanban-column > header b {
+  background: var(--ui-primary-soft);
+}
+
+/* Final visible operations brand lock */
+.owner-operations-page {
+  background: #f6f8fc !important;
+}
+
+.owner-operations-search,
+.owner-operations-view-toggle,
+.owner-kanban-task-list,
+.create-owner-task-modal,
+.create-owner-task-modal > header,
+.create-owner-task-modal > footer {
+  background: #f3f6fc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.owner-task-card {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.owner-operations-new-task,
+.owner-operations-ai-button,
+.owner-kanban-column.tone-primary > header b,
+.owner-task-progress i,
+.create-owner-task-modal > footer button:last-child {
+  background: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
+  color: #ffffff !important;
+}
+
+.owner-task-category,
+.owner-task-priority.priority-medium,
+.owner-task-priority.priority-low,
+.owner-task-done,
+.owner-task-avatars span,
+.owner-operations-assignees i {
+  background: var(--ui-primary-soft) !important;
+  color: var(--ui-primary) !important;
 }

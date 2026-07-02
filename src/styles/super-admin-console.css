@@ -1764,6 +1764,7 @@
 
 .super-admin-modal-layer {
   align-items: center;
+  animation: modalBackdropIn var(--modal-open-dur) var(--modal-ease) both;
   display: flex;
   inset: 0;
   justify-content: center;
@@ -1781,6 +1782,7 @@
 }
 
 .super-admin-add-user-modal {
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both;
   background: var(--sa-surface);
   border: 1px solid var(--sa-line);
   border-radius: 8px;
@@ -1795,6 +1797,13 @@
 
 .super-admin-register-company-modal {
   width: min(100%, 540px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .super-admin-modal-layer,
+  .super-admin-add-user-modal {
+    animation: none;
+  }
 }
 
 .super-admin-add-user-modal>header {

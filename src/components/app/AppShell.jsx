@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect } from "react";
+<<<<<<< HEAD
 import { FiAlertTriangle, FiBarChart2, FiBell, FiBriefcase, FiCheckCircle, FiCloud, FiChevronDown, FiClock, FiFolder, FiHome, FiLogOut, FiMenu, FiMessageCircle, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
+=======
+import { FiBarChart2, FiBriefcase, FiBell, FiCloud, FiChevronDown, FiFolder, FiHome, FiLogOut, FiMessageCircle, FiSearch, FiSettings, FiShield, FiUser, FiUsers, FiZap } from "react-icons/fi";
+>>>>>>> 0b2a913c5655085fcdc5a8b7833b1da6a45f10ce
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
@@ -234,7 +238,7 @@ export function Topbar({ user, role, onMobileNavToggle }) {
         <FiMenu aria-hidden="true" />
       </button>
       <label className="product-search">
-        <span className="search-icon" aria-hidden="true" />
+        <FiSearch className="search-icon" aria-hidden="true" />
         <input placeholder="Search everywhere..." />
       </label>
       <div className="topbar-cluster">

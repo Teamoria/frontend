@@ -543,6 +543,7 @@
 
 .employees-modal-overlay {
   align-items: center;
+  animation: modalBackdropIn var(--modal-open-dur) var(--modal-ease) both;
   background: rgba(250, 248, 255, 0.92);
   display: flex;
   inset: 0;
@@ -553,6 +554,7 @@
 }
 
 .employees-modal {
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both;
   background: #ffffff;
   border: 1px solid var(--product-line);
   border-radius: 8px;
@@ -560,6 +562,13 @@
   max-width: 580px;
   overflow: hidden;
   width: min(100%, 580px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .employees-modal-overlay,
+  .employees-modal {
+    animation: none;
+  }
 }
 
 .employees-modal header,
@@ -1214,6 +1223,537 @@
 
 .employee-project-progress i.tone-secondary {
   background: #505f76;
+}
+
+/* Unified employee directory colors */
+.employees-summary-card,
+.employees-directory-panel,
+.employees-modal,
+.employee-profile-drawer,
+.employee-profile-actions button,
+.employee-profile-actions a,
+.employee-profile-stat-grid article,
+.employee-profile-details,
+.employee-project-progress {
+  background: var(--ui-surface);
+  border-color: var(--ui-line);
+}
+
+.employees-filter-bar,
+.employees-pagination,
+.employees-modal header,
+.employees-modal footer {
+  background: var(--ui-surface-soft);
+  border-color: var(--ui-line);
+}
+
+.employees-summary-card strong,
+.employees-table th,
+.employees-identity b,
+.employees-modal h2,
+.employee-profile-hero h2,
+.employee-profile-stat-grid b,
+.employee-profile-details b,
+.employee-project-progress b {
+  color: var(--ui-text);
+}
+
+.employees-summary-card small,
+.employees-filter-bar label span,
+.employees-identity small,
+.employees-role-note,
+.employees-pagination p,
+.employee-profile-details small,
+.employee-project-progress span {
+  color: var(--ui-muted);
+}
+
+.employees-summary-card span,
+.employees-identity>span,
+.employees-role-pill--member,
+.employees-role-pill--manager,
+.employees-status--invited {
+  background: var(--ui-primary-soft);
+  border-color: var(--ui-primary-soft-strong);
+  color: var(--ui-primary);
+}
+
+.employees-role-pill--admin,
+.employees-pagination button.active,
+.employee-profile-avatar span,
+.employee-profile-actions button.primary,
+.employee-ai-score-card,
+.employee-profile-timeline article>span {
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: #ffffff;
+}
+
+.employees-clear-filter,
+.employees-actions button:hover,
+.employee-profile-hero p,
+.employee-profile-actions button svg,
+.employee-profile-actions a svg,
+.employee-profile-timeline-head button {
+  color: var(--ui-primary);
+}
+
+.employees-actions button:hover,
+.employees-modal input:focus,
+.employees-modal select:focus {
+  border-color: var(--ui-primary);
+}
+
+.employees-modal input:focus,
+.employees-modal select:focus {
+  box-shadow: 0 0 0 3px rgba(15, 63, 191, 0.12);
+}
+
+.employees-status--active {
+  background: var(--ui-success-soft);
+  color: var(--ui-success);
+}
+
+.employees-status--pending {
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning);
+}
+
+.employees-status--inactive,
+.employees-status--suspended {
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
+}
+
+/* Final visible employees brand lock */
+.employees-summary-card,
+.employees-directory-panel,
+.employees-modal,
+.employee-profile-drawer,
+.employee-profile-actions button,
+.employee-profile-actions a,
+.employee-profile-stat-grid article,
+.employee-profile-details,
+.employee-project-progress {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.employees-filter-bar,
+.employees-pagination,
+.employees-modal header,
+.employees-modal footer {
+  background: #f3f6fc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.employees-summary-card span,
+.employees-identity>span,
+.employees-role-pill--member,
+.employees-role-pill--manager {
+  background: var(--ui-primary-soft) !important;
+  border-color: var(--ui-primary-soft-strong) !important;
+  color: var(--ui-primary) !important;
+}
+
+.employees-role-pill--admin,
+.employees-pagination button.active,
+.employee-profile-avatar span,
+.employee-profile-actions button.primary {
+  background: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Professional employee directory layout */
+.employees-page {
+  display: grid;
+  gap: 20px;
+}
+
+.employees-page .product-page-head {
+  align-items: flex-start;
+  margin: 0;
+}
+
+.employees-page .product-page-head h1 {
+  color: var(--ui-text);
+  font-size: 38px;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.employees-page .product-page-head p {
+  color: var(--ui-muted);
+  font-size: 15px;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+.employees-page .product-button {
+  border-radius: 8px;
+  min-height: 46px;
+  padding-inline: 18px;
+}
+
+.employees-page .employees-summary-grid {
+  gap: 18px;
+  margin: 0;
+}
+
+.employees-page .employees-summary-card {
+  min-height: 106px;
+  padding: 18px 20px;
+  position: relative;
+}
+
+.employees-page .employees-summary-card small {
+  color: var(--ui-muted);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.employees-page .employees-summary-card div {
+  align-items: flex-end;
+  margin-top: 12px;
+}
+
+.employees-page .employees-summary-card strong {
+  color: var(--ui-text);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.employees-page .employees-summary-card span {
+  align-self: center;
+  border-radius: 7px;
+  font-size: 11px;
+  padding: 7px 10px;
+}
+
+.employees-page .employees-layout {
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.75fr) minmax(300px, 0.95fr);
+}
+
+.employees-page .employees-directory-panel {
+  border-radius: 8px;
+}
+
+/* Desktop spacing pass for Employees */
+.employees-page {
+  gap: 24px;
+}
+
+.employees-page .product-page-head {
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 2px;
+}
+
+.employees-page .product-page-head h1 {
+  font-size: 40px;
+  line-height: 1.08;
+}
+
+.employees-page .product-page-head p {
+  font-size: 16px;
+  margin-top: 10px;
+}
+
+.employees-page .page-actions {
+  align-self: center;
+  flex: 0 0 auto;
+}
+
+.employees-page .product-button {
+  font-size: 15px;
+  min-height: 50px;
+  min-width: 176px;
+}
+
+.employees-page .employees-summary-grid {
+  gap: 20px;
+}
+
+.employees-page .employees-summary-card {
+  min-height: 118px;
+  padding: 22px;
+}
+
+.employees-page .employees-summary-card div {
+  margin-top: 14px;
+}
+
+.employees-page .employees-summary-card strong {
+  font-size: 38px;
+}
+
+.employees-page .employees-summary-card span {
+  font-size: 12px;
+  padding: 8px 11px;
+}
+
+.employees-page .employees-layout {
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+.employees-page .employees-directory-panel {
+  min-height: 520px;
+}
+
+.employees-page .employees-directory-panel .panel-head {
+  padding: 22px 22px 0;
+}
+
+.employees-page .employees-filter-bar {
+  padding: 16px 22px;
+}
+
+.employees-page .employees-table th {
+  padding: 16px 14px;
+}
+
+.employees-page .employees-table td {
+  font-size: 14px;
+  padding: 18px 14px;
+}
+
+.employees-page .employees-table tr {
+  min-height: 72px;
+}
+
+.employees-page .employees-table th:nth-child(1),
+.employees-page .employees-table td:nth-child(1) {
+  width: 24%;
+}
+
+.employees-page .employees-table th:nth-child(2),
+.employees-page .employees-table td:nth-child(2) {
+  width: 23%;
+}
+
+.employees-page .employees-table th:nth-child(3),
+.employees-page .employees-table td:nth-child(3) {
+  width: 15%;
+}
+
+.employees-page .employees-table th:nth-child(5),
+.employees-page .employees-table td:nth-child(5) {
+  width: 12%;
+}
+
+.employees-page .employees-table th:nth-child(7),
+.employees-page .employees-table td:nth-child(7) {
+  width: 10%;
+}
+
+.employees-page .role-matrix article {
+  padding: 20px;
+}
+
+/* Modern data-grid treatment */
+.employees-page .employees-directory-panel {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #ffffff 68%, #f8fafc 100%) !important;
+  border: 1px solid #d9e2f1 !important;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.07) !important;
+  overflow: hidden;
+}
+
+.employees-page .employees-directory-panel .panel-head {
+  align-items: center;
+  border-bottom: 1px solid #e6edf7;
+  display: flex;
+  min-height: 64px;
+  padding: 0 22px;
+}
+
+.employees-page .employees-directory-panel .panel-head h2 {
+  color: var(--ui-text);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.employees-page .employees-filter-bar {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #dbe5f2 !important;
+  border-top: 0 !important;
+  gap: 18px;
+  margin-top: 0;
+  padding: 16px 22px;
+}
+
+.employees-page .employees-filter-bar>div {
+  align-items: center;
+  gap: 14px;
+}
+
+.employees-page .employees-filter-bar label {
+  gap: 8px;
+}
+
+.employees-page .employees-filter-bar label span {
+  color: #667085;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.employees-page .employees-filter-bar select {
+  background: #ffffff;
+  border: 1px solid #d8e1ee;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+  color: var(--ui-text);
+  font-size: 14px;
+  min-height: 40px;
+}
+
+.employees-page .employees-filter-bar select:focus {
+  border-color: var(--ui-primary-soft-strong);
+  box-shadow: 0 0 0 3px rgba(15, 63, 191, 0.1);
+  outline: 0;
+}
+
+.employees-page .employees-clear-filter {
+  color: var(--ui-primary);
+  font-size: 14px;
+}
+
+.employees-page .employees-filter-bar .filter-button {
+  background: #ffffff;
+  border: 1px solid #d8e1ee;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+  min-height: 42px;
+}
+
+.employees-page .employees-table-wrap {
+  background: #ffffff;
+  overflow-x: auto;
+}
+
+.employees-page .employees-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 980px;
+}
+
+.employees-page .employees-table thead {
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.employees-page .employees-table th {
+  background: #ffffff;
+  border-bottom: 1px solid #e7edf6;
+  color: #475467;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 15px 16px;
+}
+
+.employees-page .employees-table td {
+  border-top: 0;
+  border-bottom: 1px solid #edf2f8;
+  color: #344054;
+  padding: 18px 16px;
+}
+
+.employees-page .employees-table tbody tr {
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+
+.employees-page .employees-table tbody tr:hover td {
+  background: #f8fbff;
+}
+
+.employees-page .employees-table tbody tr.is-selected td {
+  background: #eef5ff;
+}
+
+.employees-page .employees-identity {
+  gap: 14px;
+}
+
+.employees-page .employees-identity>span {
+  background: #e8f1ff !important;
+  border-color: #cfe0ff !important;
+  color: var(--ui-primary) !important;
+  height: 42px;
+  width: 42px;
+}
+
+.employees-page .employees-identity b {
+  color: var(--ui-text);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.employees-page .employees-email {
+  color: #475467;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.employees-page .employees-role-pill,
+.employees-page .employees-status {
+  border-radius: 999px;
+  font-size: 12px;
+  min-width: 58px;
+  justify-content: center;
+  padding: 7px 11px;
+}
+
+.employees-page .employees-role-pill--admin {
+  background: #1746c8 !important;
+}
+
+.employees-page .employees-status--active {
+  background: #e7f8ef !important;
+  color: #079455 !important;
+}
+
+.employees-page .employees-actions {
+  gap: 8px;
+}
+
+.employees-page .employees-actions button {
+  background: #ffffff;
+  border: 1px solid #d8e1ee;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+  color: #667085;
+  height: 34px;
+  width: 34px;
+}
+
+.employees-page .employees-actions button:hover {
+  background: var(--ui-primary-soft);
+  border-color: var(--ui-primary-soft-strong);
+  color: var(--ui-primary);
+  transform: none;
+}
+
+.employees-page .employees-pagination {
+  background: #f8fafc !important;
+  border-top: 1px solid #dbe5f2 !important;
+  min-height: 64px;
+}
+
+.employees-page .employees-pagination button {
+  background: #ffffff;
+  border-color: #d8e1ee;
+}
+
+.employees-page .employees-pagination button.active {
+  background: var(--ui-primary) !important;
+  border-color: var(--ui-primary) !important;
 }
 
 
