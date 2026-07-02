@@ -343,116 +343,118 @@ export default function EmployeesPage() {
           </div>
 
           <div className="employees-table-wrap">
-            <table className="employees-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Timezone</th>
-                  <th>Verified</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <MessageRow text={isDemo ? "Loading demo staff..." : "Loading staff from API..."} />
-                ) : rows.length === 0 ? (
-                  <MessageRow text="No staff members found." />
-                ) : rows.map((employee) => (
-                  <tr
-                    className={selectedEmployee?.id === employee.id ? "is-selected" : ""}
-                    key={employee.id || employee.email}
-                    onClick={() => setSelectedEmployee(employee)}
-                  >
-                    <td>
-                      <div className="employees-identity">
-                        <span>{getInitials(employee.name || employee.email)}</span>
-                        <div>
-                          <b>{employee.name || "Unnamed employee"}</b>
-                          <small>{employee.phone || "No phone"}</small>
+            <div className="container--scroll-x">
+              <table className="employees-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Timezone</th>
+                    <th>Verified</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <MessageRow text={isDemo ? "Loading demo staff..." : "Loading staff from API..."} />
+                  ) : rows.length === 0 ? (
+                    <MessageRow text="No staff members found." />
+                  ) : rows.map((employee) => (
+                    <tr
+                      className={selectedEmployee?.id === employee.id ? "is-selected" : ""}
+                      key={employee.id || employee.email}
+                      onClick={() => setSelectedEmployee(employee)}
+                    >
+                      <td>
+                        <div className="employees-identity">
+                          <span>{getInitials(employee.name || employee.email)}</span>
+                          <div>
+                            <b>{employee.name || "Unnamed employee"}</b>
+                            <small>{employee.phone || "No phone"}</small>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td>
-                      <a className="employees-email" href={`mailto:${employee.email}`}>
-                        <FiMail aria-hidden="true" />
-                        {employee.email}
-                      </a>
-                    </td>
-                    <td>
-                      <span className={`employees-role-pill employees-role-pill--${getRoleClass(employee.role)}`}>
-                        {formatLabel(employee.role)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`employees-status employees-status--${getStatusClass(employee.status)}`}>
-                        {formatLabel(employee.status)}
-                      </span>
-                    </td>
-                    <td>{employee.timezone || "UTC"}</td>
-                    <td>{employee.is_email_verified ? "Yes" : "No"}</td>
-                    <td>
-                      <div className="employees-actions">
-                        <button type="button" title="View profile" aria-label={`View ${employee.name} profile`} onClick={(event) => event.stopPropagation()}>
-                          <FiEye aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          title="Edit employee"
-                          aria-label={`Edit ${employee.name}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openEditModal(employee);
-                          }}
-                        >
-                          <FiEdit2 aria-hidden="true" />
-                        </button>
-                        {filters.archived ? (
-                          <>
-                            <button
-                              type="button"
-                              title="Restore employee"
-                              aria-label={`Restore ${employee.name}`}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                runAction(() => restoreStaffMember(employee.id), "Employee restored successfully.");
-                              }}
-                            >
-                              <FiRotateCcw aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              title="Delete permanently"
-                              aria-label={`Delete ${employee.name} permanently`}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                runAction(() => forceDeleteStaffMember(employee.id), "Employee permanently deleted.");
-                              }}
-                            >
-                              <FiTrash2 aria-hidden="true" />
-                            </button>
-                          </>
-                        ) : (
+                      </td>
+                      <td>
+                        <a className="employees-email" href={`mailto:${employee.email}`}>
+                          <FiMail aria-hidden="true" />
+                          {employee.email}
+                        </a>
+                      </td>
+                      <td>
+                        <span className={`employees-role-pill employees-role-pill--${getRoleClass(employee.role)}`}>
+                          {formatLabel(employee.role)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`employees-status employees-status--${getStatusClass(employee.status)}`}>
+                          {formatLabel(employee.status)}
+                        </span>
+                      </td>
+                      <td>{employee.timezone || "UTC"}</td>
+                      <td>{employee.is_email_verified ? "Yes" : "No"}</td>
+                      <td>
+                        <div className="employees-actions">
+                          <button type="button" title="View profile" aria-label={`View ${employee.name} profile`} onClick={(event) => event.stopPropagation()}>
+                            <FiEye aria-hidden="true" />
+                          </button>
                           <button
                             type="button"
-                            title="Archive employee"
-                            aria-label={`Archive ${employee.name}`}
+                            title="Edit employee"
+                            aria-label={`Edit ${employee.name}`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              runAction(() => deleteStaffMember(employee.id), "Employee archived successfully.");
+                              openEditModal(employee);
                             }}
                           >
-                            <FiUserX aria-hidden="true" />
+                            <FiEdit2 aria-hidden="true" />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          {filters.archived ? (
+                            <>
+                              <button
+                                type="button"
+                                title="Restore employee"
+                                aria-label={`Restore ${employee.name}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  runAction(() => restoreStaffMember(employee.id), "Employee restored successfully.");
+                                }}
+                              >
+                                <FiRotateCcw aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Delete permanently"
+                                aria-label={`Delete ${employee.name} permanently`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  runAction(() => forceDeleteStaffMember(employee.id), "Employee permanently deleted.");
+                                }}
+                              >
+                                <FiTrash2 aria-hidden="true" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Archive employee"
+                              aria-label={`Archive ${employee.name}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                runAction(() => deleteStaffMember(employee.id), "Employee archived successfully.");
+                              }}
+                            >
+                              <FiUserX aria-hidden="true" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="employees-pagination">

@@ -119,6 +119,48 @@
   position: relative;
 }
 
+.mobile-nav-toggle {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dfe4ef;
+  border-radius: 10px;
+  color: #263147;
+  display: none !important;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.mobile-nav-toggle svg {
+  height: 18px;
+  width: 18px;
+}
+
+.mobile-nav-overlay {
+  background: rgba(19, 27, 46, 0.4) !important;
+  /* تعتيم الخلفية */
+  backdrop-filter: blur(4px);
+  /* إضافة تأثير ضبابي مثل السوبر */
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+}
+
+.mobile-nav-overlay.is-open {
+  display: flex !important;
+}
+
+.mobile-nav-panel {
+  background: #f1f3ff !important;
+  width: 260px;
+  height: 100vh;
+  box-shadow: 20px 0 50px rgba(0, 0, 0, 0.1);
+  padding: 20px 10px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
 .owner-topbar {
   align-items: center;
   background: var(--owner-container);
@@ -191,6 +233,142 @@
   justify-content: center;
   overflow: hidden;
   width: 36px;
+}
+
+.dashboard-notifications-wrap {
+  position: relative;
+}
+
+.dashboard-notifications-wrap>button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--owner-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  position: relative;
+  width: 40px;
+}
+
+.dashboard-notifications-wrap>button:hover {
+  background: var(--owner-container-high);
+}
+
+.dashboard-notifications-wrap>button span {
+  align-items: center;
+  background: #f05285;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  color: #ffffff;
+  display: flex;
+  font-size: 10px;
+  font-weight: 900;
+  height: 18px;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 4px;
+  position: absolute;
+  right: -2px;
+  top: -3px;
+}
+
+.dashboard-notifications-panel {
+  background: #ffffff;
+  border: 1px solid rgba(196, 197, 214, 0.7);
+  border-radius: 14px;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.16);
+  min-width: 320px;
+  padding: 12px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 80;
+}
+
+.dashboard-notifications-panel header,
+.dashboard-notifications-panel footer {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dashboard-notifications-panel header {
+  margin-bottom: 10px;
+}
+
+.dashboard-notifications-panel h3 {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.dashboard-notifications-panel header button,
+.dashboard-notifications-panel footer button {
+  background: transparent;
+  border: 0;
+  color: #4c6ef5;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0;
+}
+
+.dashboard-notifications-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-notification-item {
+  align-items: flex-start;
+  border: 1px solid #edf2f7;
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+}
+
+.dashboard-notification-item span {
+  align-items: center;
+  background: #f4f6ff;
+  border-radius: 10px;
+  color: #4c6ef5;
+  display: inline-flex;
+  flex: 0 0 34px;
+  height: 34px;
+  justify-content: center;
+}
+
+.dashboard-notification-item.tone-warning span {
+  background: #fff7ed;
+  color: #ff8c00;
+}
+
+.dashboard-notification-item.tone-success span {
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.dashboard-notification-item h4 {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  margin: 0 0 4px;
+}
+
+.dashboard-notification-item p {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0 0 4px;
+}
+
+.dashboard-notification-item time {
+  color: #6b7280;
+  font-size: 11px;
 }
 
 .dashboard-profile-menu-wrap {
@@ -443,10 +621,9 @@
 }
 
 .owner-metrics-grid {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 24px;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 20px !important;
 }
 
 .owner-metric-card {
@@ -1079,24 +1256,105 @@
 }
 
 @media (max-width: 860px) {
-  .owner-dashboard {
-    display: block;
+  .mobile-nav-toggle {
+    display: inline-flex !important;
   }
 
-  .owner-sidebar {
+  .owner-search,
+  .exec-search,
+  .employee-search {
+    display: none !important;
+  }
+
+  .owner-dashboard,
+  .exec-dashboard,
+  .employee-dashboard {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .mobile-nav-toggle {
+    margin-right: auto !important;
+    display: flex !important;
+    /* إظهار الزر */
+    align-items: center;
+    justify-content: center;
+  }
+
+  .owner-dashboard>.product-sidebar,
+  .exec-dashboard>.product-sidebar,
+  .employee-dashboard>.product-sidebar,
+  .owner-sidebar,
+  .exec-sidebar,
+  .employee-sidebar,
+  .product-sidebar {
+    display: none !important;
+  }
+
+  .mobile-nav-overlay {
+    background: rgba(15, 23, 42, 0.42);
+    display: none;
+    inset: 0;
+    position: fixed;
+    z-index: 90;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .mobile-nav-overlay.is-open {
+    display: flex;
+  }
+
+  .mobile-nav-panel {
+    background: #f1f3ff;
+    box-shadow: 16px 0 50px rgba(15, 23, 42, 0.24);
+    height: 100vh;
+    max-width: 280px;
+    padding: 16px 12px 18px;
+    width: min(84vw, 280px);
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+  }
+
+  .mobile-nav-overlay.is-open .mobile-nav-panel {
+    transform: translateX(0);
+  }
+
+  .owner-topbar,
+  .exec-topbar,
+  .employee-topbar {
+    height: 64px !important;
+    padding: 0 16px !important;
+    justify-content: flex-end !important;
+    /* دفع الأيقونات لليمين */
+    gap: 12px !important;
+  }
+
+  .owner-search,
+  .exec-search,
+  .employee-search {
     display: none;
   }
 
-  .owner-topbar {
-    padding: 0 16px;
-  }
-
-  .owner-search {
-    display: none;
-  }
-
-  .owner-page {
+  .owner-page,
+  .exec-page,
+  .employee-page {
     padding: 24px 16px 116px;
+  }
+
+  .dashboard-account-summary {
+    display: none;
+  }
+
+  .dashboard-profile-menu-wrap {
+    border-left: 0;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .dashboard-notifications-panel {
+    min-width: min(92vw, 320px);
+    right: -8px;
   }
 
   .owner-hero-row {
@@ -1163,9 +1421,17 @@
     margin-left: auto;
   }
 
-  .owner-top-actions button {
+  .owner-top-actions button,
+  .exec-top-actions button,
+  .employee-top-actions button,
+  .dashboard-notifications-wrap>button {
     height: 36px;
     width: 36px;
+  }
+
+  .dashboard-notifications-panel {
+    min-width: min(94vw, 300px);
+    right: -12px;
   }
 
   .owner-panel-head {
@@ -1448,10 +1714,11 @@
   background: var(--exec-container-high);
 }
 
-.exec-metrics-grid {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.exec-metrics-grid,
+.super-admin-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 20px !important;
 }
 
 .exec-glass-card {
@@ -1974,23 +2241,68 @@
 }
 
 @media (max-width: 860px) {
-  .execution-dashboard {
-    display: block;
+  .mobile-nav-toggle {
+    display: inline-flex;
   }
 
-  .exec-sidebar {
+  .execution-dashboard,
+  .owner-dashboard,
+  .employee-dashboard {
+    display: block;
+    grid-template-columns: 1fr !important;
+  }
+
+  .owner-dashboard>.product-sidebar,
+  .exec-dashboard>.product-sidebar,
+  .employee-dashboard>.product-sidebar {
     display: none;
   }
 
-  .exec-topbar {
+  .mobile-nav-overlay {
+    background: rgba(15, 23, 42, 0.42);
+    display: none;
+    inset: 0;
+    position: fixed;
+    z-index: 90;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .mobile-nav-overlay.is-open {
+    display: flex;
+  }
+
+  .mobile-nav-panel {
+    background: #f1f3ff;
+    box-shadow: 16px 0 50px rgba(15, 23, 42, 0.24);
+    height: 100vh;
+    max-width: 280px;
+    padding: 16px 12px 18px;
+    width: min(84vw, 280px);
+    transform: translateX(-100%);
+    transition: transform 220ms ease;
+  }
+
+  .mobile-nav-overlay.is-open .mobile-nav-panel {
+    transform: translateX(0);
+  }
+
+  .owner-topbar,
+  .exec-topbar,
+  .employee-topbar {
+    gap: 12px;
     padding: 0 16px;
   }
 
-  .exec-search {
-    max-width: none;
+  .owner-search,
+  .exec-search,
+  .employee-search {
+    display: none;
   }
 
-  .exec-page {
+  .owner-page,
+  .exec-page,
+  .employee-page {
     padding: 24px 16px 116px;
   }
 
@@ -2014,9 +2326,25 @@
     display: none;
   }
 
+  .dashboard-account-summary {
+    display: none !important;
+  }
+
+  .dashboard-notifications-panel {
+    min-width: min(94vw, 300px);
+    right: -12px;
+  }
+
+
   .exec-top-actions {
     gap: 6px;
     margin-left: auto;
+  }
+
+  .owner-hero-row h2,
+  .manager-hub-head h2,
+  .employee-hero h2 {
+    font-size: 22px !important;
   }
 
   .exec-top-actions button {
@@ -2040,6 +2368,27 @@
   .exec-primary-button {
     width: 100%;
   }
+
+  .exec-page-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .owner-table-panel table,
+  .exec-overdue-card table {
+    min-width: 700px !important;
+  }
+
+  .owner-table-wrap,
+  .exec-table-wrap,
+  .super-admin-table-wrap {
+    width: 100% !important;
+    overflow-x: auto !important;
+    /* تفعيل التمرير الأفقي للجداول */
+    -webkit-overflow-scrolling: touch;
+  }
+
 }
 
 /* Employee Dashboard */
@@ -2825,25 +3174,51 @@
 }
 
 @media (max-width: 860px) {
-  .employee-dashboard {
-    display: block;
+  .mobile-nav-toggle {
+    display: inline-flex;
   }
 
-  .employee-sidebar {
-    display: none;
+  .employee-dashboard,
+  .owner-dashboard,
+  .exec-dashboard {
+    display: block !important;
+    grid-template-columns: 1fr !important;
   }
 
-  .employee-page {
-    padding: 24px 16px 116px;
+  .employee-sidebar,
+  .owner-sidebar,
+  .exec-sidebar,
+  .product-sidebar {
+    display: none !important;
   }
 
-  .employee-topbar {
+  .employee-topbar,
+  .owner-topbar,
+  .exec-topbar {
     padding: 0 16px;
+  }
+
+  .employee-page,
+  .owner-page,
+  .exec-page {
+    padding: 24px 16px 116px;
   }
 
   .employee-ai-helper {
     inset-inline: 16px;
     width: auto;
+  }
+
+  .owner-content,
+  .exec-shell,
+  .employee-shell {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .mobile-nav-toggle {
+    display: inline-flex !important;
+    /* تأكد أن الزر سيظهر الآن */
   }
 }
 
@@ -2855,6 +3230,11 @@
   .employee-top-actions {
     gap: 6px;
     margin-left: auto;
+  }
+
+  .dashboard-notifications-panel {
+    min-width: min(94vw, 300px);
+    right: -12px;
   }
 
   .employee-hero h2 {
@@ -3793,9 +4173,9 @@
   gap: 14px !important;
 }
 
-.owner-top-actions > button,
-.exec-top-actions > button,
-.employee-top-actions > button {
+.owner-top-actions>button,
+.exec-top-actions>button,
+.employee-top-actions>button {
   align-items: center !important;
   background: #ffffff !important;
   border: 1px solid #dfe4ef !important;
@@ -3808,9 +4188,9 @@
   width: 44px !important;
 }
 
-.owner-top-actions > button::after,
-.exec-top-actions > button::after,
-.employee-top-actions > button::after {
+.owner-top-actions>button::after,
+.exec-top-actions>button::after,
+.employee-top-actions>button::after {
   align-items: center !important;
   background: #f05285 !important;
   border: 2px solid #ffffff !important;
@@ -3829,15 +4209,15 @@
   top: -3px !important;
 }
 
-.owner-top-actions > button:hover,
-.exec-top-actions > button:hover,
-.employee-top-actions > button:hover {
+.owner-top-actions>button:hover,
+.exec-top-actions>button:hover,
+.employee-top-actions>button:hover {
   background: #f7f9ff !important;
 }
 
-.owner-top-actions > button svg,
-.exec-top-actions > button svg,
-.employee-top-actions > button svg {
+.owner-top-actions>button svg,
+.exec-top-actions>button svg,
+.employee-top-actions>button svg {
   height: 19px !important;
   stroke-width: 2 !important;
   width: 19px !important;
@@ -3952,6 +4332,111 @@
   .manager-insight-grid,
   .manager-recommendation-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Page-only mobile adjustments for Dashboard (owner / exec / employee) */
+@media (max-width: 767px) {
+
+  /* collapse two-column dashboard into a single column and hide the sidebar (AppSidebar will be shown via mobile overlay) */
+  .owner-dashboard,
+  .exec-dashboard,
+  .employee-dashboard {
+    grid-template-columns: 1fr !important;
+  }
+
+  .owner-dashboard>aside,
+  .exec-dashboard>aside,
+  .employee-dashboard>aside {
+    display: none !important;
+  }
+
+  .mobile-nav-toggle {
+    display: inline-flex !important;
+  }
+
+  /* Tighten page padding and prevent accidental horizontal scrolling */
+  .owner-page,
+  .exec-page,
+  .employee-page {
+    padding: 16px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Stack hero/title rows and make period / actions flow beneath */
+  .owner-hero-row,
+  .manager-hub-head,
+  .employee-schedule-head {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Metrics and KPI grids: full-width single column */
+  .owner-metrics-grid,
+  .manager-insight-grid,
+  .manager-recommendation-grid,
+  .owner-risk-grid,
+  .employee-bento-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Owner insights: make main column stack above right rail */
+  .owner-insights-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .owner-right-rail {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Panels should not clip vertically on small screens */
+  .owner-panel,
+  .owner-ai-panel,
+  .manager-strategic-card,
+  .manager-risk-card,
+  .manager-recommendation-card {
+    max-height: none !important;
+  }
+
+  /* Table handling: table wrapper already uses .container--scroll-x; ensure it doesn't force page scroll */
+  .owner-table-wrap,
+  .owner-table-panel {
+    overflow-x: hidden !important;
+  }
+
+  .owner-table-wrap .container--scroll-x {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .owner-table-panel table {
+    min-width: 720px;
+    width: auto !important;
+  }
+
+  /* Employee input and small controls should expand to full width */
+  .employee-ai-input,
+  .owner-period,
+  .page-actions,
+  .exec-page-actions {
+    width: 100% !important;
+  }
+
+  .employee-ai-input input,
+  .owner-search input,
+  .exec-search input,
+  .employee-search input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ensure recommendation action buttons wrap instead of overflowing */
+  .manager-recommendation-card div div,
+  .manager-recommendation-card div {
+    flex-wrap: wrap !important;
   }
 }
 
@@ -4138,4 +4623,45 @@
 .exec-search input,
 .employee-search input {
   font-size: 14px !important;
+}
+
+
+@media (max-width: 1024px) {
+
+  /* إلغاء الـ Grid المعقد وتحويله لعمود واحد */
+  .owner-insights-grid,
+  .exec-bento-grid,
+  .employee-bento-grid,
+  .manager-intel-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+
+
+  .owner-main-column,
+  .owner-right-rail,
+  .exec-burndown-card,
+  .exec-activity-card,
+  .exec-ai-bottleneck,
+  .exec-overdue-card,
+  .employee-task-panel,
+  .employee-score-card,
+  .employee-upcoming-panel,
+  .employee-ai-card,
+  .employee-files-panel,
+  .employee-schedule-panel,
+  .manager-risks-column,
+  .manager-strategic-column,
+  .manager-recommendations {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .manager-insight-grid,
+  .manager-recommendation-grid {
+    grid-template-columns: 1fr !important;
+  }
+
 }

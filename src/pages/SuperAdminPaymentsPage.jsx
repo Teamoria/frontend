@@ -219,53 +219,55 @@ function TransactionsTable() {
       </div>
 
       <div className="super-admin-table-wrap">
-        <table className="super-admin-management-table super-admin-transactions-table">
-          <thead>
-            <tr>
-              <th>Company</th>
-              <th>Transaction ID</th>
-              <th>Plan</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th aria-label="Action" />
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td>
-                  <span className={`super-admin-company-code tone-${transaction.tone}`}>{transaction.code}</span>
-                  <span className="super-admin-user-cell">
-                    <b>{transaction.company}</b>
-                    <small>{transaction.domain}</small>
-                  </span>
-                </td>
-                <td className="super-admin-mono">{transaction.id}</td>
-                <td>
-                  <span className={`super-admin-plan ${transaction.plan === "Enterprise" ? "enterprise" : ""}`}>
-                    {transaction.plan}
-                  </span>
-                </td>
-                <td>
-                  <b>{transaction.amount}</b>
-                </td>
-                <td>
-                  <span className={`super-admin-payment-status tone-${transaction.status.toLowerCase()}`}>
-                    <i />
-                    {transaction.status}
-                  </span>
-                </td>
-                <td>{transaction.date}</td>
-                <td>
-                  <button type="button" aria-label={`Open invoice for ${transaction.company}`}>
-                    <FiFileText aria-hidden="true" />
-                  </button>
-                </td>
+        <div className="container--scroll-x">
+          <table className="super-admin-management-table super-admin-transactions-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Transaction ID</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th aria-label="Action" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td>
+                    <span className={`super-admin-company-code tone-${transaction.tone}`}>{transaction.code}</span>
+                    <span className="super-admin-user-cell">
+                      <b>{transaction.company}</b>
+                      <small>{transaction.domain}</small>
+                    </span>
+                  </td>
+                  <td className="super-admin-mono">{transaction.id}</td>
+                  <td>
+                    <span className={`super-admin-plan ${transaction.plan === "Enterprise" ? "enterprise" : ""}`}>
+                      {transaction.plan}
+                    </span>
+                  </td>
+                  <td>
+                    <b>{transaction.amount}</b>
+                  </td>
+                  <td>
+                    <span className={`super-admin-payment-status tone-${transaction.status.toLowerCase()}`}>
+                      <i />
+                      {transaction.status}
+                    </span>
+                  </td>
+                  <td>{transaction.date}</td>
+                  <td>
+                    <button type="button" aria-label={`Open invoice for ${transaction.company}`}>
+                      <FiFileText aria-hidden="true" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <footer className="super-admin-pagination">

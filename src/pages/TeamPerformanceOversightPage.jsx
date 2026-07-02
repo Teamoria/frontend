@@ -79,35 +79,37 @@ export default function TeamPerformanceOversightPage() {
       <section className="performance-layout">
         <Panel title="Team Health Ranking" className="performance-table-panel">
           <div className="performance-table-wrap">
-            <table className="performance-table">
-              <thead>
-                <tr>
-                  <th>Team</th>
-                  <th>Owner</th>
-                  <th>Score</th>
-                  <th>Status</th>
-                  <th>Velocity</th>
-                  <th>Risk</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teams.map(([team, owner, score, status, velocity, risk]) => (
-                  <tr key={team}>
-                    <td>
-                      <b>{team}</b>
-                      <span>Workspace performance</span>
-                    </td>
-                    <td>{owner}</td>
-                    <td><strong>{score}</strong></td>
-                    <td><Badge tone={status === "Needs Review" ? "amber" : "green"}>{status}</Badge></td>
-                    <td>{velocity}</td>
-                    <td>
-                      <span className={`performance-risk risk-${risk.toLowerCase()}`}>{risk}</span>
-                    </td>
+            <div className="container--scroll-x">
+              <table className="performance-table">
+                <thead>
+                  <tr>
+                    <th>Team</th>
+                    <th>Owner</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Velocity</th>
+                    <th>Risk</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {teams.map(([team, owner, score, status, velocity, risk]) => (
+                    <tr key={team}>
+                      <td>
+                        <b>{team}</b>
+                        <span>Workspace performance</span>
+                      </td>
+                      <td>{owner}</td>
+                      <td><strong>{score}</strong></td>
+                      <td><Badge tone={status === "Needs Review" ? "amber" : "green"}>{status}</Badge></td>
+                      <td>{velocity}</td>
+                      <td>
+                        <span className={`performance-risk risk-${risk.toLowerCase()}`}>{risk}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </Panel>
 

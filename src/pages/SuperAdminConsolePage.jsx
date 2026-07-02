@@ -261,20 +261,20 @@ function SuperAdminTopbar() {
       </label>
       <div className="super-admin-actions">
         <div className="super-admin-notification-anchor">
-        <button
-          type="button"
-          aria-expanded={notificationsOpen}
-          aria-label="Notifications"
-          onClick={() => {
-            setProfileOpen(false);
-            setNotificationsOpen((open) => !open);
-          }}
-        >
-          <FiBell aria-hidden="true" />
-          <i />
-          <span className="super-admin-notification-count">3</span>
-        </button>
-        {notificationsOpen ? <NotificationsOverlay /> : null}
+          <button
+            type="button"
+            aria-expanded={notificationsOpen}
+            aria-label="Notifications"
+            onClick={() => {
+              setProfileOpen(false);
+              setNotificationsOpen((open) => !open);
+            }}
+          >
+            <FiBell aria-hidden="true" />
+            <i />
+            <span className="super-admin-notification-count">3</span>
+          </button>
+          {notificationsOpen ? <NotificationsOverlay /> : null}
         </div>
         <div className="super-admin-profile-anchor">
           <button
@@ -471,44 +471,46 @@ function RecentOnboardingTable() {
         <button type="button">View All Companies</button>
       </div>
       <div className="super-admin-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Company Name</th>
-              <th>Plan</th>
-              <th>Status</th>
-              <th>Users</th>
-              <th>Onboarding Date</th>
-              <th aria-label="Actions" />
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map(([code, name, plan, status, users, date, tone]) => (
-              <tr key={name}>
-                <td>
-                  <span className={`super-admin-company-code tone-${tone}`}>{code}</span>
-                  <b>{name}</b>
-                </td>
-                <td>
-                  <span className={`super-admin-plan ${plan === "Enterprise" ? "enterprise" : ""}`}>{plan}</span>
-                </td>
-                <td>
-                  <span className={`super-admin-status ${status === "Active" ? "active" : ""}`}>
-                    <i />
-                    {status}
-                  </span>
-                </td>
-                <td>{users}</td>
-                <td>{date}</td>
-                <td>
-                  <button type="button" aria-label={`Open actions for ${name}`}>
-                    <FiMoreVertical aria-hidden="true" />
-                  </button>
-                </td>
+        <div className="container--scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Company Name</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Users</th>
+                <th>Onboarding Date</th>
+                <th aria-label="Actions" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {companies.map(([code, name, plan, status, users, date, tone]) => (
+                <tr key={name}>
+                  <td>
+                    <span className={`super-admin-company-code tone-${tone}`}>{code}</span>
+                    <b>{name}</b>
+                  </td>
+                  <td>
+                    <span className={`super-admin-plan ${plan === "Enterprise" ? "enterprise" : ""}`}>{plan}</span>
+                  </td>
+                  <td>
+                    <span className={`super-admin-status ${status === "Active" ? "active" : ""}`}>
+                      <i />
+                      {status}
+                    </span>
+                  </td>
+                  <td>{users}</td>
+                  <td>{date}</td>
+                  <td>
+                    <button type="button" aria-label={`Open actions for ${name}`}>
+                      <FiMoreVertical aria-hidden="true" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

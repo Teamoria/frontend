@@ -122,59 +122,61 @@ export default function OwnerProjectsPage() {
 
       <section className="owner-projects-table-panel">
         <div className="owner-projects-table-wrap">
-          <table className="owner-projects-table">
-            <thead>
-              <tr>
-                <th>Project Name</th>
-                <th>Priority</th>
-                <th>Progress</th>
-                <th>Team</th>
-                <th>AI Health Score</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ownerProjects.map((project) => (
-                <tr key={project.name}>
-                  <td>
-                    <b>{project.name}</b>
-                    <span>{project.department}</span>
-                  </td>
-                  <td>
-                    <span className={`owner-projects-priority priority-${project.priority.toLowerCase()}`}>
-                      {project.priority === "High" ? <FiChevronsUp aria-hidden="true" /> : <FiArrowUp aria-hidden="true" />}
-                      {project.priority}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="owner-projects-progress">
-                      <div><i style={{ width: `${project.progress}%` }} /></div>
-                      <span>{project.progress}%</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="owner-projects-team-cell">
-                      <div className="owner-projects-avatar-stack">
-                        {project.team.map((member) => <span key={member}>{member}</span>)}
-                      </div>
-                      <small>{project.teamLabel}</small>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`owner-projects-health ${project.status === "At Risk" ? "health-risk" : ""}`}>
-                      <i />
-                      {project.health}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`owner-projects-status status-${project.status.toLowerCase().replace(" ", "-")}`}>
-                      {project.status}
-                    </span>
-                  </td>
+          <div className="container--scroll-x">
+            <table className="owner-projects-table">
+              <thead>
+                <tr>
+                  <th>Project Name</th>
+                  <th>Priority</th>
+                  <th>Progress</th>
+                  <th>Team</th>
+                  <th>AI Health Score</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {ownerProjects.map((project) => (
+                  <tr key={project.name}>
+                    <td>
+                      <b>{project.name}</b>
+                      <span>{project.department}</span>
+                    </td>
+                    <td>
+                      <span className={`owner-projects-priority priority-${project.priority.toLowerCase()}`}>
+                        {project.priority === "High" ? <FiChevronsUp aria-hidden="true" /> : <FiArrowUp aria-hidden="true" />}
+                        {project.priority}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="owner-projects-progress">
+                        <div><i style={{ width: `${project.progress}%` }} /></div>
+                        <span>{project.progress}%</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="owner-projects-team-cell">
+                        <div className="owner-projects-avatar-stack">
+                          {project.team.map((member) => <span key={member}>{member}</span>)}
+                        </div>
+                        <small>{project.teamLabel}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`owner-projects-health ${project.status === "At Risk" ? "health-risk" : ""}`}>
+                        <i />
+                        {project.health}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`owner-projects-status status-${project.status.toLowerCase().replace(" ", "-")}`}>
+                        {project.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

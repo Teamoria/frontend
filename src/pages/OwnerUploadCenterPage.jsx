@@ -82,39 +82,41 @@ export default function OwnerUploadCenterPage() {
             </div>
           </div>
           <div className="owner-upload-table-wrap">
-            <table className="owner-upload-table">
-              <thead>
-                <tr>
-                  <th>File Name</th>
-                  <th>Type</th>
-                  <th>Uploaded Date</th>
-                  <th>AI Insights</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {knowledgeAssets.map((asset) => {
-                  const Icon = asset.icon;
+            <div className="container--scroll-x">
+              <table className="owner-upload-table">
+                <thead>
+                  <tr>
+                    <th>File Name</th>
+                    <th>Type</th>
+                    <th>Uploaded Date</th>
+                    <th>AI Insights</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {knowledgeAssets.map((asset) => {
+                    const Icon = asset.icon;
 
-                  return (
-                    <tr key={asset.name}>
-                      <td>
-                        <Icon aria-hidden="true" />
-                        <span>{asset.name}</span>
-                      </td>
-                      <td>{asset.type}</td>
-                      <td>{asset.date}</td>
-                      <td>
-                        <div className="owner-upload-tags">
-                          {asset.tags.map((tag) => <span key={tag}>{tag}</span>)}
-                        </div>
-                      </td>
-                      <td><button type="button">View AI Summary</button></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={asset.name}>
+                        <td>
+                          <Icon aria-hidden="true" />
+                          <span>{asset.name}</span>
+                        </td>
+                        <td>{asset.type}</td>
+                        <td>{asset.date}</td>
+                        <td>
+                          <div className="owner-upload-tags">
+                            {asset.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                          </div>
+                        </td>
+                        <td><button type="button">View AI Summary</button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       </section>

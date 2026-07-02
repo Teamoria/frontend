@@ -142,65 +142,67 @@ export default function SuperAdminCompaniesPage() {
           {status.loading ? <p className="super-admin-state">Loading companies...</p> : null}
 
           <div className="super-admin-table-wrap">
-            <table className="super-admin-management-table">
-              <thead>
-                <tr>
-                  <th>Company</th>
-                  <th>Industry</th>
-                  <th>Website</th>
-                  <th>Status</th>
-                  <th>Address</th>
-                  <th>Created</th>
-                  <th>Updated</th>
-                  <th aria-label="Actions" />
-                </tr>
-              </thead>
-              <tbody>
-                {!status.loading && filteredCompanies.length === 0 ? (
+            <div className="container--scroll-x">
+              <table className="super-admin-management-table">
+                <thead>
                   <tr>
-                    <td colSpan="8">No companies found.</td>
+                    <th>Company</th>
+                    <th>Industry</th>
+                    <th>Website</th>
+                    <th>Status</th>
+                    <th>Address</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                    <th aria-label="Actions" />
                   </tr>
-                ) : null}
-                {filteredCompanies.map((company) => (
-                  <tr key={company.id}>
-                    <td>
-                      <span className="super-admin-company-code tone-primary">{getInitials(company.name)}</span>
-                      <b>{company.name || "Unnamed company"}</b>
-                    </td>
-                    <td>{company.industry || "-"}</td>
-                    <td>{company.website ? <a href={company.website} rel="noreferrer" target="_blank">{company.website}</a> : "-"}</td>
-                    <td>
-                      <span className={`super-admin-status ${company.status === "active" ? "active" : ""} ${company.status === "suspended" ? "suspended" : ""}`}>
-                        <i />
-                        {formatLabel(company.status)}
-                      </span>
-                    </td>
-                    <td>{company.address || "-"}</td>
-                    <td>{formatDate(company.created_at)}</td>
-                    <td>{formatDate(company.updated_at)}</td>
-                    <td>
-                      <div className="super-admin-row-actions">
-                        <button type="button" title="Edit company" onClick={() => setFormState({ open: true, mode: "edit", company })}>
-                          <FiEdit2 aria-hidden="true" />
-                        </button>
-                        {archived ? (
-                          <button type="button" title="Restore company" onClick={() => handleRestore(company.id)}>
-                            <FiRefreshCw aria-hidden="true" />
+                </thead>
+                <tbody>
+                  {!status.loading && filteredCompanies.length === 0 ? (
+                    <tr>
+                      <td colSpan="8">No companies found.</td>
+                    </tr>
+                  ) : null}
+                  {filteredCompanies.map((company) => (
+                    <tr key={company.id}>
+                      <td>
+                        <span className="super-admin-company-code tone-primary">{getInitials(company.name)}</span>
+                        <b>{company.name || "Unnamed company"}</b>
+                      </td>
+                      <td>{company.industry || "-"}</td>
+                      <td>{company.website ? <a href={company.website} rel="noreferrer" target="_blank">{company.website}</a> : "-"}</td>
+                      <td>
+                        <span className={`super-admin-status ${company.status === "active" ? "active" : ""} ${company.status === "suspended" ? "suspended" : ""}`}>
+                          <i />
+                          {formatLabel(company.status)}
+                        </span>
+                      </td>
+                      <td>{company.address || "-"}</td>
+                      <td>{formatDate(company.created_at)}</td>
+                      <td>{formatDate(company.updated_at)}</td>
+                      <td>
+                        <div className="super-admin-row-actions">
+                          <button type="button" title="Edit company" onClick={() => setFormState({ open: true, mode: "edit", company })}>
+                            <FiEdit2 aria-hidden="true" />
                           </button>
-                        ) : (
-                          <button type="button" title="Delete company" onClick={() => handleDelete(company.id)}>
-                            <FiTrash2 aria-hidden="true" />
+                          {archived ? (
+                            <button type="button" title="Restore company" onClick={() => handleRestore(company.id)}>
+                              <FiRefreshCw aria-hidden="true" />
+                            </button>
+                          ) : (
+                            <button type="button" title="Delete company" onClick={() => handleDelete(company.id)}>
+                              <FiTrash2 aria-hidden="true" />
+                            </button>
+                          )}
+                          <button type="button" aria-label={`Open actions for ${company.name}`}>
+                            <FiMoreVertical aria-hidden="true" />
                           </button>
-                        )}
-                        <button type="button" aria-label={`Open actions for ${company.name}`}>
-                          <FiMoreVertical aria-hidden="true" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <Pagination pagination={pagination} page={page} setPage={setPage} totalLabel="companies" />

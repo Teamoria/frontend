@@ -10,6 +10,7 @@ import {
   FiCreditCard,
   FiDownload,
   FiLogOut,
+  FiMenu,
   FiPlus,
   FiSearch,
   FiShield,
@@ -105,6 +106,7 @@ export default function DashboardPage() {
 }
 function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   const isPreview = !authUser;
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const companyName = authUser?.company?.name || "Your Company";
 
   return (
@@ -112,6 +114,9 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
       <AppSidebar active="Dashboard" roleId={roleId} />
       <section className="owner-content">
         <header className="owner-topbar">
+          <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={() => setMobileNavOpen((value) => !value)}>
+            <FiMenu aria-hidden="true" />
+          </button>
           <label className="owner-search">
             <FiSearch aria-hidden="true" />
             <input placeholder="Search everywhere..." />
@@ -150,41 +155,43 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                   <a href="#/reports">View All Units</a>
                 </div>
                 <div className="owner-table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Department</th>
-                        <th>Velocity</th>
-                        <th>Project Health</th>
-                        <th>AI Integration</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ownerTeams.map(([code, name, office, velocity, health, tone, avatars]) => (
-                        <tr key={name}>
-                          <td>
-                            <div className={`owner-team-code tone-${tone}`}>{code}</div>
-                            <div>
-                              <b>{name}</b>
-                              <span>{office}</span>
-                            </div>
-                          </td>
-                          <td>{velocity}</td>
-                          <td>
-                            <span className={`owner-health tone-${tone}`}>
-                              {health === "Elite" ? <FiCheckCircle /> : health === "Stable" ? <FiTrendingUp /> : <FiAlertTriangle />}
-                              {health}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="owner-avatar-stack">
-                              {Array.from({ length: avatars }).map((_, index) => <i key={`${name}-${index}`} />)}
-                            </div>
-                          </td>
+                  <div className="container--scroll-x">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Department</th>
+                          <th>Velocity</th>
+                          <th>Project Health</th>
+                          <th>AI Integration</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {ownerTeams.map(([code, name, office, velocity, health, tone, avatars]) => (
+                          <tr key={name}>
+                            <td>
+                              <div className={`owner-team-code tone-${tone}`}>{code}</div>
+                              <div>
+                                <b>{name}</b>
+                                <span>{office}</span>
+                              </div>
+                            </td>
+                            <td>{velocity}</td>
+                            <td>
+                              <span className={`owner-health tone-${tone}`}>
+                                {health === "Elite" ? <FiCheckCircle /> : health === "Stable" ? <FiTrendingUp /> : <FiAlertTriangle />}
+                                {health}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="owner-avatar-stack">
+                                {Array.from({ length: avatars }).map((_, index) => <i key={`${name}-${index}`} />)}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </section>
 
@@ -215,7 +222,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                 <div className="owner-ai-head">
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
-                  <h3>AI Company Hub</h3>
+                    <h3>AI Company Hub</h3>
                     <p>Mock strategic suggestions</p>
                   </div>
                 </div>
@@ -238,17 +245,29 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
             </aside>
           </section>
         </div>
+        {mobileNavOpen ? (
+          <div className="mobile-nav-overlay is-open" role="presentation" onClick={() => setMobileNavOpen(false)}>
+            <div className="mobile-nav-panel" role="dialog" aria-label="Navigation menu" onClick={(event) => event.stopPropagation()}>
+              <AppSidebar active="Dashboard" roleId={roleId} onNavigate={() => setMobileNavOpen(false)} />
+            </div>
+          </div>
+        ) : null}
       </section>
     </main>
   );
 }
 
 function ExecutionDashboard({ isPreview, roleId, profile, onRoleChange }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   return (
     <main className="execution-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
       <section className="exec-shell">
         <header className="exec-topbar">
+          <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={() => setMobileNavOpen((value) => !value)}>
+            <FiMenu aria-hidden="true" />
+          </button>
           <label className="exec-search">
             <FiSearch aria-hidden="true" />
             <input placeholder="Search everywhere..." />
@@ -430,6 +449,7 @@ function TrendBars() {
 }
 
 function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange }) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const firstName = (authUser?.name || authUser?.email || "there").split(/\s|@/).filter(Boolean)[0];
 
   return (
@@ -437,6 +457,9 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
       <AppSidebar active="Dashboard" roleId={roleId} />
       <section className="employee-shell">
         <header className="employee-topbar">
+          <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={() => setMobileNavOpen((value) => !value)}>
+            <FiMenu aria-hidden="true" />
+          </button>
           <label className="employee-search">
             <FiSearch aria-hidden="true" />
             <input placeholder="Search everywhere..." />
@@ -594,6 +617,13 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
 
         <AiHelper classNamePrefix="employee" />
         <a className="employee-fab" href="#/tasks" aria-label="Create task"><FiPlus aria-hidden="true" /></a>
+        {mobileNavOpen ? (
+          <div className="mobile-nav-overlay is-open" role="presentation" onClick={() => setMobileNavOpen(false)}>
+            <div className="mobile-nav-panel" role="dialog" aria-label="Navigation menu" onClick={(event) => event.stopPropagation()}>
+              <AppSidebar active="Dashboard" roleId={roleId} onNavigate={() => setMobileNavOpen(false)} />
+            </div>
+          </div>
+        ) : null}
       </section>
     </main>
   );
@@ -602,21 +632,31 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
 function TopActions({ classNamePrefix, profile }) {
   const { logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const menuRef = useRef(null);
+  const notificationsRef = useRef(null);
   const displayName = user?.name || user?.email || profile.label;
   const displayRole = profile.label;
   const initials = getInitials(displayName || profile.initials);
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (!menuRef.current?.contains(event.target)) {
+      const clickedOutsideMenu = menuRef.current && !menuRef.current.contains(event.target);
+      const clickedOutsideNotifications = notificationsRef.current && !notificationsRef.current.contains(event.target);
+
+      if (clickedOutsideMenu) {
         setIsMenuOpen(false);
+      }
+
+      if (clickedOutsideNotifications) {
+        setIsNotificationsOpen(false);
       }
     }
 
     function handleEsc(event) {
       if (event.key === "Escape") {
         setIsMenuOpen(false);
+        setIsNotificationsOpen(false);
       }
     }
 
@@ -630,7 +670,49 @@ function TopActions({ classNamePrefix, profile }) {
 
   return (
     <div className={`${classNamePrefix}-top-actions`}>
-      <button type="button" aria-label="Notifications"><FiBell /></button>
+      <div className="dashboard-notifications-wrap" ref={notificationsRef}>
+        <button
+          type="button"
+          aria-label="Notifications"
+          aria-expanded={isNotificationsOpen}
+          onClick={() => {
+            setIsMenuOpen(false);
+            setIsNotificationsOpen((current) => !current);
+          }}
+        >
+          <FiBell />
+          <span>3</span>
+        </button>
+        {isNotificationsOpen ? (
+          <section className="dashboard-notifications-panel" aria-label="Notifications panel">
+            <header>
+              <h3>Notifications</h3>
+              <button type="button">Mark all as read</button>
+            </header>
+            <div className="dashboard-notifications-list">
+              {[
+                { title: "New task assigned", text: "You received a new task in the onboarding project.", time: "5m ago", tone: "info", icon: FiBell },
+                { title: "Deadline approaching", text: "The launch checklist needs review soon.", time: "28m ago", tone: "warning", icon: FiAlertTriangle },
+                { title: "Update approved", text: "Your weekly update was approved by the team lead.", time: "1h ago", tone: "success", icon: FiCheckCircle }
+              ].map(({ icon: Icon, text, time, title, tone }) => (
+                <article className={`dashboard-notification-item tone-${tone}`} key={title}>
+                  <span>
+                    <Icon aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h4>{title}</h4>
+                    <p>{text}</p>
+                    <time>{time}</time>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <footer>
+              <button type="button">View all notifications</button>
+            </footer>
+          </section>
+        ) : null}
+      </div>
       <div className="dashboard-profile-menu-wrap" ref={menuRef}>
         <div className="dashboard-account-summary">
           <div className="avatar-image" aria-hidden="true" />

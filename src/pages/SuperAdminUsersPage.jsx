@@ -170,66 +170,68 @@ export default function SuperAdminUsersPage() {
           {status.loading ? <p className="super-admin-state">Loading users...</p> : null}
 
           <div className="super-admin-table-wrap">
-            <table className="super-admin-management-table super-admin-users-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Company</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Last Login</th>
-                  <th aria-label="Actions" />
-                </tr>
-              </thead>
-              <tbody>
-                {!status.loading && filteredUsers.length === 0 ? (
+            <div className="container--scroll-x">
+              <table className="super-admin-management-table super-admin-users-table">
+                <thead>
                   <tr>
-                    <td colSpan="6">No users found.</td>
+                    <th>User</th>
+                    <th>Company</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th aria-label="Actions" />
                   </tr>
-                ) : null}
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <span className="super-admin-user-avatar tone-primary">{getInitials(user.name || user.email)}</span>
-                      <span className="super-admin-user-cell">
-                        <b>{user.name || "Unnamed user"}</b>
-                        <small>{user.email}</small>
-                      </span>
-                    </td>
-                    <td>{user.company?.name || user.company || "-"}</td>
-                    <td>
-                      <span className={`super-admin-role-pill tone-${roleTone(user.role)}`}>{formatLabel(user.role)}</span>
-                    </td>
-                    <td>
-                      <span className={`super-admin-status ${user.status === "active" ? "active" : ""} ${user.status === "suspended" ? "suspended" : ""}`}>
-                        <i />
-                        {formatLabel(user.status)}
-                      </span>
-                    </td>
-                    <td>{formatDate(user.last_login_at)}</td>
-                    <td>
-                      <div className="super-admin-row-actions">
-                        <button type="button" title="Edit user" onClick={() => setFormState({ open: true, mode: "edit", user })}>
-                          <FiEdit2 aria-hidden="true" />
-                        </button>
-                        {archived ? (
-                          <button type="button" title="Restore user" onClick={() => handleRestore(user.id)}>
-                            <FiRefreshCw aria-hidden="true" />
+                </thead>
+                <tbody>
+                  {!status.loading && filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="6">No users found.</td>
+                    </tr>
+                  ) : null}
+                  {filteredUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td>
+                        <span className="super-admin-user-avatar tone-primary">{getInitials(user.name || user.email)}</span>
+                        <span className="super-admin-user-cell">
+                          <b>{user.name || "Unnamed user"}</b>
+                          <small>{user.email}</small>
+                        </span>
+                      </td>
+                      <td>{user.company?.name || user.company || "-"}</td>
+                      <td>
+                        <span className={`super-admin-role-pill tone-${roleTone(user.role)}`}>{formatLabel(user.role)}</span>
+                      </td>
+                      <td>
+                        <span className={`super-admin-status ${user.status === "active" ? "active" : ""} ${user.status === "suspended" ? "suspended" : ""}`}>
+                          <i />
+                          {formatLabel(user.status)}
+                        </span>
+                      </td>
+                      <td>{formatDate(user.last_login_at)}</td>
+                      <td>
+                        <div className="super-admin-row-actions">
+                          <button type="button" title="Edit user" onClick={() => setFormState({ open: true, mode: "edit", user })}>
+                            <FiEdit2 aria-hidden="true" />
                           </button>
-                        ) : (
-                          <button type="button" title="Delete user" onClick={() => handleDelete(user.id)}>
-                            <FiTrash2 aria-hidden="true" />
+                          {archived ? (
+                            <button type="button" title="Restore user" onClick={() => handleRestore(user.id)}>
+                              <FiRefreshCw aria-hidden="true" />
+                            </button>
+                          ) : (
+                            <button type="button" title="Delete user" onClick={() => handleDelete(user.id)}>
+                              <FiTrash2 aria-hidden="true" />
+                            </button>
+                          )}
+                          <button type="button" aria-label={`Open actions for ${user.name || user.email}`}>
+                            <FiMoreVertical aria-hidden="true" />
                           </button>
-                        )}
-                        <button type="button" aria-label={`Open actions for ${user.name || user.email}`}>
-                          <FiMoreVertical aria-hidden="true" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <Pagination pagination={pagination} page={page} setPage={setPage} totalLabel="users" />

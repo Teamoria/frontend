@@ -1,0 +1,269 @@
+/* Additional responsive overrides (safe, minimal) */
+
+/* Allow explicit horizontal scrolling for wide tables */
+.container--scroll-x {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.container--scroll-x table {
+    width: auto;
+    min-width: 100%;
+    border-collapse: collapse;
+}
+
+/* Prevent accidental page horizontal scroll while allowing table scroll */
+@media (max-width: 1023px) {
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+}
+
+/* KPI grids responsive defaults */
+.stats-grid-modern,
+.metric-row,
+.feature-grid,
+.home-feature-grid,
+.owner-metrics-grid,
+.owner-projects-summary-grid,
+.performance-metric-grid,
+.employee-performance-grid,
+.owner-upload-processing-grid,
+.dashboard-grid-modern,
+.dashboard-lower-grid,
+.manager-recommendation-grid,
+.manager-insight-grid,
+.projects-grid-modern,
+.settings-grid,
+.profile-command-stats,
+.profile-access-grid,
+.ai-chat-grid,
+.upload-layout,
+.workspace-detail-grid,
+.meetings-layout,
+.meeting-grid,
+.run-detail-layout,
+.graph-layout,
+.agent-grid,
+.tool-grid,
+.tasks-kanban-board,
+.create-owner-task-grid,
+.extracted-grid,
+.home-footer-grid,
+.super-admin-metrics,
+.super-admin-payments-grid,
+.super-admin-plan-list,
+.super-admin-metrics {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 768px) {
+
+    .stats-grid-modern,
+    .metric-row,
+    .feature-grid,
+    .home-feature-grid,
+    .owner-metrics-grid,
+    .owner-projects-summary-grid,
+    .performance-metric-grid,
+    .employee-performance-grid,
+    .owner-upload-processing-grid,
+    .dashboard-grid-modern,
+    .dashboard-lower-grid,
+    .manager-recommendation-grid,
+    .manager-insight-grid,
+    .projects-grid-modern,
+    .settings-grid,
+    .profile-command-stats,
+    .profile-access-grid,
+    .ai-chat-grid,
+    .upload-layout,
+    .workspace-detail-grid,
+    .meeting-grid,
+    .agent-grid,
+    .tool-grid,
+    .create-owner-task-grid,
+    .extracted-grid,
+    .home-footer-grid,
+    .super-admin-metrics,
+    .super-admin-payments-grid,
+    .super-admin-plan-list,
+    .super-admin-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+
+    .stats-grid-modern,
+    .metric-row,
+    .feature-grid,
+    .home-feature-grid,
+    .owner-metrics-grid,
+    .owner-projects-summary-grid,
+    .performance-metric-grid,
+    .employee-performance-grid,
+    .owner-upload-processing-grid,
+    .dashboard-grid-modern,
+    .dashboard-lower-grid,
+    .manager-recommendation-grid,
+    .manager-insight-grid,
+    .projects-grid-modern,
+    .settings-grid,
+    .profile-command-stats,
+    .profile-access-grid,
+    .ai-chat-grid,
+    .upload-layout,
+    .workspace-detail-grid,
+    .meeting-grid,
+    .agent-grid,
+    .tool-grid,
+    .create-owner-task-grid,
+    .extracted-grid,
+    .home-footer-grid,
+    .super-admin-metrics,
+    .super-admin-payments-grid,
+    .super-admin-plan-list,
+    .super-admin-metrics {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Make form elements full width on small screens */
+@media (max-width: 767px) {
+
+    input,
+    select,
+    textarea {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    label {
+        width: 100% !important;
+    }
+
+    .product-search,
+    .owner-search,
+    .exec-search,
+    .owner-projects-search,
+    .super-admin-search,
+    .ai-chat-search,
+    .super-admin-management-search,
+    .super-admin-transaction-search,
+    .profile-chat-search,
+    .upload-search,
+    .owner-upload-search,
+    .meeting-search {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .page-actions,
+    .topbar-actions,
+    .owner-projects-toolbar-actions,
+    .exec-page-actions,
+    .ai-chat-header-actions,
+    .super-admin-management-controls,
+    .super-admin-action-row,
+    .employees-filter-bar>div,
+    .owner-projects-toolbar,
+    .owner-upload-section-head,
+    .profile-section-head,
+    .super-admin-management-toolbar,
+    .owner-upload-actions,
+    .performance-side-stack,
+    .upload-list,
+    .ai-message-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ai-chat-grid,
+    .profile-command-page,
+    .upload-layout,
+    .owner-upload-page,
+    .owner-projects-summary-grid,
+    .owner-upload-processing-grid,
+    .profile-command-stats,
+    .profile-access-grid,
+    .workspace-detail-grid,
+    .meeting-grid,
+    .agent-grid,
+    .tool-grid,
+    .create-owner-task-grid,
+    .extracted-grid,
+    .home-footer-grid,
+    .super-admin-metrics,
+    .super-admin-payments-grid,
+    .super-admin-plan-list {
+        grid-template-columns: 1fr !important;
+    }
+
+    .ai-chat-surface {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .ai-insight-rail,
+    .ai-context-rail {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .graph-layout,
+    .run-detail-layout,
+    .tasks-kanban-board {
+        grid-template-columns: 1fr !important;
+    }
+
+    .workspace-graph,
+    .ai-chat-surface,
+    .product-page-head,
+    .task-modal,
+    .graph-panel {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .product-page-head {
+        flex-wrap: wrap;
+    }
+
+    .page-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .page-actions>* {
+        flex: 1 1 100%;
+    }
+
+    .profile-command-page {
+        grid-template-columns: 1fr !important;
+        padding: 18px !important;
+    }
+
+    .profile-control-panel {
+        width: 100% !important;
+    }
+
+    .profile-form-stack,
+    .settings-list,
+    .employees-modal-grid,
+    .modal-grid,
+    .modal-grid--single,
+    .owner-show-grid,
+    .profile-access-grid,
+    .profile-command-stats {
+        grid-template-columns: 1fr !important;
+    }
+}

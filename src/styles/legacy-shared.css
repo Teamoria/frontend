@@ -2190,6 +2190,13 @@
   justify-items: center;
   min-height: 280px;
   padding: 28px;
+
+  :root {
+    --break-mobile: 639px;
+    --break-tablet: 1023px;
+    --break-desktop: 1279px;
+  }
+
   text-align: center;
 }
 
@@ -6150,4 +6157,3 @@
     display: none;
   }
 }
-
