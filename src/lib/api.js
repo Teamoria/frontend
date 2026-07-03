@@ -96,35 +96,17 @@ function demoPagination(items, page = 1) {
 
 function buildUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const cleanBaseUrl = getRuntimeApiBaseUrl().replace(/\/$/, "");
+  const cleanBaseUrl = API_BASE_URL.replace(/\/$/, "");
+
+  if (cleanPath.startsWith("/api/")) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
 
   if (cleanBaseUrl.endsWith(`/api/${API_VERSION}`)) {
     return `${cleanBaseUrl}${cleanPath}`;
   }
 
   return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
-}
-
-function getRuntimeApiBaseUrl() {
-  if (typeof window === "undefined") {
-    return API_BASE_URL;
-  }
-
-  try {
-    const configuredUrl = new URL(API_BASE_URL, window.location.origin);
-    const configuredHost = configuredUrl.hostname;
-    const pageHost = window.location.hostname;
-    const configuredIsLocal = ["localhost", "127.0.0.1", "::1"].includes(configuredHost);
-    const pageIsLocal = ["localhost", "127.0.0.1", "::1"].includes(pageHost);
-
-    if (configuredIsLocal && !pageIsLocal) {
-      return window.location.origin;
-    }
-  } catch {
-    return API_BASE_URL;
-  }
-
-  return API_BASE_URL;
 }
 
 export function getAccessToken() {
@@ -217,11 +199,12 @@ async function requestCurrentUserWithFallback() {
 }
 
 export async function apiRequest(path, { method = "GET", body, auth = false, query, redirectOnUnauthorized = true } = {}) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const headers = {
     Accept: "application/json"
   };
 
-  if (body) {
+  if (body && !isFormData) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -255,7 +238,7 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
   const response = await fetch(url.toString(), {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
   });
 
   const payload = await response.json().catch(() => null);
@@ -323,6 +306,10 @@ export async function loginWithEmail({ email, password }) {
     clearAccessToken();
     throw error;
   }
+}
+
+export function getApiHealth() {
+  return apiRequest("/api/health");
 }
 
 export async function loginWithGoogle(providerToken) {
@@ -435,6 +422,32 @@ export async function updateProfile(body) {
     auth: true,
     body: cleanBody
   });
+}
+
+export function uploadFiles({ files, project_id, category }) {
+  const formData = new FormData();
+  const fileList = Array.from(files || []);
+
+  fileList.forEach((file) => {
+    formData.append("files[]", file);
+  });
+
+  formData.append("project_id", project_id);
+  formData.append("category", category);
+
+  return apiRequest("/uploads/", {
+    method: "POST",
+    auth: true,
+    body: formData
+  });
+}
+
+export function listUploads() {
+  return apiRequest("/uploads/list", { auth: true });
+}
+
+export function listProjectUploads(projectId) {
+  return apiRequest(`/uploads/${projectId}/list`, { auth: true });
 }
 
 export function listUsers({ page, archived } = {}) {
