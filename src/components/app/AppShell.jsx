@@ -76,7 +76,6 @@ const ownerNavItems = [
   { label: "Dashboard", path: "/dashboard", icon: "grid" },
   { label: "Employees", path: "/employees", icon: "users" },
   { label: "Projects", path: "/owner/projects", icon: "folder" },
-  { label: "Tasks", path: "/tasks", icon: "check" },
   { label: "Operations Board", path: "/owner/operations", icon: "check" },
   { label: "Upload Center", path: "/owner/uploads", icon: "upload" },
   { label: "AI Chat", path: "/ai-chat", icon: "spark" },

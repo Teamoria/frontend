@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken } from "./api.js";
+import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken, getStoredUser, setStoredUser } from "./api.js";
 import { normalizeRole } from "./authRoles.js";
 import { clearDemoMode, getDemoUser, isDemoMode } from "./demoMode.js";
 
@@ -24,6 +24,11 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      const cachedUser = getStoredUser();
+      if (cachedUser) {
+        setUser(cachedUser);
+      }
+
       refreshUser()
         .catch(() => {
           clearAccessToken();
@@ -46,13 +51,25 @@ export function AuthProvider({ children }) {
       return nextUser;
     }
 
-    const payload = await getCurrentUser();
-    const nextUser = payload?.data?.user || payload?.data || payload?.user || payload || null;
-    setUser(nextUser);
-    return nextUser;
+    try {
+      const payload = await getCurrentUser();
+      const nextUser = payload?.data?.user || payload?.data || payload?.user || payload || null;
+      setStoredUser(nextUser);
+      setUser(nextUser);
+      return nextUser;
+    } catch (error) {
+      const cachedUser = getStoredUser();
+      if (error.status === 404 && cachedUser) {
+        setUser(cachedUser);
+        return cachedUser;
+      }
+
+      throw error;
+    }
   }
 
   function login(userData) {
+    setStoredUser(userData);
     setUser(userData);
   }
 

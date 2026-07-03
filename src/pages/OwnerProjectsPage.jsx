@@ -1,104 +1,163 @@
 import {
-  FiAlertTriangle,
-  FiArrowLeft,
-  FiArrowRight,
   FiArrowUp,
-  FiCheck,
   FiChevronsUp,
-  FiDollarSign,
-  FiFilter,
+  FiEdit3,
   FiFolder,
   FiInfo,
   FiPlus,
+  FiRefreshCw,
   FiSliders,
   FiTarget,
   FiTrendingUp,
+  FiUserPlus,
   FiUsers,
   FiX,
   FiZap,
 } from "react-icons/fi";
-import { useState, useRef, useEffect } from "react";
-import AppShell, { PageHeader } from "../components/app/AppShell.jsx";
+import { useEffect, useMemo, useState } from "react";
+import AppShell from "../components/app/AppShell.jsx";
+import { EmptyState, LoadingState, MetricCard, StatusBadge } from "../components/app/UiPrimitives.jsx";
+import {
+  addCompanyProjectMembers,
+  createCompanyProject,
+  getPayloadData,
+  listCompanyProjects,
+  listStaff,
+  removeCompanyProjectMember,
+  updateCompanyProject
+} from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/owner-projects.css";
 
-const summaryCards = [
-  { label: "Total Active Projects", value: "124", detail: "+12% from last quarter", icon: FiFolder, tone: "primary" },
-  { label: "Avg. Velocity", value: "42 pts/sprint", detail: "Stable across teams", icon: FiTrendingUp, tone: "secondary" },
-  { label: "Upcoming Milestones", value: "18", detail: "3 at risk of delay", icon: FiTarget, tone: "warning" }
-];
-
-const ownerProjects = [
-  {
-    name: "Project Alpha - Nexus Integration",
-    department: "Engineering Dept.",
-    priority: "High",
-    progress: 75,
-    team: ["LA", "MT", "+4"],
-    teamLabel: "Lead & Devs",
-    health: "92/100",
-    status: "Active"
-  },
-  {
-    name: "Q3 Marketing Campaign: Horizons",
-    department: "Marketing Dept.",
-    priority: "Medium",
-    progress: 40,
-    team: ["NE", "+2"],
-    teamLabel: "Marketing Ops",
-    health: "65/100",
-    status: "At Risk"
-  },
-  {
-    name: "System Security Audit v2.4",
-    department: "IT & Ops Dept.",
-    priority: "High",
-    progress: 10,
-    team: ["RS"],
-    teamLabel: "Security Lead",
-    health: "88/100",
-    status: "Pending"
-  }
-];
-
 export default function OwnerProjectsPage() {
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const { user } = useAuth();
+  const [projectModal, setProjectModal] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isLoading, setIsLoading] = useState(true);
+
+  const summaryCards = useMemo(() => {
+    const activeProjects = projects.filter((project) => normalizeStatus(project.status) === "active").length;
+    const pendingProjects = projects.filter((project) => ["pending", "paused"].includes(normalizeStatus(project.status))).length;
+    const averageProgress = projects.length
+      ? Math.round(projects.reduce((total, project) => total + normalizeProgress(project.progress), 0) / projects.length)
+      : 0;
+
+    return [
+      { label: "Total Active Projects", value: String(activeProjects), detail: `${projects.length} projects loaded from API`, icon: FiFolder, tone: "primary" },
+      { label: "Avg. Progress", value: `${averageProgress}%`, detail: "Live company workspace data", icon: FiTrendingUp, tone: "secondary" },
+      { label: "Pending / Paused", value: String(pendingProjects), detail: "Needs owner attention", icon: FiTarget, tone: "warning" }
+    ];
+  }, [projects]);
+
+  useEffect(() => {
+    loadProjects();
+    loadStaff();
+  }, []);
+
+  async function loadProjects() {
+    setIsLoading(true);
+    setStatus({ type: "", message: "" });
+
+    try {
+      const payload = await listCompanyProjects();
+      const data = getPayloadData(payload);
+      const rows = data?.projects || data?.data || data || [];
+      setProjects(Array.isArray(rows) ? rows.map(normalizeProject) : []);
+    } catch (error) {
+      setProjects([]);
+      setStatus({ type: "error", message: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function loadStaff() {
+    try {
+      const payload = await listStaff();
+      const data = getPayloadData(payload);
+      const rows = data?.users || data?.staff || data?.data || data || [];
+      setStaff(Array.isArray(rows) ? rows.map(normalizeStaffMember) : []);
+    } catch {
+      setStaff([]);
+    }
+  }
+
+  function handleProjectSaved(project, message = "Project saved successfully.") {
+    if (project) {
+      setProjects((current) => {
+        const normalized = normalizeProject(project);
+        const exists = current.some((item) => String(item.id) === String(normalized.id));
+
+        if (!exists) {
+          return [normalized, ...current];
+        }
+
+        return current.map((item) => (String(item.id) === String(normalized.id) ? normalized : item));
+      });
+    }
+
+    setStatus({ type: "success", message });
+    loadProjects();
+  }
 
   return (
-    <AppShell active="Projects" role="Company Owner" roleId="owner" user="Company Owner">
+    <AppShell active="Projects" role="Company Owner" roleId="owner" user={user?.name || "Company Owner"}>
       <div className="owner-projects-page">
-      <PageHeader
-        title="Projects Directory"
-        eyebrow="Manage and track enterprise initiatives across all departments."
-        actions={(
-          <>
-            <button className="owner-projects-primary" type="button" onClick={() => setIsProjectModalOpen(true)}>
+      <div className="owner-projects-sticky-head">
+        <div className="owner-projects-titlebar">
+          <div>
+            <h1>Projects Directory</h1>
+            <p>Manage company projects, members, progress, and delivery status.</p>
+          </div>
+          <div className="owner-projects-actions">
+            <button className="owner-projects-refresh" type="button" onClick={loadProjects} disabled={isLoading}>
+              <FiRefreshCw aria-hidden="true" />
+              Refresh
+            </button>
+            <button className="owner-projects-primary" type="button" onClick={() => setProjectModal({ mode: "create", project: null })}>
               <FiPlus aria-hidden="true" />
               New Project
             </button>
-            <button className="filter-button" type="button">
-              <FiFilter aria-hidden="true" />
-              Filters
-            </button>
-            <button className="filter-button" type="button">
-              <FiSliders aria-hidden="true" />
-              Sort By
-            </button>
-          </>
-        )}
-      />
+          </div>
+        </div>
+
+        <div className="owner-projects-filterbar">
+          <label>
+            <span>Filter by:</span>
+            <select defaultValue="all">
+              <option value="all">All Projects</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="paused">Paused</option>
+            </select>
+          </label>
+          <button className="owner-projects-sort" type="button">
+            <FiSliders aria-hidden="true" />
+            Sort By
+          </button>
+        </div>
+      </div>
 
       <section className="owner-projects-summary-grid">
         {summaryCards.map(({ detail, icon: Icon, label, tone, value }) => (
-          <article className={`owner-projects-summary-card tone-${tone}`} key={label}>
-            <div>
-              <span>{label}</span>
-              <i><Icon aria-hidden="true" /></i>
-            </div>
-            <strong>{value}</strong>
-            <small>{tone === "warning" ? <FiAlertTriangle aria-hidden="true" /> : <FiTrendingUp aria-hidden="true" />}{detail}</small>
-          </article>
+          <MetricCard
+            detail={detail}
+            icon={Icon}
+            key={label}
+            label={label}
+            tone={tone}
+            value={value}
+          />
         ))}
       </section>
+
+      {status.message ? (
+        <p className={`auth-alert auth-alert--${status.type} owner-projects-alert`} role="alert" aria-live="polite">
+          {status.message}
+        </p>
+      ) : null}
 
       <section className="owner-projects-table-panel">
         <div className="owner-projects-table-wrap">
@@ -112,14 +171,19 @@ export default function OwnerProjectsPage() {
                   <th>Team</th>
                   <th>AI Health Score</th>
                   <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {ownerProjects.map((project) => (
-                  <tr key={project.name}>
+                {isLoading ? (
+                  <MessageRow text="Loading projects from API..." />
+                ) : projects.length === 0 ? (
+                  <MessageRow text="No projects found in the company workspace." />
+                ) : projects.map((project) => (
+                  <tr key={project.id || project.name}>
                     <td>
                       <b>{project.name}</b>
-                      <span>{project.department}</span>
+                      <span>{project.description || formatDateRange(project.start_date, project.end_date)}</span>
                     </td>
                     <td>
                       <span className={`owner-projects-priority priority-${project.priority.toLowerCase()}`}>
@@ -148,9 +212,21 @@ export default function OwnerProjectsPage() {
                       </span>
                     </td>
                     <td>
-                      <span className={`owner-projects-status status-${project.status.toLowerCase().replace(" ", "-")}`}>
+                      <StatusBadge tone={getStatusTone(project.status)}>
                         {project.status}
-                      </span>
+                      </StatusBadge>
+                    </td>
+                    <td>
+                      <div className="owner-projects-row-actions">
+                        <button type="button" onClick={() => setProjectModal({ mode: "edit", project })}>
+                          <FiEdit3 aria-hidden="true" />
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => setProjectModal({ mode: "members", project })}>
+                          <FiUserPlus aria-hidden="true" />
+                          Members
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -165,7 +241,7 @@ export default function OwnerProjectsPage() {
           <FiUsers aria-hidden="true" />
           <div>
             <h3>Company Owner Baseline</h3>
-            <p>This page is scoped for executive project oversight and can be used as the main owner projects screen.</p>
+            <p>Track project ownership, team members, and delivery status from one workspace.</p>
           </div>
         </article>
         <article>
@@ -177,182 +253,379 @@ export default function OwnerProjectsPage() {
         </article>
       </section>
 
-      {isProjectModalOpen ? <InitializeProjectModal onClose={() => setIsProjectModalOpen(false)} /> : null}
+      {projectModal ? (
+        <ProjectModal
+          mode={projectModal.mode}
+          project={projectModal.project}
+          staff={staff}
+          onClose={() => setProjectModal(null)}
+          onSaved={handleProjectSaved}
+        />
+      ) : null}
       </div>
     </AppShell>
   );
 }
 
-function InitializeProjectModal({ onClose }) {
-  const [step, setStep] = useState(1);
-  const totalSteps = 4;
-  const progress = ((step - 1) / (totalSteps - 1)) * 100;
+function ProjectModal({ mode, project, staff, onClose, onSaved }) {
+  const isEditing = mode === "edit" || mode === "members";
+  const isMembersOnly = mode === "members";
+  const [form, setForm] = useState({
+    name: project?.name || "",
+    description: project?.description || "",
+    status: normalizeStatus(project?.status || "active"),
+    progress: project?.progress ?? 0,
+    start_date: toDateInputValue(project?.start_date),
+    end_date: toDateInputValue(project?.end_date)
+  });
+  const [selectedMemberIds, setSelectedMemberIds] = useState(() => getProjectUserIds(project));
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isSaving, setIsSaving] = useState(false);
 
-  function goNext() {
-    if (step < totalSteps) {
-      setStep((currentStep) => currentStep + 1);
+  function updateField(field, value) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function toggleMember(userId) {
+    setSelectedMemberIds((current) => {
+      if (current.includes(userId)) {
+        return current.filter((id) => id !== userId);
+      }
+
+      return [...current, userId];
+    });
+  }
+
+  async function submitProject(event) {
+    event.preventDefault();
+    setStatus({ type: "", message: "" });
+
+    if (!isMembersOnly && !form.name.trim()) {
+      setStatus({ type: "error", message: "Project name is required." });
       return;
     }
 
-    onClose();
+    setIsSaving(true);
+
+    try {
+      let savedProject = project;
+
+      if (!isMembersOnly) {
+        const projectBody = {
+          ...form,
+          progress: Number(form.progress || 0)
+        };
+        const payload = isEditing
+          ? await updateCompanyProject(project.id, projectBody)
+          : await createCompanyProject(projectBody);
+        const data = getPayloadData(payload);
+        savedProject = data?.project || data;
+      }
+
+      if (savedProject?.id) {
+        await syncProjectMembers(savedProject, selectedMemberIds, { removeMissing: isEditing });
+      }
+
+      onSaved(
+        savedProject,
+        isMembersOnly ? "Project members updated successfully." : isEditing ? "Project updated successfully." : "Project created successfully."
+      );
+      onClose();
+    } catch (error) {
+      setStatus({ type: "error", message: error.message });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
     <div className="initialize-project-backdrop" role="presentation">
-      <section className="initialize-project-modal" role="dialog" aria-modal="true" aria-labelledby="initialize-project-title">
+      <form className="initialize-project-modal initialize-project-modal--single" role="dialog" aria-modal="true" aria-labelledby="initialize-project-title" onSubmit={submitProject}>
         <header className="initialize-project-header">
           <div className="initialize-project-title-row">
             <div>
-              <h2 id="initialize-project-title">Initialize New Project</h2>
-              <p>Complete the steps below to setup your workspace.</p>
+              <span className="initialize-project-kicker">Company project</span>
+              <h2 id="initialize-project-title">{isEditing ? "Edit Project" : "Create New Project"}</h2>
+              <p>{isMembersOnly ? "Update who can work on this project." : "Add project details and assign employees in one step."}</p>
             </div>
             <button className="initialize-project-close" type="button" aria-label="Close" onClick={onClose}>
               <FiX aria-hidden="true" />
             </button>
           </div>
-
-          <div className="initialize-project-steps" style={{ "--progress": `${progress}%` }}>
-            {["General Info", "Timeline & Budget", "Team Setup", "AI Objectives"].map((label, index) => {
-              const number = index + 1;
-              const isDone = number < step;
-              const isActive = number === step;
-
-              return (
-                <button
-                  className={isActive ? "active" : isDone ? "done" : ""}
-                  type="button"
-                  key={label}
-                  onClick={() => number <= step + 1 && setStep(number)}
-                >
-                  <span>{isDone ? <FiCheck aria-hidden="true" /> : number}</span>
-                  <b>{label}</b>
-                </button>
-              );
-            })}
-          </div>
         </header>
 
+        {status.message ? <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p> : null}
+
         <div className="initialize-project-body">
-          {step === 1 ? <GeneralInfoStep /> : null}
-          {step === 2 ? <TimelineBudgetStep /> : null}
-          {step === 3 ? <TeamSetupStep /> : null}
-          {step === 4 ? <AiObjectivesStep /> : null}
+          <section className="initialize-project-step initialize-project-step--single">
+            <div className="initialize-project-fields">
+              {!isMembersOnly ? (
+              <>
+              <label className="initialize-project-field-wide">
+                <span>Project name <em>*</em></span>
+                <input
+                  autoFocus
+                  placeholder="e.g., Q3 Marketing Campaign"
+                  required
+                  disabled={isMembersOnly}
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                />
+              </label>
+
+              <label>
+                <span>Status</span>
+                <select value={form.status} onChange={(event) => updateField("status", event.target.value)}>
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="paused">Paused</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Progress</span>
+                <input
+                  min="0"
+                  max="100"
+                  placeholder="0"
+                  type="number"
+                  value={form.progress}
+                  onChange={(event) => updateField("progress", event.target.value)}
+                />
+              </label>
+
+              <label>
+                <span>Start date</span>
+                <input required type="date" value={form.start_date} onChange={(event) => updateField("start_date", event.target.value)} />
+              </label>
+
+              <label>
+                <span>End date</span>
+                <input required type="date" value={form.end_date} onChange={(event) => updateField("end_date", event.target.value)} />
+              </label>
+
+              <label className="initialize-project-field-wide">
+                <span>Description</span>
+                <textarea
+                  placeholder="Briefly describe the project goals..."
+                  required
+                  rows="4"
+                  value={form.description}
+                  onChange={(event) => updateField("description", event.target.value)}
+                />
+              </label>
+              </>
+              ) : null}
+
+              <fieldset className="initialize-project-members initialize-project-field-wide">
+                <legend>Project employees</legend>
+                {staff.length === 0 ? (
+                  <p>No employees loaded yet.</p>
+                ) : (
+                  <div>
+                    {staff.map((member) => (
+                      <label key={member.id}>
+                        <input
+                          checked={selectedMemberIds.includes(member.id)}
+                          type="checkbox"
+                          onChange={() => toggleMember(member.id)}
+                        />
+                        <span>{member.initials}</span>
+                        <b>{member.name}</b>
+                        <small>{member.role}</small>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </fieldset>
+
+              <article className="initialize-project-note initialize-project-field-wide">
+                <FiInfo aria-hidden="true" />
+                <div>
+                  <h4>Saved to workspace</h4>
+                  <p>Project details and selected employees are saved to the company workspace.</p>
+                </div>
+              </article>
+            </div>
+          </section>
         </div>
 
         <footer className="initialize-project-footer">
-          <button
-            className="initialize-project-secondary"
-            type="button"
-            disabled={step === 1}
-            onClick={() => setStep((currentStep) => Math.max(1, currentStep - 1))}
-          >
-            <FiArrowLeft aria-hidden="true" />
-            Back
+          <button className="initialize-project-secondary" type="button" onClick={onClose}>
+            Cancel
           </button>
           <div>
-            <button className="initialize-project-ghost" type="button">Save Draft</button>
-            <button className="initialize-project-primary" type="button" onClick={goNext}>
-              {step === totalSteps ? "Initialize Project" : "Continue"}
-              {step === totalSteps ? <FiZap aria-hidden="true" /> : <FiArrowRight aria-hidden="true" />}
+            <button className="initialize-project-primary" type="submit" disabled={isSaving}>
+              {isSaving ? "Saving..." : isEditing ? "Save Changes" : "Create Project"}
+              <FiZap aria-hidden="true" />
             </button>
           </div>
         </footer>
-      </section>
+      </form>
     </div>
   );
 }
 
-function GeneralInfoStep() {
+function MessageRow({ text }) {
+  const isLoading = text.toLowerCase().includes("loading");
+
   return (
-    <section className="initialize-project-step">
-      <h3>General Information</h3>
-      <div className="initialize-project-fields">
-        <label>
-          <span>Project Name <em>*</em></span>
-          <input placeholder="e.g., Q3 Marketing Campaign" />
-        </label>
-        <label>
-          <span>Category</span>
-          <select defaultValue="">
-            <option disabled value="">Select a category</option>
-            <option value="engineering">Engineering</option>
-            <option value="marketing">Marketing</option>
-            <option value="design">Design</option>
-            <option value="operations">Operations</option>
-          </select>
-        </label>
-        <label>
-          <span>Description</span>
-          <textarea placeholder="Briefly describe the project goals..." rows="4" />
-        </label>
-      </div>
-    </section>
+    <tr>
+      <td className="owner-projects-empty-cell" colSpan="7">
+        {isLoading ? (
+          <LoadingState>{text}</LoadingState>
+        ) : (
+          <EmptyState icon={FiFolder} title="No projects yet">
+            {text}
+          </EmptyState>
+        )}
+      </td>
+    </tr>
   );
 }
 
-function TimelineBudgetStep() {
-  return (
-    <section className="initialize-project-step">
-      <h3>Timeline & Budget Allocation</h3>
-      <div className="initialize-project-fields">
-        <div className="initialize-project-two-col">
-          <label>
-            <span>Start Date</span>
-            <input type="date" />
-          </label>
-          <label>
-            <span>End Date</span>
-            <input type="date" />
-          </label>
-        </div>
-        <label>
-          <span>Estimated Budget (USD)</span>
-          <div className="initialize-project-money">
-            <FiDollarSign aria-hidden="true" />
-            <input placeholder="0.00" type="number" />
-          </div>
-        </label>
-        <article className="initialize-project-note">
-          <FiInfo aria-hidden="true" />
-          <div>
-            <h4>Budget Tracking</h4>
-            <p>AI will automatically monitor expenses against this baseline and alert managers if variance exceeds 10%.</p>
-          </div>
-        </article>
-      </div>
-    </section>
-  );
+async function syncProjectMembers(project, selectedMemberIds, { removeMissing = false } = {}) {
+  const projectId = project.id;
+  const currentIds = getProjectUserIds(project);
+  const idsToAdd = selectedMemberIds.filter((id) => !currentIds.includes(id));
+  const idsToRemove = removeMissing ? currentIds.filter((id) => !selectedMemberIds.includes(id)) : [];
+
+  if (idsToAdd.length > 0) {
+    await addCompanyProjectMembers(projectId, {
+      user_ids: idsToAdd,
+      role: "member"
+    });
+  }
+
+  if (idsToRemove.length > 0) {
+    await Promise.all(idsToRemove.map((userId) => removeCompanyProjectMember(projectId, userId)));
+  }
 }
 
-function TeamSetupStep() {
-  return (
-    <section className="initialize-project-step">
-      <h3>Team Setup</h3>
-      <div className="initialize-project-choice-grid">
-        {["Engineering Lead", "Project Manager", "Marketing Ops", "Security Lead"].map((label) => (
-          <label key={label}>
-            <input type="checkbox" />
-            <span>{label}</span>
-          </label>
-        ))}
-      </div>
-    </section>
-  );
+function getProjectUserIds(project) {
+  const users = normalizeResourceCollection(project?.users || project?.members || []);
+  return users.map((member) => String(member.id || member.user_id || member.user?.id)).filter(Boolean);
 }
 
-function AiObjectivesStep() {
-  return (
-    <section className="initialize-project-step">
-      <h3>AI Objectives</h3>
-      <div className="initialize-project-choice-grid">
-        {["Track delivery risks", "Summarize weekly progress", "Monitor budget variance", "Recommend resource changes"].map((label) => (
-          <label key={label}>
-            <input type="checkbox" defaultChecked={label === "Track delivery risks"} />
-            <span>{label}</span>
-          </label>
-        ))}
-      </div>
-    </section>
-  );
+function normalizeStaffMember(member) {
+  const value = member.user || member;
+  const name = value.name || value.full_name || value.email || "Employee";
+
+  return {
+    id: String(value.id),
+    name,
+    email: value.email || "",
+    role: formatLabel(value.role || "member"),
+    initials: getInitials(name)
+  };
+}
+
+function normalizeProject(project) {
+  const status = normalizeStatus(project.status);
+  const progress = normalizeProgress(project.progress);
+  const members = normalizeResourceCollection(project.members || project.users || project.team || []);
+
+  return {
+    ...project,
+    name: project.name || project.title || "Untitled project",
+    description: project.description || "",
+    priority: getPriority(status, progress),
+    progress,
+    status: formatLabel(status || "pending"),
+    team: getTeamInitials(members),
+    teamLabel: members.length ? `${members.length} members` : "No members",
+    health: `${getHealthScore(status, progress)}/100`
+  };
+}
+
+function normalizeStatus(status) {
+  return String(status || "pending").toLowerCase().replace(/\s+/g, "_");
+}
+
+function normalizeProgress(progress) {
+  const value = Number(progress || 0);
+
+  if (Number.isNaN(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
+}
+
+function getPriority(status, progress) {
+  if (["paused", "cancelled"].includes(status) || progress < 25) return "High";
+  if (status === "pending" || progress < 60) return "Medium";
+  return "Medium";
+}
+
+function getHealthScore(status, progress) {
+  if (status === "completed") return 100;
+  if (status === "cancelled") return 20;
+  if (status === "paused") return 55;
+  if (status === "pending") return 70;
+  return Math.max(60, Math.min(98, 65 + Math.round(progress / 3)));
+}
+
+function getTeamInitials(members) {
+  if (!Array.isArray(members) || members.length === 0) return ["--"];
+
+  const initials = members.slice(0, 2).map((member) => {
+    const value = member.name || member.email || member.user?.name || member.user?.email || "User";
+    return String(value)
+      .split(/\s|@/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "U";
+  });
+
+  if (members.length > 2) {
+    initials.push(`+${members.length - 2}`);
+  }
+
+  return initials;
+}
+
+function normalizeResourceCollection(value) {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+}
+
+function getInitials(value) {
+  return String(value || "User")
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+}
+
+function toDateInputValue(value) {
+  if (!value) return "";
+  return String(value).slice(0, 10);
+}
+
+function formatDateRange(startDate, endDate) {
+  if (!startDate && !endDate) return "No timeline set";
+  if (startDate && endDate) return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+  return formatDate(startDate || endDate);
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function formatLabel(value) {
+  return String(value || "").replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getStatusTone(status) {
+  const value = normalizeStatus(status);
+
+  if (["active", "completed"].includes(value)) return "success";
+  if (["pending", "paused"].includes(value)) return "warning";
+  if (["cancelled", "at_risk"].includes(value)) return "danger";
+  return "neutral";
 }
 

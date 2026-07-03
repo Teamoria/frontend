@@ -407,6 +407,132 @@
   color: #0f3fbf;
 }
 
+.tasks-list-view {
+  background: #ffffff;
+  border: 1px solid #dce6f5;
+  border-radius: 16px;
+  box-shadow: 0 14px 36px rgba(22, 31, 64, 0.06);
+  overflow: hidden;
+}
+
+.tasks-list-head,
+.tasks-list-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(280px, 1.5fr) 120px minmax(160px, 0.8fr) 110px 96px;
+}
+
+.tasks-list-head {
+  background: #f3f6fc;
+  border-bottom: 1px solid #dce6f5;
+  color: #5b6475;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  padding: 14px 18px;
+  text-transform: uppercase;
+}
+
+.tasks-list-rows {
+  display: grid;
+}
+
+.tasks-list-row {
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid #e5edf8;
+  min-height: 92px;
+  padding: 16px 18px;
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+
+.tasks-list-row:last-child {
+  border-bottom: 0;
+}
+
+.tasks-list-row:hover {
+  background: #f8fbff;
+}
+
+.tasks-list-row.is-done {
+  opacity: 0.72;
+}
+
+.tasks-list-row.is-done h3 {
+  text-decoration: line-through;
+}
+
+.tasks-list-main {
+  align-items: flex-start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 12px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.tasks-list-main h3 {
+  color: #20253d;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.tasks-list-main p {
+  color: #687186;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 5px 0 0;
+}
+
+.tasks-stage-dot {
+  background: #aeb7c7;
+  border-radius: 50%;
+  height: 10px;
+  margin-top: 5px;
+  width: 10px;
+}
+
+.tasks-stage-dot--blue,
+.tasks-stage-dot--purple {
+  background: var(--ui-primary);
+}
+
+.tasks-stage-dot--green {
+  background: #22c55e;
+}
+
+.tasks-list-stage {
+  color: #263147;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.tasks-list-owner {
+  align-items: center;
+  color: #445069;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 850;
+  gap: 9px;
+  min-width: 0;
+}
+
+.tasks-list-owner i {
+  align-items: center;
+  background: linear-gradient(135deg, #dec2ff, #8a72d4);
+  border-radius: 50%;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 30px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 950;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
 .task-modal .modal-grid--single {
   grid-template-columns: 1fr;
 }
@@ -439,6 +565,22 @@
 
   .tasks-kanban-board {
     grid-template-columns: 1fr;
+  }
+
+  .tasks-list-head {
+    display: none;
+  }
+
+  .tasks-list-row {
+    gap: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .tasks-list-stage,
+  .tasks-list-owner,
+  .tasks-list-row > .tasks-date,
+  .tasks-list-row > .tasks-priority {
+    justify-self: start;
   }
 }
 
@@ -533,7 +675,9 @@
 
 .tasks-filter-bar,
 .tasks-workspace .tasks-card,
-.tasks-view-toggle button.active {
+.tasks-view-toggle button.active,
+.tasks-list-view,
+.tasks-list-row {
   background: #ffffff !important;
   border-color: #cbd5e1 !important;
 }
@@ -541,7 +685,8 @@
 .tasks-kanban-list,
 .tasks-view-toggle,
 .tasks-filter-bar button,
-.tasks-kanban-head span {
+.tasks-kanban-head span,
+.tasks-list-head {
   background: #f3f6fc !important;
   border-color: #cbd5e1 !important;
 }

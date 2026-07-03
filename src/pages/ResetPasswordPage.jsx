@@ -1,18 +1,17 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
+import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiLock, FiMail, FiShield } from "react-icons/fi";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { forgotPasswordSendOtp, forgotPasswordVerify } from "../lib/api.js";
 import "../styles/reset-access.css";
-
-const workspaceImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAihiwQ5gWaPNLFXzNG-TzS2eV0pPLpvfKcuLXvwklDhAET0Ao6oujo3rL7pREHOEaeUopVHbIOXzGKlzHBOtBvUjhf4SyYBHJUaMCn46KzUgUiP8NEjIFMOH4IvWOszKDZ_3eye1Av_F6UW0eoXThSb6pg6WvvrCC2wC_TpAScoDN3ifERvRQdeQwl142mfsWhiJKDGEIwQVwYdn0VktxZL2Ra-6sMzeWtD6-hAmcwzGk26As4cT7kFlmhYZTwI1obzGuHp1EU9fJh";
 
 export default function ResetPasswordPage() {
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasEmail, setHasEmail] = useState(false);
 
   async function handleSendOtp(event) {
     event.preventDefault();
@@ -66,7 +65,7 @@ export default function ResetPasswordPage() {
       visualContent={<ResetAccessVisual />}
     >
       {step === "email" && (
-        <form className="auth-form reset-password-form reset-access-form" onSubmit={handleSendOtp}>
+        <form className={`auth-form reset-password-form reset-access-form ${hasEmail ? "has-email" : ""}`} onSubmit={handleSendOtp}>
           <ResetMobileBrand />
           <header className="reset-access-header">
             <h1>Reset Access</h1>
@@ -75,7 +74,15 @@ export default function ResetPasswordPage() {
           {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
           <div className="form-stack">
             <span className="label">Work Email</span>
-            <TextInput icon={<FiMail />} name="email" type="email" placeholder="identity@enterprise.ai" required disabled={isSubmitting} />
+            <TextInput
+              icon={<FiMail />}
+              name="email"
+              type="email"
+              placeholder="identity@enterprise.ai"
+              required
+              disabled={isSubmitting}
+              onChange={(event) => setHasEmail(event.target.value.trim().length > 0)}
+            />
           </div>
           <PrimaryButton type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Sending..." : "Send Restoration Link"}
@@ -138,14 +145,7 @@ export default function ResetPasswordPage() {
 }
 
 function ResetAccessVisual() {
-  return (
-    <div className="reset-access-visual-content" aria-hidden="true">
-      <img src={workspaceImage} alt="" />
-      <div className="reset-access-visual-brand">
-        <span>Teamoria</span>
-      </div>
-    </div>
-  );
+  return <AuthLegacyVisual className="reset-access-visual-content" />;
 }
 
 function ResetMobileBrand() {

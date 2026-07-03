@@ -1756,4 +1756,64 @@
   border-color: var(--ui-primary) !important;
 }
 
+/* Premium pass: align staff management with Teamoria design-system tokens. */
+.employees-page .employees-summary-card,
+.employees-page .employees-directory-panel,
+.employees-page .employees-modal {
+  background: linear-gradient(180deg, #ffffff, #fdfcff) !important;
+  border: 1px solid var(--tm-color-border, #efe7fc) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 18px 46px rgba(76, 29, 149, 0.08) !important;
+}
+
+.employees-page .employees-summary-card {
+  transition: transform var(--tm-motion-fast, 160ms) var(--tm-ease, ease), box-shadow var(--tm-motion-fast, 160ms) var(--tm-ease, ease);
+}
+
+.employees-page .employees-summary-card:hover {
+  box-shadow: var(--tm-shadow-md, 0 22px 60px rgba(76, 29, 149, 0.14)) !important;
+  transform: translateY(-2px);
+}
+
+.employees-page .employees-summary-card span,
+.employees-page .employees-identity>span,
+.employees-page .employees-role-pill--member,
+.employees-page .employees-role-pill--manager {
+  background: rgba(124, 58, 237, 0.1) !important;
+  border-color: rgba(124, 58, 237, 0.16) !important;
+  color: var(--tm-color-primary, #7c3aed) !important;
+}
+
+.employees-page .employees-filter-bar,
+.employees-page .employees-pagination,
+.employees-page .employees-modal header,
+.employees-page .employees-modal footer {
+  background: #faf7ff !important;
+  border-color: var(--tm-color-border, #efe7fc) !important;
+}
+
+.employees-page .employees-table thead,
+.employees-page .employees-table th {
+  background: #faf7ff !important;
+}
+
+.employees-page .employees-table td {
+  border-bottom-color: #f0eafa !important;
+}
+
+.employees-page .employees-table tbody tr:hover td {
+  background: #fbf8ff !important;
+}
+
+.employees-page .employees-table tbody tr.is-selected td {
+  background: rgba(124, 58, 237, 0.08) !important;
+}
+
+.employees-page .employees-filter-bar select:focus,
+.employees-page .employees-modal input:focus,
+.employees-page .employees-modal select:focus {
+  border-color: var(--tm-color-primary, #7c3aed) !important;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.14) !important;
+}
+
 

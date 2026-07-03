@@ -122,7 +122,7 @@ export function ProfileContent() {
           <div className="profile-access-grid">
             <article>
               <div><i aria-hidden="true" /><b>Current Profile</b></div>
-              <strong>GET /api/v1/profile</strong>
+              <strong>GET /api/v1/admin/profile or /api/v1/company/profile</strong>
               <p>Identity, status, timezone, and role are loaded after login.</p>
             </article>
             <article>

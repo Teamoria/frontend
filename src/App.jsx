@@ -68,7 +68,6 @@ const companyOwnerRoutes = new Set([
   "/dashboard",
   "/employees",
   "/owner/projects",
-  "/tasks",
   "/owner/operations",
   "/owner/uploads",
   "/ai-chat",
@@ -129,6 +128,11 @@ const routes = {
 };
 
 function getPath() {
+  if (window.location.pathname !== "/" && routes[window.location.pathname]) {
+    const nextHash = `${window.location.pathname}${window.location.search || ""}`;
+    window.history.replaceState(null, "", `${window.location.origin}/#${nextHash}`);
+  }
+
   const hash = window.location.hash.replace("#", "");
   const path = hash.split("?")[0];
   return routes[path] ? path : "/";
@@ -164,6 +168,11 @@ export default function App() {
 
     if (!user) {
       window.location.hash = "/signin";
+      return null;
+    }
+
+    if (normalizedRole === "company_owner" && path === "/tasks") {
+      window.location.hash = "/owner/operations";
       return null;
     }
 
