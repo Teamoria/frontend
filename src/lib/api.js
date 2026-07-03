@@ -96,13 +96,35 @@ function demoPagination(items, page = 1) {
 
 function buildUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const cleanBaseUrl = API_BASE_URL.replace(/\/$/, "");
+  const cleanBaseUrl = getRuntimeApiBaseUrl().replace(/\/$/, "");
 
   if (cleanBaseUrl.endsWith(`/api/${API_VERSION}`)) {
     return `${cleanBaseUrl}${cleanPath}`;
   }
 
   return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
+}
+
+function getRuntimeApiBaseUrl() {
+  if (typeof window === "undefined") {
+    return API_BASE_URL;
+  }
+
+  try {
+    const configuredUrl = new URL(API_BASE_URL, window.location.origin);
+    const configuredHost = configuredUrl.hostname;
+    const pageHost = window.location.hostname;
+    const configuredIsLocal = ["localhost", "127.0.0.1", "::1"].includes(configuredHost);
+    const pageIsLocal = ["localhost", "127.0.0.1", "::1"].includes(pageHost);
+
+    if (configuredIsLocal && !pageIsLocal) {
+      return window.location.origin;
+    }
+  } catch {
+    return API_BASE_URL;
+  }
+
+  return API_BASE_URL;
 }
 
 export function getAccessToken() {
