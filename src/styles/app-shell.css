@@ -208,7 +208,8 @@
     transform: translateX(0) !important;
   }
 
-  .product-sidebar {
+  .mobile-sidebar-panel .product-sidebar,
+  .mobile-nav-panel .product-sidebar {
     display: flex !important;
     height: auto !important;
     min-height: 100vh !important;
@@ -216,7 +217,7 @@
     width: 100% !important;
   }
 
-  .product-main {
+  س .product-main {
     min-width: 0 !important;
     width: 100% !important;
   }
@@ -282,33 +283,36 @@
   }
 }
 
-/* Canonical workspace sidebar: one visual language across all workspace pages. */
-.product-shell,
-.owner-dashboard,
-.exec-dashboard,
-.employee-dashboard {
-  grid-template-columns: 232px minmax(0, 1fr) !important;
-}
+/* Canonical workspace sidebar: one visual language across all workspace pages (desktop only). */
+@media (min-width: 861px) {
 
-.product-sidebar,
-.owner-dashboard>.product-sidebar,
-.exec-dashboard>.product-sidebar,
-.employee-dashboard>.product-sidebar {
-  background: #f1f3ff !important;
-  border-right: 1px solid #c8ccda !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 18px !important;
-  grid-column: 1 !important;
-  height: 100vh !important;
-  min-height: 100vh !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  padding: 26px 16px 16px !important;
-  position: sticky !important;
-  top: 0 !important;
-  width: 232px !important;
+  .product-shell,
+  .owner-dashboard,
+  .exec-dashboard,
+  .employee-dashboard {
+    grid-template-columns: 232px minmax(0, 1fr) !important;
+  }
+
+  .product-sidebar,
+  .owner-dashboard>.product-sidebar,
+  .exec-dashboard>.product-sidebar,
+  .employee-dashboard>.product-sidebar {
+    background: #f1f3ff !important;
+    border-right: 1px solid #c8ccda !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 18px !important;
+    grid-column: 1 !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 26px 16px 16px !important;
+    position: sticky !important;
+    top: 0 !important;
+    width: 232px !important;
+  }
 }
 
 .product-sidebar .sidebar-brand-wrap {
@@ -582,16 +586,18 @@
   z-index: 30 !important;
 }
 
-.mobile-nav-toggle {
-  align-items: center !important;
-  background: #ffffff !important;
-  border: 1px solid #dfe4ef !important;
-  border-radius: 10px !important;
-  color: #263147 !important;
-  display: none !important;
-  height: 42px !important;
-  justify-content: center !important;
-  width: 42px !important;
+@media (min-width: 861px) {
+  .mobile-nav-toggle {
+    align-items: center !important;
+    background: #ffffff !important;
+    border: 1px solid #dfe4ef !important;
+    border-radius: 10px !important;
+    color: #263147 !important;
+    display: none !important;
+    height: 42px !important;
+    justify-content: center !important;
+    width: 42px !important;
+  }
 }
 
 .mobile-nav-toggle svg {
@@ -866,9 +872,6 @@
 .profile-caret:hover {
   background: #f7f9ff !important;
   color: #1a44c2 !important;
-<<<<<<< HEAD
-}
-=======
 }
 
 /* Unified workspace color system */
@@ -1142,7 +1145,7 @@
 }
 
 /* Match AppShell topbar placement to the dashboard topbar. */
-.product-main > .product-topbar {
+.product-main>.product-topbar {
   margin-left: -34px !important;
   margin-right: -34px !important;
   width: calc(100% + 68px) !important;
@@ -1321,4 +1324,226 @@
   color: #667085 !important;
   opacity: 1 !important;
 }
->>>>>>> 0b2a913c5655085fcdc5a8b7833b1da6a45f10ce
+
+/* ============ Final Unified Topbar/Search — يطابق Super Admin بالضبط ============ */
+.product-topbar,
+.owner-topbar,
+.exec-topbar,
+.employee-topbar {
+  align-items: center !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e4e7f0 !important;
+
+  /* 1. التعديل المصيري: إجبار العناصر على البقاء في سطر أفقي واحد */
+  display: flex !important;
+  flex-direction: row !important;
+
+  /* 2. قفل الالتفاف: نمنع أي عنصر من النزول لسطر جديد مهما انضغطت الشاشة */
+  flex-wrap: nowrap !important;
+
+  /* 3. توزيع العناصر: تأمين مسافة عادلة بين الطرف الأيمن والأيسر */
+  justify-content: space-between !important;
+  gap: 12px !important;
+  /* تقليل الفراغات الداخلية لتوفير مساحة للموبايل */
+  height: 68px !important;
+
+  /* 4. تقليل الحواف الجانبية حتى لا تضغط العناصر في الشاشات الصغيرة */
+  padding: 0 16px !important;
+
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+
+  /* 5. منع تكسر الكلمات: نمنع النصوص الطويلة مثل الأسماء من الانقسام لسطرين */
+  white-space: nowrap !important;
+}
+
+.product-topbar .product-search,
+.owner-topbar .owner-search,
+.exec-topbar .exec-search,
+.employee-topbar .employee-search {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #d9deea !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  color: #7f879a !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  gap: 14px !important;
+  height: 38px !important;
+  max-width: 400px !important;
+  min-width: 140px !important;
+  margin: 0 8px !important;
+  padding: 0 12px !important;
+}
+
+.product-topbar .product-search input {
+  width: 100% !important;
+  font-size: 13px !important;
+}
+
+.product-topbar .product-search svg,
+.owner-topbar .owner-search svg,
+.exec-topbar .exec-search svg,
+.employee-topbar .employee-search svg,
+.product-topbar .product-search .search-icon {
+  border: 0 !important;
+  color: #8791a6 !important;
+  display: block !important;
+  flex: 0 0 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  min-height: 20px !important;
+  min-width: 20px !important;
+  stroke-width: 2.25 !important;
+  width: 20px !important;
+}
+
+.product-topbar .product-search .search-icon::after {
+  content: none !important;
+}
+
+.product-topbar .product-search input,
+.owner-topbar .owner-search input,
+.exec-topbar .exec-search input,
+.employee-topbar .employee-search input {
+  background: transparent !important;
+  border: 0 !important;
+  color: #22283a !important;
+  flex: 1 1 auto !important;
+  font-family: Inter, "Noto Sans Arabic", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  height: auto !important;
+  line-height: normal !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  outline: 0 !important;
+  padding: 0 !important;
+}
+
+.product-topbar .product-search input::placeholder,
+.owner-topbar .owner-search input::placeholder,
+.exec-topbar .exec-search input::placeholder,
+.employee-topbar .employee-search input::placeholder {
+  color: #6f7583 !important;
+  opacity: 1 !important;
+}
+
+/* قفل تكتل البروفايل والإشعارات ومنعه من الانضغاط */
+.topbar-cluster {
+  align-items: center !important;
+  display: flex !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.product-profile {
+  align-items: center !important;
+  display: flex !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+
+}
+
+/* تهيئة المحتوى الرئيسي ودفع الصفحات أسفل الناف بار تلقائياً */
+.product-main {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.product-main>div:last-child {
+  padding: 20px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+/* ========================================================
+   قفل وتثبيت الناف بار بالسقف وترتيب الأزرار (نسخة السوبر)
+   ======================================================== */
+
+/* 1. إلغاء أي مسافة بيضاء علوية وإلصاق الناف بار بالسقف تماماً */
+body,
+#root,
+.product-shell,
+.product-main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+header,
+.product-topbar {
+  position: sticky !important;
+  top: 0 !important;
+  /* إلصاق كامل بالسقف */
+  margin-top: 0 !important;
+  height: 64px !important;
+  /* ارتفاع متناسق وموحد */
+
+  /* قفل العناصر في سطر أفقي واحد ومنع أي تداخل أو نزول لأسفل */
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 16px !important;
+  background-color: #ffffff !important;
+  z-index: 50 !important;
+}
+
+/* 2. التحكم في حجم حقل البحث ومنعه من ضغط الأزرار أو إخفاء البروفايل */
+header div[class*="search"],
+.product-topbar .product-search {
+  flex: 0 1 auto !important;
+  /* جعله ينكمش بمرونة لحماية بقية العناصر */
+  width: 100% !important;
+  max-width: 200px !important;
+  /* حجم محدد ومثالي للبحث الصغير */
+  min-width: 110px !important;
+  height: 38px !important;
+  margin: 0 8px !important;
+}
+
+/* 3. تجميع وحماية (الإشعارات + البروفايل + السهم) في كتلة واحدة صلبة على اليمين */
+header>div:last-child,
+.topbar-cluster {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+  /* مسافة متناسقة وجذابة بين الإشعارات والبروفايل */
+  flex-shrink: 0 !important;
+  /* ممنوع انكماش الكتلة أو اختفائها نهائياً */
+  margin-left: auto !important;
+  /* دفع الكتلة بالكامل لجهة اليمين مثل السوبر */
+}
+
+/* 4. حماية البروفايل والسهم وضمان ظهورهم بجانب بعضهم فوراً */
+header div[class*="profile"],
+.product-profile {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  /* مسافة ثابتة بين الصورة والسهم */
+  flex-shrink: 0 !important;
+  /* قفل حماية البروفايل */
+}
+
+/* منع انضغاط الصورة الشخصية أو زر الإشعارات أو السهم المنسدل */
+header img,
+.avatar-image,
+div[class*="avatar"],
+.product-notification-anchor,
+.profile-caret,
+header svg {
+  flex-shrink: 0 !important;
+  /* إجبار المتصفح على إظهارهم بأحجامهم الكاملة */
+}

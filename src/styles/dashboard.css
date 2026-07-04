@@ -4592,23 +4592,26 @@
 }
 
 
-/* Unified Dashboard Sidebars */
-.owner-dashboard,
-.exec-dashboard,
-.employee-dashboard {
-  grid-template-columns: 232px minmax(0, 1fr) !important;
-}
+/* Unified Dashboard Sidebars (desktop only — الموبايل يبقى عمود واحد) */
+@media (min-width: 861px) {
 
-.owner-dashboard>.product-sidebar,
-.exec-dashboard>.product-sidebar,
-.employee-dashboard>.product-sidebar {
-  grid-column: 1;
-}
+  .owner-dashboard,
+  .exec-dashboard,
+  .employee-dashboard {
+    grid-template-columns: 232px minmax(0, 1fr) !important;
+  }
 
-.owner-content,
-.exec-content,
-.employee-content {
-  grid-column: 2;
+  .owner-dashboard>.product-sidebar,
+  .exec-dashboard>.product-sidebar,
+  .employee-dashboard>.product-sidebar {
+    grid-column: 1;
+  }
+
+  .owner-content,
+  .exec-content,
+  .employee-content {
+    grid-column: 2;
+  }
 }
 
 .owner-sidebar,
