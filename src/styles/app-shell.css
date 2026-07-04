@@ -1547,3 +1547,103 @@ div[class*="avatar"],
 header svg {
   flex-shrink: 0 !important;
 }
+
+
+@media (max-width: 760px) {
+
+  /* إخفاء خانة البحث بالكامل بهذه الصفحات على الجوال فقط */
+  .owner-topbar .owner-search,
+  .exec-topbar .exec-search,
+  .employee-topbar .employee-search {
+    display: none !important;
+  }
+
+  /* دفع كتلة (الجرس + البروفايل) بالكامل لليمين */
+  .owner-topbar .topbar-cluster,
+  .exec-topbar .topbar-cluster,
+  .employee-topbar .topbar-cluster {
+    margin-left: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* إخفاء الاسم والدور، وترك الصورة + السهم فقط جنب بعض */
+  .owner-topbar .product-profile,
+  .exec-topbar .product-profile,
+  .employee-topbar .product-profile {
+    border-left: 0 !important;
+    padding-left: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .owner-topbar .product-profile b,
+  .owner-topbar .product-profile small,
+  .exec-topbar .product-profile b,
+  .exec-topbar .product-profile small,
+  .employee-topbar .product-profile b,
+  .employee-topbar .product-profile small {
+    display: none !important;
+  }
+
+  /* ظهور زر الهامبرغر على الجوال بهذه الصفحات */
+  .owner-topbar .mobile-nav-toggle,
+  .exec-topbar .mobile-nav-toggle,
+  .employee-topbar .mobile-nav-toggle {
+    display: inline-flex !important;
+  }
+
+  .product-profile {
+    margin-right: 1px;
+  }
+
+
+}
+
+
+@media (max-width: 760px) {
+
+  /* إخفاء خانة البحث بالكامل بهذه الصفحات على الجوال فقط */
+  .product-topbar .oproduct-search {
+    display: none !important;
+  }
+
+  /* دفع كتلة (الجرس + البروفايل) بالكامل لليمين */
+  .topbar-cluster .product-notification-anchor {
+    margin-left: 10px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-shrink: 0 !important;
+
+  }
+
+  /* إخفاء الاسم والدور، وترك الصورة + السهم فقط جنب بعض */
+  .product-topbar .product-profile {
+    border-left: 0 !important;
+    padding-left: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  /* ظهور زر الهامبرغر على الجوال بهذه الصفحات */
+  .product-topbar .mobile-nav-toggle {
+    display: inline-flex !important;
+  }
+
+  .product-topbar .product-profile {
+    margin-left: 2px !important;
+  }
+
+  .topbar-cluster {
+    width: auto !important;
+  }
+}
