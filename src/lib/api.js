@@ -122,7 +122,7 @@ function getRuntimeApiBaseUrl() {
     const pageIsLocal = ["localhost", "127.0.0.1", "::1"].includes(pageHost);
 
     if (configuredIsLocal && !pageIsLocal) {
-      return window.location.origin;
+      return import.meta.env.VITE_API_ORIGIN || API_BASE_URL;
     }
   } catch {
     return API_BASE_URL;
@@ -457,7 +457,7 @@ export function uploadFiles({ files, project_id, category }) {
   formData.append("project_id", project_id);
   formData.append("category", category);
 
-  return apiRequest("/uploads/", {
+  return apiRequest("/uploads", {
     method: "POST",
     auth: true,
     body: formData
