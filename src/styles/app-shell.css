@@ -1546,5 +1546,4 @@ div[class*="avatar"],
 .profile-caret,
 header svg {
   flex-shrink: 0 !important;
-  /* إجبار المتصفح على إظهارهم بأحجامهم الكاملة */
 }
