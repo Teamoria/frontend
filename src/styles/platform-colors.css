@@ -1,0 +1,333 @@
+:root {
+  --ink: #020617;
+  --muted: #5b6475;
+  --line: #dce6f5;
+  --soft: #f8fbff;
+  --brand: #0f3fbf;
+  --brand-2: #0369a1;
+  --teal: #0e7490;
+  --amber: #d97706;
+  --danger: #dc2626;
+  --shadow: 0 24px 70px rgba(15, 63, 191, 0.13);
+  --ui-bg: #f6f9fe;
+  --ui-sidebar: #eef4ff;
+  --ui-surface: #ffffff;
+  --ui-surface-soft: #f3f7ff;
+  --ui-surface-muted: #e8f1ff;
+  --ui-line: #dce6f5;
+  --ui-line-strong: #b8c8e2;
+  --ui-text: #020617;
+  --ui-muted: #5b6475;
+  --ui-muted-strong: #41506a;
+  --ui-primary: #0f3fbf;
+  --ui-primary-hover: #0b349f;
+  --ui-primary-soft: #e8f1ff;
+  --ui-primary-soft-strong: #cfe0ff;
+  --ui-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  --ui-shadow-strong: 0 18px 42px rgba(15, 63, 191, 0.14);
+}
+
+body {
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+.brand-mark {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), transparent 40%),
+    linear-gradient(145deg, #1d4ed8, #0f3fbf) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 12px 24px rgba(15, 63, 191, 0.22) !important;
+}
+
+.small-primary,
+.primary-link,
+.primary-button,
+.home-start,
+.home-primary-cta,
+.product-button,
+.owner-projects-primary,
+.initialize-project-primary,
+.sidebar-new-project,
+.product-sidebar .sidebar-new-project {
+  background: linear-gradient(135deg, #0f3fbf, #1d4ed8) !important;
+  border-color: #0f3fbf !important;
+  box-shadow: 0 16px 34px rgba(15, 63, 191, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.small-primary:hover,
+.primary-link:hover,
+.primary-button:hover,
+.home-start:hover,
+.home-primary-cta:hover,
+.product-button:hover,
+.owner-projects-primary:hover,
+.initialize-project-primary:hover,
+.sidebar-new-project:hover,
+.product-sidebar .sidebar-new-project:hover {
+  background: linear-gradient(135deg, #0b349f, #0f3fbf) !important;
+}
+
+.secondary-link,
+.home-secondary-cta,
+.filter-button,
+.select-button,
+.google-button {
+  background: #ffffff !important;
+  border-color: var(--ui-line) !important;
+  color: var(--ui-text) !important;
+}
+
+.page-kicker,
+.section-kicker,
+.pill,
+.home-logo,
+.home-logo-text,
+.home-hero h1 span,
+.home-dashboard-mock aside b,
+.home-mock-metrics svg,
+.home-feature-visual--summary b,
+.form-row a,
+.auth-switch a,
+.back-link,
+.pd-item:hover,
+.pd-item:hover svg {
+  color: var(--ui-primary) !important;
+}
+
+.teamoria-home {
+  --home-primary: #0f3fbf;
+  --home-primary-dark: #08245f;
+  --home-bg: #f8fbff;
+  --home-surface: #ffffff;
+  --home-container: #e8f1ff;
+  --home-container-low: #f3f7ff;
+  --home-container-high: #dbe8ff;
+  --home-line: #d5e1f1;
+  --home-text: #020617;
+  --home-muted: #4b5565;
+}
+
+.home-topbar,
+.teamoria-home .home-topbar,
+.teamoria-home .home-topbar nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: var(--home-line) !important;
+}
+
+.home-hero {
+  background:
+    radial-gradient(circle at 50% -20%, rgba(15, 63, 191, 0.12) 0%, transparent 42%),
+    linear-gradient(180deg, #ffffff 0%, #f3f7ff 58%, #ffffff 100%) !important;
+}
+
+.home-pill,
+.home-dashboard-mock aside span.active,
+.home-feature-grid article:first-child > span,
+.home-lang-toggle button.active {
+  background: #e8f1ff !important;
+  border-color: rgba(15, 63, 191, 0.14) !important;
+  color: #08245f !important;
+}
+
+.home-feature-grid article > span,
+.tm-empty-state__icon,
+.tm-skeleton--avatar,
+.pd-avatar,
+.auth-inline-action {
+  background: #e8f1ff !important;
+  border-color: rgba(15, 63, 191, 0.16) !important;
+  color: var(--ui-primary) !important;
+}
+
+.home-mock-head em,
+.home-feature-visual--chat > div:nth-child(2) span,
+.accent-violet,
+.accent-pink,
+.graph-node--violet rect,
+.tasks-kanban-column--purple .tasks-kanban-head i,
+.performance-metric-card.tone-violet > span {
+  background: #e8f1ff !important;
+  color: #0f3fbf !important;
+  fill: #0f3fbf !important;
+}
+
+.home-mock-chart i:nth-child(2),
+.floating-card i,
+.sparkline {
+  border-color: #0369a1 !important;
+}
+
+.stats-band,
+.auth-visual,
+.auth-shell.sign-in-shell .auth-visual,
+.auth-visual--security,
+.product-console {
+  background:
+    radial-gradient(circle at 86% 12%, rgba(96, 165, 250, 0.24), transparent 28%),
+    linear-gradient(145deg, #07152f 0%, #0f2f8f 56%, #0f3fbf 100%) !important;
+  color: #ffffff !important;
+}
+
+.auth-shell.sign-in-shell .auth-visual::before {
+  background:
+    linear-gradient(90deg, rgba(7, 21, 47, 0.66), transparent 62%),
+    radial-gradient(circle at 62% 42%, rgba(96, 165, 250, 0.18), transparent 34%) !important;
+}
+
+.auth-shell.sign-in-shell .auth-panel,
+.auth-shell.sign-up-shell .auth-panel,
+.auth-panel {
+  background: linear-gradient(180deg, #ffffff, #f8fbff 70%, #f3f7ff) !important;
+}
+
+.auth-form,
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .sign-in-form,
+.auth-shell.auth-shell--analytics .auth-panel .auth-form,
+.auth-shell.auth-shell--signup .auth-panel .auth-form {
+  border-color: var(--ui-line) !important;
+  box-shadow: 0 26px 80px rgba(15, 63, 191, 0.1) !important;
+}
+
+.field:focus-within,
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .field:focus-within,
+.auth-shell.sign-up-shell.auth-shell--signup .auth-panel .field:focus-within {
+  border-color: var(--ui-primary) !important;
+  box-shadow: 0 0 0 4px rgba(15, 63, 191, 0.13), 0 14px 30px rgba(15, 63, 191, 0.08) !important;
+}
+
+.product-shell,
+.owner-dashboard,
+.exec-dashboard,
+.employee-dashboard,
+.product-main {
+  background: var(--ui-bg) !important;
+  color: var(--ui-text) !important;
+}
+
+.product-sidebar,
+.owner-sidebar,
+.exec-sidebar,
+.employee-sidebar,
+.mobile-sidebar-panel {
+  background: var(--ui-sidebar) !important;
+  border-color: var(--ui-line-strong) !important;
+}
+
+.product-sidebar .brand,
+.product-sidebar .brand--compact,
+.product-sidebar .brand-word,
+.product-sidebar .brand--compact .brand-word,
+.owner-brand h1,
+.exec-brand h1,
+.employee-brand h1 {
+  color: var(--ui-primary) !important;
+}
+
+.product-sidebar nav a:hover,
+.owner-nav a:hover,
+.exec-nav a:hover,
+.employee-nav a:hover,
+.filter-button:hover,
+.select-button:hover {
+  background: var(--ui-primary-soft) !important;
+  border-color: var(--ui-primary-soft-strong) !important;
+  color: var(--ui-primary) !important;
+}
+
+.product-sidebar nav a.active,
+.owner-nav a.active,
+.exec-nav a.active,
+.employee-nav a.active {
+  background: var(--ui-primary) !important;
+  color: #ffffff !important;
+}
+
+.product-sidebar nav a.active .sidebar-nav-icon,
+.owner-nav a.active svg,
+.exec-nav a.active svg,
+.employee-nav a.active svg {
+  color: #ffffff !important;
+}
+
+.product-topbar,
+.owner-topbar,
+.exec-topbar,
+.employee-topbar,
+.product-search,
+.owner-search,
+.exec-search,
+.employee-search,
+.notification-button,
+.profile-caret,
+.product-notifications-panel,
+.product-panel,
+.premium-card,
+.project-hub-card,
+.panel,
+.chart-panel,
+.graph-panel,
+.chat-panel,
+.tm-metric-card {
+  background: var(--ui-surface) !important;
+  border-color: var(--ui-line) !important;
+}
+
+.product-panel,
+.premium-card,
+.project-hub-card,
+.panel,
+.chart-panel,
+.graph-panel,
+.chat-panel,
+.tm-metric-card {
+  box-shadow: var(--ui-shadow) !important;
+}
+
+.product-panel:hover,
+.premium-card:hover,
+.project-hub-card:hover,
+.tm-metric-card:hover {
+  border-color: var(--ui-primary-soft-strong) !important;
+  box-shadow: var(--ui-shadow-strong) !important;
+}
+
+.progress-track,
+.owner-progress,
+.employee-ai-progress,
+.employee-project-progress p,
+.auth-preview-metrics i {
+  background: var(--ui-primary-soft) !important;
+}
+
+.progress-track span,
+.owner-progress i,
+.employee-project-progress i,
+.auth-preview-metrics i::after,
+.bars span {
+  background: linear-gradient(90deg, #0f3fbf, #0369a1) !important;
+}
+
+.notification-button span {
+  background: #dc2626 !important;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(15, 63, 191, 0.24) !important;
+  outline-offset: 2px;
+}
+
+.auth-form .field input:focus,
+.auth-form .field input:focus-visible,
+.auth-form .field select:focus,
+.auth-form .field select:focus-visible {
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.auth-form .field:focus-within {
+  border-color: var(--ui-primary, #0f3fbf) !important;
+  box-shadow: 0 0 0 4px rgba(15, 63, 191, 0.12), 0 14px 30px rgba(15, 63, 191, 0.08) !important;
+}

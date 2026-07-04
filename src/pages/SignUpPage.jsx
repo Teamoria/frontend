@@ -1,14 +1,13 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
+import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiAward, FiEye, FiEyeOff, FiLock, FiMail, FiUser } from "react-icons/fi";
 import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { registerWithEmail } from "../lib/api.js";
+import { formatAuthErrorMessage } from "../lib/authErrors.js";
 import { PENDING_SIGNUP_KEY } from "./VerifyOtpPage.jsx";
 import "../styles/sign-up.css";
-
-const workspaceImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAihiwQ5gWaPNLFXzNG-TzS2eV0pPLpvfKcuLXvwklDhAET0Ao6oujo3rL7pREHOEaeUopVHbIOXzGKlzHBOtBvUjhf4SyYBHJUaMCn46KzUgUiP8NEjIFMOH4IvWOszKDZ_3eye1Av_F6UW0eoXThSb6pg6WvvrCC2wC_TpAScoDN3ifERvRQdeQwl142mfsWhiJKDGEIwQVwYdn0VktxZL2Ra-6sMzeWtD6-hAmcwzGk26As4cT7kFlmhYZTwI1obzGuHp1EU9fJh";
 
 const roleMap = {
   owner: "admin",
@@ -21,6 +20,7 @@ export default function SignUpPage() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [hasEmail, setHasEmail] = useState(false);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -43,7 +43,7 @@ export default function SignUpPage() {
       }));
       window.location.hash = "/verify-otp";
     } catch (error) {
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: formatAuthErrorMessage(error, "signup") });
     } finally {
       setIsSubmitting(false);
     }
@@ -57,13 +57,13 @@ export default function SignUpPage() {
       text="Streamline your team collaboration with AI-powered meeting summaries and real-time operational insights."
       visualContent={<SignUpWorkspaceVisual />}
     >
-      <form className="auth-form sign-up-form" onSubmit={handleSubmit}>
+      <form className={`auth-form sign-up-form ${hasEmail ? "has-email" : ""}`} onSubmit={handleSubmit}>
         <div className="sign-up-mobile-brand">
           <span>Teamoria</span>
           <small>Enterprise AI PM</small>
         </div>
         <header className="sign-up-header">
-          <h1>Create Account</h1>
+          <h1>Create account</h1>
           <p>Join the world's most advanced AI-driven workspace</p>
         </header>
 
@@ -76,14 +76,28 @@ export default function SignUpPage() {
         </GoogleAuthButton>
         <div className="divider"><span>or sign up with</span></div>
 
-        {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
+        {status.message && (
+          <p className={`auth-alert auth-alert--${status.type}`} role="alert" aria-live="polite">
+            {status.message}
+          </p>
+        )}
 
         <div className="form-stack">
           <span className="label">Full Name</span>
-          <TextInput icon={<FiUser />} name="fullName" placeholder="Enter your full name" required disabled={isSubmitting} />
+          <TextInput autoComplete="name" icon={<FiUser />} name="fullName" placeholder="Enter your full name" required disabled={isSubmitting} />
 
           <span className="label">Work Email</span>
-          <TextInput icon={<FiMail />} name="email" type="email" placeholder="identity@enterprise.ai" required disabled={isSubmitting} />
+          <TextInput
+            autoComplete="email"
+            icon={<FiMail />}
+            inputMode="email"
+            name="email"
+            type="email"
+            placeholder="name@company.com"
+            required
+            disabled={isSubmitting}
+            onChange={(event) => setHasEmail(event.target.value.trim().length > 0)}
+          />
 
           <span className="label">Role</span>
           <label className="field sign-up-select-field">
@@ -103,6 +117,7 @@ export default function SignUpPage() {
             <input
               name="password"
               required
+              autoComplete="new-password"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               disabled={isSubmitting}
@@ -128,14 +143,7 @@ export default function SignUpPage() {
 }
 
 function SignUpWorkspaceVisual() {
-  return (
-    <div className="sign-up-visual-content" aria-hidden="true">
-      <img src={workspaceImage} alt="" />
-      <div className="sign-up-visual-brand">
-        <span>Teamoria</span>
-      </div>
-    </div>
-  );
+  return <AuthLegacyVisual className="sign-up-visual-content" />;
 }
 
 function SignUpFooter() {

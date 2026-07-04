@@ -1,8 +1,29 @@
-export function TextInput({ icon, type = "text", placeholder, value, name, required = false, disabled = false }) {
+export function TextInput({
+  autoComplete,
+  icon,
+  inputMode,
+  type = "text",
+  placeholder,
+  value,
+  name,
+  required = false,
+  disabled = false,
+  ...inputProps
+}) {
   return (
     <label className="field input-wrapper">
       <span className="field-icon icon" aria-hidden="true">{icon}</span>
-      <input name={name} required={required} type={type} placeholder={placeholder} defaultValue={value} disabled={disabled} />
+      <input
+        autoComplete={autoComplete}
+        defaultValue={value}
+        disabled={disabled}
+        inputMode={inputMode}
+        name={name}
+        placeholder={placeholder}
+        required={required}
+        type={type}
+        {...inputProps}
+      />
     </label>
   );
 }

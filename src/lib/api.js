@@ -7,6 +7,7 @@ const API_BASE_URL =
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const TOKEN_KEY = "teamoria_access_token";
+const USER_KEY = "teamoria_current_user";
 
 const demoCompanies = [
   {
@@ -95,13 +96,39 @@ function demoPagination(items, page = 1) {
 
 function buildUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const cleanBaseUrl = API_BASE_URL.replace(/\/$/, "");
+  const cleanBaseUrl = getRuntimeApiBaseUrl().replace(/\/$/, "");
+
+  if (cleanPath.startsWith("/api/")) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
 
   if (cleanBaseUrl.endsWith(`/api/${API_VERSION}`)) {
     return `${cleanBaseUrl}${cleanPath}`;
   }
 
   return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
+}
+
+function getRuntimeApiBaseUrl() {
+  if (typeof window === "undefined") {
+    return API_BASE_URL;
+  }
+
+  try {
+    const configuredUrl = new URL(API_BASE_URL, window.location.origin);
+    const configuredHost = configuredUrl.hostname;
+    const pageHost = window.location.hostname;
+    const configuredIsLocal = ["localhost", "127.0.0.1", "::1"].includes(configuredHost);
+    const pageIsLocal = ["localhost", "127.0.0.1", "::1"].includes(pageHost);
+
+    if (configuredIsLocal && !pageIsLocal) {
+      return import.meta.env.VITE_API_ORIGIN || API_BASE_URL;
+    }
+  } catch {
+    return API_BASE_URL;
+  }
+
+  return API_BASE_URL;
 }
 
 export function getAccessToken() {
@@ -114,8 +141,23 @@ export function setAccessToken(token) {
   }
 }
 
+export function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user) {
+  if (user) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+}
+
 export function clearAccessToken() {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
 }
 
 export class ApiError extends Error {
@@ -132,19 +174,59 @@ function normalizeData(payload) {
 }
 
 function extractToken(payload) {
-  return payload?.token || payload?.data?.token || payload?.access_token || payload?.data?.access_token || "";
+  return (
+    payload?.token ||
+    payload?.data?.token ||
+    payload?.access_token ||
+    payload?.data?.access_token ||
+    payload?.bearer_token ||
+    payload?.data?.bearer_token ||
+    payload?.plain_text_token ||
+    payload?.data?.plain_text_token ||
+    ""
+  );
 }
 
 function getProfileFromPayload(payload) {
   return payload?.data?.user || payload?.data || payload?.user || payload || null;
 }
 
-export async function apiRequest(path, { method = "GET", body, auth = false, query } = {}) {
+function normalizeRole(role) {
+  const cleanRole = String(role || "").toLowerCase().replace(/[\s-]+/g, "_");
+
+  if (cleanRole === "owner" || cleanRole === "company_admin") return "company_owner";
+  if (cleanRole === "manager") return "company_manager";
+  if (cleanRole === "member") return "company_member";
+
+  return cleanRole;
+}
+
+function getProfilePath(user = getStoredUser()) {
+  return normalizeRole(user?.role) === "admin" ? "/admin/profile" : "/company/profile";
+}
+
+async function requestCurrentUserWithFallback() {
+  const preferredPath = getProfilePath();
+  const fallbackPath = preferredPath === "/admin/profile" ? "/company/profile" : "/admin/profile";
+
+  try {
+    return await apiRequest(preferredPath, { auth: true, redirectOnUnauthorized: false });
+  } catch (error) {
+    if (error.status === 401 || error.status === 403 || error.status === 404) {
+      return apiRequest(fallbackPath, { auth: true, redirectOnUnauthorized: false });
+    }
+
+    throw error;
+  }
+}
+
+export async function apiRequest(path, { method = "GET", body, auth = false, query, redirectOnUnauthorized = true } = {}) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const headers = {
     Accept: "application/json"
   };
 
-  if (body) {
+  if (body && !isFormData) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -178,7 +260,7 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
   const response = await fetch(url.toString(), {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
   });
 
   const payload = await response.json().catch(() => null);
@@ -200,13 +282,20 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
     }
 
     if (response.status === 401) {
-      clearAccessToken();
-      window.location.hash = "/signin";
+      if (redirectOnUnauthorized) {
+        clearAccessToken();
+        window.location.hash = "/signin";
+      }
       throw new ApiError(message || "Session expired. Please sign in again.", { status: response.status, payload });
     }
 
     if (response.status === 403) {
       throw new ApiError(message || "You are not authorized", { status: response.status, payload });
+    }
+
+    if (response.status === 404) {
+      const route = url.pathname.replace(`/api/${API_VERSION}`, "") || path;
+      throw new ApiError(`API route is not available yet: ${route}`, { status: response.status, payload });
     }
 
     throw new ApiError(message, { status: response.status, payload });
@@ -223,13 +312,26 @@ export async function loginWithEmail({ email, password }) {
 
   const token = extractToken(payload);
   setAccessToken(token);
+  const userFromLogin = getProfileFromPayload(payload);
+  setStoredUser(userFromLogin);
   try {
     const profilePayload = await getCurrentUser();
-    return { token, user: getProfileFromPayload(profilePayload), payload };
+    const user = getProfileFromPayload(profilePayload);
+    setStoredUser(user);
+    return { token, user, payload };
   } catch (error) {
+    if (error.status === 404 && userFromLogin) {
+      setStoredUser(userFromLogin);
+      return { token, user: userFromLogin, payload };
+    }
+
     clearAccessToken();
     throw error;
   }
+}
+
+export function getApiHealth() {
+  return apiRequest("/api/health");
 }
 
 export async function loginWithGoogle(providerToken) {
@@ -242,10 +344,19 @@ export async function loginWithGoogle(providerToken) {
 
   const token = extractToken(payload);
   setAccessToken(token);
+  const userFromLogin = getProfileFromPayload(payload);
+  setStoredUser(userFromLogin);
   try {
     const profilePayload = await getCurrentUser();
-    return { token, user: getProfileFromPayload(profilePayload), payload };
+    const user = getProfileFromPayload(profilePayload);
+    setStoredUser(user);
+    return { token, user, payload };
   } catch (error) {
+    if (error.status === 404 && userFromLogin) {
+      setStoredUser(userFromLogin);
+      return { token, user: userFromLogin, payload };
+    }
+
     clearAccessToken();
     throw error;
   }
@@ -258,7 +369,7 @@ export async function registerWithEmail({ name, email, password }) {
       name,
       email,
       password,
-      confirm_password: password
+      password_confirmation: password
     }
   });
 }
@@ -291,7 +402,7 @@ export async function verifyOtp({ email, code, type = "register", newPassword })
 }
 
 export async function getCurrentUser() {
-  return apiRequest("/profile", { auth: true });
+  return requestCurrentUserWithFallback();
 }
 
 export async function logoutUser() {
@@ -328,11 +439,37 @@ export async function updateProfile(body) {
     }
   });
 
-  return apiRequest("/profile", {
+  return apiRequest(getProfilePath(), {
     method: "PATCH",
     auth: true,
     body: cleanBody
   });
+}
+
+export function uploadFiles({ files, project_id, category }) {
+  const formData = new FormData();
+  const fileList = Array.from(files || []);
+
+  fileList.forEach((file) => {
+    formData.append("files[]", file);
+  });
+
+  formData.append("project_id", project_id);
+  formData.append("category", category);
+
+  return apiRequest("/uploads", {
+    method: "POST",
+    auth: true,
+    body: formData
+  });
+}
+
+export function listUploads() {
+  return apiRequest("/uploads/list", { auth: true });
+}
+
+export function listProjectUploads(projectId) {
+  return apiRequest(`/uploads/${projectId}/list`, { auth: true });
 }
 
 export function listUsers({ page, archived } = {}) {
@@ -346,7 +483,7 @@ export function listUsers({ page, archived } = {}) {
     });
   }
 
-  return apiRequest("/users", { auth: true, query: { page, archived: archived ? "true" : undefined } });
+  return apiRequest("/admin/users", { auth: true, query: { page, archived: archived ? "1" : undefined } });
 }
 
 export function createUser(body) {
@@ -354,7 +491,7 @@ export function createUser(body) {
     return Promise.resolve({ success: true, data: { user: { id: `demo-user-${Date.now()}`, ...body } } });
   }
 
-  return apiRequest("/users", { method: "POST", auth: true, body });
+  return apiRequest("/admin/users", { method: "POST", auth: true, body });
 }
 
 export function updateUser(id, body) {
@@ -362,7 +499,7 @@ export function updateUser(id, body) {
     return Promise.resolve({ success: true, data: { user: { id, ...body } } });
   }
 
-  return apiRequest(`/users/${id}`, { method: "PUT", auth: true, body });
+  return apiRequest(`/admin/users/${id}`, { method: "PUT", auth: true, body });
 }
 
 export function deleteUser(id) {
@@ -370,7 +507,7 @@ export function deleteUser(id) {
     return Promise.resolve({ success: true, data: { id } });
   }
 
-  return apiRequest(`/users/${id}`, { method: "DELETE", auth: true });
+  return apiRequest(`/admin/users/${id}`, { method: "DELETE", auth: true });
 }
 
 export function restoreUser(id) {
@@ -378,7 +515,7 @@ export function restoreUser(id) {
     return Promise.resolve({ success: true, data: { id } });
   }
 
-  return apiRequest(`/users/${id}/restore`, { method: "PATCH", auth: true });
+  return apiRequest(`/admin/users/${id}/restore`, { method: "PATCH", auth: true });
 }
 
 export function forceDeleteUser(id) {
@@ -386,7 +523,7 @@ export function forceDeleteUser(id) {
     return Promise.resolve({ success: true, data: { id } });
   }
 
-  return apiRequest(`/users/${id}/force-delete`, { method: "DELETE", auth: true });
+  return apiRequest(`/admin/users/${id}/force-delete`, { method: "DELETE", auth: true });
 }
 
 export function listCompanies({ page, archived } = {}) {
@@ -400,7 +537,7 @@ export function listCompanies({ page, archived } = {}) {
     });
   }
 
-  return apiRequest("/companies", { auth: true, query: { page, archived: archived ? "true" : undefined } });
+  return apiRequest("/admin/companies", { auth: true, query: { page, archived: archived ? "1" : undefined } });
 }
 
 export function createCompany(body) {
@@ -408,7 +545,7 @@ export function createCompany(body) {
     return Promise.resolve({ success: true, data: { company: { id: `demo-company-${Date.now()}`, ...body } } });
   }
 
-  return apiRequest("/companies", { method: "POST", auth: true, body });
+  return apiRequest("/admin/companies", { method: "POST", auth: true, body });
 }
 
 export function updateCompany(id, body) {
@@ -416,7 +553,7 @@ export function updateCompany(id, body) {
     return Promise.resolve({ success: true, data: { company: { id, ...body } } });
   }
 
-  return apiRequest(`/companies/${id}`, { method: "PUT", auth: true, body });
+  return apiRequest(`/admin/companies/${id}`, { method: "PUT", auth: true, body });
 }
 
 export function deleteCompany(id) {
@@ -424,7 +561,7 @@ export function deleteCompany(id) {
     return Promise.resolve({ success: true, data: { id } });
   }
 
-  return apiRequest(`/companies/${id}`, { method: "DELETE", auth: true });
+  return apiRequest(`/admin/companies/${id}`, { method: "DELETE", auth: true });
 }
 
 export function restoreCompany(id) {
@@ -432,7 +569,7 @@ export function restoreCompany(id) {
     return Promise.resolve({ success: true, data: { id } });
   }
 
-  return apiRequest(`/companies/${id}/restore`, { method: "PATCH", auth: true });
+  return apiRequest(`/admin/companies/${id}/restore`, { method: "PATCH", auth: true });
 }
 
 export function forceDeleteCompany(id) {
@@ -440,15 +577,19 @@ export function forceDeleteCompany(id) {
     return Promise.resolve({ success: true, data: { id } });
   }
 
-  return apiRequest(`/companies/${id}/force-delete`, { method: "DELETE", auth: true });
+  return apiRequest(`/admin/companies/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function registerCompany(body) {
+  return apiRequest("/company/register", { method: "POST", auth: true, body });
 }
 
 export function listStaff({ page, archived, roles, statuses } = {}) {
-  return apiRequest("/staff", {
+  return apiRequest("/company/staff", {
     auth: true,
     query: {
       page,
-      archived: archived ? "true" : undefined,
+      archived: archived ? "1" : undefined,
       "roles[]": roles,
       "statuses[]": statuses
     }
@@ -456,27 +597,91 @@ export function listStaff({ page, archived, roles, statuses } = {}) {
 }
 
 export function getStaffMember(id) {
-  return apiRequest(`/staff/${id}`, { auth: true });
+  return apiRequest(`/company/staff/${id}`, { auth: true });
 }
 
 export function createStaffMember(body) {
-  return apiRequest("/staff", { method: "POST", auth: true, body: normalizeStaffBody(body) });
+  return apiRequest("/company/staff", { method: "POST", auth: true, body: normalizeStaffBody(body) });
 }
 
 export function updateStaffMember(id, body) {
-  return apiRequest(`/staff/${id}`, { method: "PUT", auth: true, body: normalizeStaffBody(body, { partial: true }) });
+  return apiRequest(`/company/staff/${id}`, { method: "PUT", auth: true, body: normalizeStaffBody(body, { partial: true }) });
 }
 
 export function deleteStaffMember(id) {
-  return apiRequest(`/staff/${id}`, { method: "DELETE", auth: true });
+  return apiRequest(`/company/staff/${id}`, { method: "DELETE", auth: true });
 }
 
 export function restoreStaffMember(id) {
-  return apiRequest(`/staff/${id}/restore`, { method: "PATCH", auth: true });
+  return apiRequest(`/company/staff/${id}/restore`, { method: "PATCH", auth: true });
 }
 
 export function forceDeleteStaffMember(id) {
-  return apiRequest(`/staff/${id}/force-delete`, { method: "DELETE", auth: true });
+  return apiRequest(`/company/staff/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function listAdminProjects({ page, archived } = {}) {
+  return apiRequest("/admin/projects", { auth: true, query: { page, archived: archived ? "1" : undefined } });
+}
+
+export function createAdminProject(body) {
+  return apiRequest("/admin/projects", { method: "POST", auth: true, body });
+}
+
+export function updateAdminProject(id, body) {
+  return apiRequest(`/admin/projects/${id}`, { method: "PUT", auth: true, body });
+}
+
+export function deleteAdminProject(id) {
+  return apiRequest(`/admin/projects/${id}`, { method: "DELETE", auth: true });
+}
+
+export function restoreAdminProject(id) {
+  return apiRequest(`/admin/projects/${id}/restore`, { method: "PATCH", auth: true });
+}
+
+export function forceDeleteAdminProject(id) {
+  return apiRequest(`/admin/projects/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function addAdminProjectMembers(id, body) {
+  return apiRequest(`/admin/projects/${id}/members`, { method: "POST", auth: true, body });
+}
+
+export function removeAdminProjectMember(id, userId) {
+  return apiRequest(`/admin/projects/${id}/members/${userId}`, { method: "DELETE", auth: true });
+}
+
+export function listCompanyProjects({ page, archived } = {}) {
+  return apiRequest("/company/projects", { auth: true, query: { page, archived: archived ? "1" : undefined } });
+}
+
+export function createCompanyProject(body) {
+  return apiRequest("/company/projects", { method: "POST", auth: true, body: normalizeCompanyProjectBody(body) });
+}
+
+export function updateCompanyProject(id, body) {
+  return apiRequest(`/company/projects/${id}`, { method: "PUT", auth: true, body: normalizeCompanyProjectBody(body) });
+}
+
+export function deleteCompanyProject(id) {
+  return apiRequest(`/company/projects/${id}`, { method: "DELETE", auth: true });
+}
+
+export function restoreCompanyProject(id) {
+  return apiRequest(`/company/projects/${id}/restore`, { method: "PATCH", auth: true });
+}
+
+export function forceDeleteCompanyProject(id) {
+  return apiRequest(`/company/projects/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function addCompanyProjectMembers(id, body) {
+  return apiRequest(`/company/projects/${id}/members`, { method: "POST", auth: true, body });
+}
+
+export function removeCompanyProjectMember(id, userId) {
+  return apiRequest(`/company/projects/${id}/members/${userId}`, { method: "DELETE", auth: true });
 }
 
 export function getPayloadData(payload) {
@@ -496,6 +701,19 @@ function normalizeStaffBody(body, { partial = false } = {}) {
   if (!partial && cleanBody.password && !cleanBody.password_confirmation) {
     cleanBody.password_confirmation = cleanBody.password;
   }
+
+  return cleanBody;
+}
+
+function normalizeCompanyProjectBody(body) {
+  const allowedFields = ["name", "description", "status", "progress", "start_date", "end_date"];
+  const cleanBody = {};
+
+  allowedFields.forEach((field) => {
+    if (body[field] !== undefined && body[field] !== "") {
+      cleanBody[field] = body[field];
+    }
+  });
 
   return cleanBody;
 }

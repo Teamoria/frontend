@@ -64,10 +64,22 @@ export default function TasksPage() {
   const [columns, setColumns] = useState(initialColumns);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskDraft, setTaskDraft] = useState(emptyTask);
+  const [viewMode, setViewMode] = useState("board");
   const isMember = normalizedRole === "company_member";
 
   const totalTasks = useMemo(
     () => columns.reduce((total, column) => total + column.tasks.length, 0),
+    [columns]
+  );
+
+  const taskRows = useMemo(
+    () => columns.flatMap((column) => column.tasks.map((task, index) => ({
+      ...task,
+      rowId: `${column.id}-${task.title}-${task.date}-${index}`,
+      stage: column.title,
+      stageTone: column.tone,
+      done: column.done
+    }))),
     [columns]
   );
 
@@ -111,8 +123,8 @@ export default function TasksPage() {
           </div>
           <div className="tasks-head-actions">
             <div className="tasks-view-toggle" aria-label="Task view">
-              <button className="active" type="button"><FiGrid aria-hidden="true" />Board</button>
-              <button type="button"><FiList aria-hidden="true" />List</button>
+              <button className={viewMode === "board" ? "active" : ""} type="button" onClick={() => setViewMode("board")} aria-pressed={viewMode === "board"}><FiGrid aria-hidden="true" />Board</button>
+              <button className={viewMode === "list" ? "active" : ""} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}><FiList aria-hidden="true" />List</button>
             </div>
             {isMember ? null : (
               <button className="tasks-primary-button" type="button" onClick={() => setIsModalOpen(true)}>
@@ -129,55 +141,65 @@ export default function TasksPage() {
           <span>{totalTasks} tasks in total</span>
         </div>
 
-        <section className="tasks-kanban-board">
-          {columns.map((column) => (
-            <div className={`tasks-kanban-column tasks-kanban-column--${column.tone}`} key={column.title}>
-              <div className="tasks-kanban-head">
-                <div>
-                  <i aria-hidden="true" />
-                  <h2>{column.title}</h2>
-                  <span>{column.tasks.length}</span>
+        {viewMode === "board" ? (
+          <section className="tasks-kanban-board">
+            {columns.map((column) => (
+              <div className={`tasks-kanban-column tasks-kanban-column--${column.tone}`} key={column.title}>
+                <div className="tasks-kanban-head">
+                  <div>
+                    <i aria-hidden="true" />
+                    <h2>{column.title}</h2>
+                    <span>{column.tasks.length}</span>
+                  </div>
+                  <button type="button" aria-label={`More actions for ${column.title}`}><FiMoreHorizontal aria-hidden="true" /></button>
                 </div>
-                <button type="button" aria-label={`More actions for ${column.title}`}><FiMoreHorizontal aria-hidden="true" /></button>
+                <div className="tasks-kanban-list">
+                  {column.tasks.map((task, index) => (
+                    <TaskCard task={task} done={column.done} key={`${task.title}-${task.date}-${index}`} />
+                  ))}
+                  {!column.done ? (
+                    <button className="tasks-add-card" type="button" onClick={() => {
+                      updateDraft("stage", column.id);
+                      setIsModalOpen(true);
+                    }}>
+                      <FiPlus aria-hidden="true" />Add Task
+                    </button>
+                  ) : null}
+                </div>
               </div>
-              <div className="tasks-kanban-list">
-                {column.tasks.map((task, index) => (
-                  <article className={`tasks-card ${task.active ? "tasks-card--active" : ""} ${column.done ? "tasks-card--done" : ""}`} key={`${task.title}-${task.date}-${index}`}>
-                    <div className="tasks-card-top">
-                      <span className={`tasks-priority tasks-priority--${task.priority.toLowerCase()}`}>{task.priority}</span>
-                      <div>
-                        {task.ai ? <FiZap aria-hidden="true" /> : null}
-                        {task.comments ? <span className="tasks-comment-dot" aria-hidden="true" /> : null}
-                      </div>
-                    </div>
-                    <h3>{task.title}</h3>
-                    {task.description ? <p>{task.description}</p> : null}
-                    <div className="tasks-card-bottom">
-                      <div className="tasks-assignee">
-                        <span>{initials(task.owner)}</span>
-                      </div>
-                      <div className="tasks-date">
-                        <FiCalendar aria-hidden="true" />
-                        <span>{task.date}</span>
-                      </div>
-                    </div>
-                    <div className="tasks-tag-row">
-                      {task.tags.map((tag) => <span key={tag}>{tag}</span>)}
-                    </div>
-                  </article>
-                ))}
-                {!column.done ? (
-                  <button className="tasks-add-card" type="button" onClick={() => {
-                    updateDraft("stage", column.id);
-                    setIsModalOpen(true);
-                  }}>
-                    <FiPlus aria-hidden="true" />Add Task
-                  </button>
-                ) : null}
-              </div>
+            ))}
+          </section>
+        ) : (
+          <section className="tasks-list-view" aria-label="Task list">
+            <div className="tasks-list-head" aria-hidden="true">
+              <span>Task</span>
+              <span>Stage</span>
+              <span>Owner</span>
+              <span>Due</span>
+              <span>Priority</span>
             </div>
-          ))}
-        </section>
+            <div className="tasks-list-rows">
+              {taskRows.map((task) => (
+                <article className={`tasks-list-row ${task.done ? "is-done" : ""}`} key={task.rowId}>
+                  <div className="tasks-list-main">
+                    <span className={`tasks-stage-dot tasks-stage-dot--${task.stageTone}`} aria-hidden="true" />
+                    <div>
+                      <h3>{task.title}</h3>
+                      {task.description ? <p>{task.description}</p> : null}
+                      <div className="tasks-tag-row">
+                        {task.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="tasks-list-stage">{task.stage}</span>
+                  <span className="tasks-list-owner"><i>{initials(task.owner)}</i>{task.owner}</span>
+                  <span className="tasks-date"><FiCalendar aria-hidden="true" />{task.date}</span>
+                  <span className={`tasks-priority tasks-priority--${task.priority.toLowerCase()}`}>{task.priority}</span>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {isModalOpen ? (
@@ -244,6 +266,34 @@ export default function TasksPage() {
         </div>
       ) : null}
     </AppShell>
+  );
+}
+
+function TaskCard({ task, done = false }) {
+  return (
+    <article className={`tasks-card ${task.active ? "tasks-card--active" : ""} ${done ? "tasks-card--done" : ""}`}>
+      <div className="tasks-card-top">
+        <span className={`tasks-priority tasks-priority--${task.priority.toLowerCase()}`}>{task.priority}</span>
+        <div>
+          {task.ai ? <FiZap aria-hidden="true" /> : null}
+          {task.comments ? <span className="tasks-comment-dot" aria-hidden="true" /> : null}
+        </div>
+      </div>
+      <h3>{task.title}</h3>
+      {task.description ? <p>{task.description}</p> : null}
+      <div className="tasks-card-bottom">
+        <div className="tasks-assignee">
+          <span>{initials(task.owner)}</span>
+        </div>
+        <div className="tasks-date">
+          <FiCalendar aria-hidden="true" />
+          <span>{task.date}</span>
+        </div>
+      </div>
+      <div className="tasks-tag-row">
+        {task.tags.map((tag) => <span key={tag}>{tag}</span>)}
+      </div>
+    </article>
   );
 }
 

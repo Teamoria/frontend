@@ -169,8 +169,28 @@ export default function EmployeesPage() {
       setRows(Array.isArray(staffRows) ? staffRows.map(normalizeEmployee) : []);
       setPagination(data?.pagination || payload?.pagination || { current_page: page, last_page: 1, per_page: 10, total: staffRows.length || 0, has_more: false });
     } catch (error) {
-      setRows([]);
-      setStatus({ type: "error", message: error.message });
+      if (error.status === 404) {
+        const previewRows = demoStaff
+          .filter((employee) => filters.role === "all" || employee.role === filters.role)
+          .filter((employee) => filters.status === "all" || employee.status === filters.status)
+          .map(normalizeEmployee);
+
+        setRows(previewRows);
+        setPagination({
+          current_page: 1,
+          last_page: 1,
+          per_page: previewRows.length,
+          total: previewRows.length,
+          has_more: false
+        });
+        setStatus({
+          type: "error",
+          message: "Staff API route is not connected yet. Showing preview data for the owner workspace."
+        });
+      } else {
+        setRows([]);
+        setStatus({ type: "error", message: error.message });
+      }
     } finally {
       setIsLoading(false);
     }
