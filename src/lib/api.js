@@ -380,6 +380,10 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
     headers["Content-Type"] = "application/json";
   }
 
+  if (API_KEY) {
+    headers["x-api-key"] = API_KEY;
+  }
+
   addTemporaryInternalHeaders(headers);
 
   if (auth) {
