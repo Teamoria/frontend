@@ -418,11 +418,7 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
   const payload = await response.json().catch(() => null);
 
   if (!response.ok || payload?.success === false) {
-    let message = payload?.message || payload?.detail || "Something went wrong. Please try again.";
-
-    if (Array.isArray(payload?.detail)) {
-      message = payload.detail.map((item) => item.msg || item.message || JSON.stringify(item)).join("\n");
-    }
+    const message = getApiErrorMessage(payload, `Upload request failed with status ${response.status}.`);
 
     throw new ApiError(message, { status: response.status, payload });
   }
@@ -607,6 +603,7 @@ export function uploadFiles({
 
   formData.append("scope", scope);
   formData.append("visibility", visibility);
+  formData.append("access_level", "view");
 
   if (company_id) formData.append("company_id", company_id);
   if (project_id) formData.append("project_id", project_id);
@@ -908,4 +905,21 @@ function normalizeCompanyProjectBody(body) {
   });
 
   return cleanBody;
+}
+
+function getApiErrorMessage(payload, fallback = "Something went wrong. Please try again.") {
+  if (Array.isArray(payload?.detail)) {
+    return payload.detail.map((item) => item.msg || item.message || JSON.stringify(item)).join("\n");
+  }
+
+  const validationErrors = payload?.errors || payload?.data;
+  if (validationErrors && typeof validationErrors === "object" && !Array.isArray(validationErrors)) {
+    const messages = Object.entries(validationErrors).flatMap(([field, value]) => {
+      const values = Array.isArray(value) ? value : [value];
+      return values.map((item) => `${field}: ${item}`);
+    });
+    if (messages.length) return messages.join("\n");
+  }
+
+  return payload?.message || payload?.detail || fallback;
 }
