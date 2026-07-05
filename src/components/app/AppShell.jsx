@@ -1,20 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  FiAlertTriangle,
   FiBarChart2,
-  FiBell,
   FiBriefcase,
-  FiCheckCircle,
   FiCloud,
-  FiChevronDown,
-  FiClock,
   FiFolder,
   FiHome,
-  FiLogOut,
-  FiMenu,
   FiMessageCircle,
-  FiSearch,
-  FiSettings,
   FiShield,
   FiUser,
   FiUsers,
@@ -25,6 +16,7 @@ import { navItems } from "../../data/teamoriaData.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
 import { getDemoRole } from "../../lib/demoMode.js";
 import "../../styles/app-shell.css";
+import AppHeader from "./AppHeader.jsx";
 
 const iconSymbolMap = { folder: "12", check: "286", trend: "94%", calendar: "43", spark: "AI" };
 const sidebarIconMap = {
@@ -37,7 +29,6 @@ const sidebarIconMap = {
   users: FiUsers,
   chart: FiBarChart2,
   system: FiShield,
-  settings: FiSettings,
   profile: FiUser
 };
 const rolePreviewProfiles = {
@@ -48,38 +39,13 @@ const rolePreviewProfiles = {
   employee: { user: "Sarah Johnson", role: "Employee", roleId: "employee" }
 };
 
-const sampleNotifications = [
-  {
-    title: "Project review requested",
-    text: "The onboarding project is ready for your approval.",
-    time: "5m ago",
-    tone: "info",
-    icon: FiMessageCircle
-  },
-  {
-    title: "Deadline approaching",
-    text: "The launch checklist is due in less than two hours.",
-    time: "28m ago",
-    tone: "warning",
-    icon: FiAlertTriangle
-  },
-  {
-    title: "Task completed",
-    text: "Your weekly status update was approved by the team lead.",
-    time: "1h ago",
-    tone: "success",
-    icon: FiCheckCircle
-  }
-];
-
 const ownerNavItems = [
   { label: "Dashboard", path: "/dashboard", icon: "grid" },
   { label: "Employees", path: "/employees", icon: "users" },
   { label: "Projects", path: "/owner/projects", icon: "folder" },
-  { label: "Operations Board", path: "/owner/operations", icon: "check" },
+  { label: "Tasks", path: "/tasks", icon: "check" },
   { label: "Upload Center", path: "/owner/uploads", icon: "upload" },
   { label: "AI Chat", path: "/ai-chat", icon: "spark" },
-  { label: "Settings", path: "/settings", icon: "settings" },
   { label: "Profile", path: "/profile", icon: "profile" }
 ];
 
@@ -216,152 +182,7 @@ function getWorkspaceNavItems(isAdmin, roleId) {
   });
 }
 export function Topbar({ user, role, onMobileNavToggle }) {
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const profileRef = useRef(null);
-  const notificationRef = useRef(null);
-  const { logout } = useAuth();
-  const initials = (user || "U").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      const clickedOutsideProfile = profileRef.current && !profileRef.current.contains(e.target);
-      const clickedOutsideNotifications = notificationRef.current && !notificationRef.current.contains(e.target);
-
-      if (clickedOutsideProfile && clickedOutsideNotifications) {
-        setProfileOpen(false);
-        setNotificationsOpen(false);
-      }
-    }
-    function handleEsc(e) {
-      if (e.key === "Escape") {
-        setProfileOpen(false);
-        setNotificationsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, []);
-
-  return (
-    <header className="product-topbar">
-      <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={onMobileNavToggle}>
-        <FiMenu aria-hidden="true" />
-      </button>
-      <label className="product-search">
-        <FiSearch className="search-icon" aria-hidden="true" />
-        <input placeholder="Search everywhere..." />
-      </label>
-      <div className="topbar-cluster">
-        <div className="product-notification-anchor" ref={notificationRef}>
-          <button
-            className={`notification-button ${notificationsOpen ? "is-active" : ""}`}
-            type="button"
-            aria-label="Notifications"
-            aria-expanded={notificationsOpen}
-            onClick={() => {
-              setProfileOpen(false);
-              setNotificationsOpen((v) => !v);
-            }}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V10a6 6 0 1 0-12 0v4.2a2 2 0 0 1-.6 1.4L4 17h5" />
-              <path d="M9 17a3 3 0 0 0 6 0" />
-            </svg>
-            <span>3</span>
-          </button>
-          {notificationsOpen ? (
-            <section className="product-notifications-panel" aria-label="Notifications panel">
-              <header>
-                <h3>Notifications</h3>
-                <button type="button">Mark all as read</button>
-              </header>
-              <div className="product-notifications-list">
-                {sampleNotifications.map(({ icon: Icon, text, time, title, tone }) => (
-                  <article className={`product-notification-item tone-${tone}`} key={title}>
-                    <span>
-                      <Icon aria-hidden="true" />
-                    </span>
-                    <div>
-                      <h4>{title}</h4>
-                      <p>{text}</p>
-                      <time>{time}</time>
-                    </div>
-                  </article>
-                ))}
-              </div>
-              <footer>
-                <button type="button">View all notifications</button>
-              </footer>
-            </section>
-          ) : null}
-        </div>
-        <div className="product-profile" ref={profileRef}>
-          <div className="avatar-image" />
-          <div>
-            <b>{user}</b>
-            <small>{role}</small>
-          </div>
-          <div className="pd-wrap">
-            <button
-              className="profile-caret"
-              type="button"
-              aria-label="Open profile menu"
-              aria-expanded={profileOpen}
-              aria-haspopup="true"
-              onClick={() => {
-                setNotificationsOpen(false);
-                setProfileOpen((v) => !v);
-              }}
-            >
-              <FiChevronDown style={{ transition: "transform .18s", transform: profileOpen ? "rotate(180deg)" : "none" }} />
-            </button>
-            {profileOpen && (
-              <div className="pd-menu" role="menu">
-                <div className="pd-header">
-                  <div className="pd-avatar">{initials}</div>
-                  <div>
-                    <b>{user}</b>
-                    <small>{role}</small>
-                  </div>
-                </div>
-                <div className="pd-items">
-                  <a className="pd-item" href="#/profile" role="menuitem" onClick={() => setProfileOpen(false)}>
-                    <FiUser /> View Profile
-                  </a>
-                  <a className="pd-item" href="#/settings" role="menuitem" onClick={() => setProfileOpen(false)}>
-                    <FiSettings /> Settings
-                  </a>
-                  <a className="pd-item" href="#/settings" role="menuitem" onClick={() => setProfileOpen(false)}>
-                    <FiShield /> Security
-                  </a>
-                  <a className="pd-item" href="#/settings" role="menuitem" onClick={() => setProfileOpen(false)}>
-                    <FiBell /> Notifications
-                  </a>
-                  <hr className="pd-divider" />
-                  <button
-                    className="pd-item pd-danger"
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setProfileOpen(false);
-                      logout();
-                    }}
-                  >
-                    <FiLogOut /> Sign Out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+  return <AppHeader classNamePrefix="product" role={role} user={user} onMobileNavToggle={onMobileNavToggle} />;
 }
 
 export function PageHeader({ title, eyebrow, actions }) {

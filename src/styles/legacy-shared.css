@@ -2149,7 +2149,6 @@
 .role-list,
 .upload-mini-list,
 .related-list,
-.settings-list,
 .insight-stack {
   display: grid;
   gap: 12px;
@@ -2253,8 +2252,7 @@
 }
 
 .extracted-grid,
-.agent-grid,
-.settings-grid {
+.agent-grid {
   display: grid;
   gap: 20px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3217,7 +3215,6 @@
   .meeting-grid,
   .extracted-grid,
   .agent-grid,
-  .settings-grid,
   .flow-steps,
   .pipeline-rail,
   .profile-stat-grid {

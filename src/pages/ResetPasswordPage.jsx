@@ -1,54 +1,47 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
 import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
-import { FiLock, FiMail, FiShield } from "react-icons/fi";
+import { FiMail } from "react-icons/fi";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
-import { forgotPasswordSendOtp, forgotPasswordVerify } from "../lib/api.js";
+import { forgotPasswordSendOtp } from "../lib/api.js";
 import "../styles/reset-access.css";
+import "../styles/auth-unified.css";
 
 export default function ResetPasswordPage() {
-  const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasEmail, setHasEmail] = useState(false);
+  const emailError = getEmailError(email, touched, submitted);
 
-  async function handleSendOtp(event) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setStatus({ type: "", message: "" });
-
-    const formData = new FormData(event.currentTarget);
-    const emailValue = formData.get("email");
-
-    try {
-      const payload = await forgotPasswordSendOtp({ email: emailValue });
-      setEmail(emailValue);
-      setStep("otp");
-      setStatus({
-        type: "success",
-        message: "Verification code sent to your email."
-      });
-    } catch (error) {
-      setStatus({ type: "error", message: error.message });
-    } finally {
-      setIsSubmitting(false);
+  function updateEmail(value) {
+    setEmail(value);
+    setTouched(true);
+    if (status.type === "error") {
+      setStatus({ type: "", message: "" });
     }
   }
 
-  async function handleVerifyAndReset(event) {
+  async function handleSendOtp(event) {
     event.preventDefault();
-    setIsSubmitting(true);
+    setSubmitted(true);
     setStatus({ type: "", message: "" });
 
-    const formData = new FormData(event.currentTarget);
-    const code = String(formData.get("code") || "").trim();
-    const newPassword = formData.get("newPassword");
+    const nextError = getEmailError(email, true, true);
+    if (nextError) {
+      setTouched(true);
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      await forgotPasswordVerify({ email, code, newPassword });
-      setStep("done");
-      setStatus({ type: "success", message: "Password reset successfully." });
+      await forgotPasswordSendOtp({ email: email.trim() });
+      setStatus({
+        type: "success",
+        message: "If this email exists, a reset link has been sent."
+      });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -64,84 +57,51 @@ export default function ResetPasswordPage() {
       text="Forgot your encryption key? We will help you securely reconnect to your team and meeting archives."
       visualContent={<ResetAccessVisual />}
     >
-      {step === "email" && (
-        <form className={`auth-form reset-password-form reset-access-form ${hasEmail ? "has-email" : ""}`} onSubmit={handleSendOtp}>
-          <ResetMobileBrand />
-          <header className="reset-access-header">
-            <h1>Reset Access</h1>
-            <p>Enter your work identity to receive an access restoration link.</p>
-          </header>
-          {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
-          <div className="form-stack">
-            <span className="label">Work Email</span>
-            <TextInput
-              icon={<FiMail />}
-              name="email"
-              type="email"
-              placeholder="identity@enterprise.ai"
-              required
-              disabled={isSubmitting}
-              onChange={(event) => setHasEmail(event.target.value.trim().length > 0)}
-            />
-          </div>
-          <PrimaryButton type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Sending..." : "Send Restoration Link"}
-          </PrimaryButton>
-          <p className="auth-switch">Remember your key? <a href="#/signin">Back to Login</a></p>
-          <ResetAccessFooter />
-        </form>
-      )}
-
-      {step === "otp" && (
-        <form className="auth-form reset-password-form reset-access-form" onSubmit={handleVerifyAndReset}>
-          <ResetMobileBrand />
-          <header className="reset-access-header">
-            <h1>Create New Key</h1>
-            <p>Enter the verification code sent to <b>{email}</b>, then choose a new password.</p>
-          </header>
-          {status.message && <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p>}
-          <div className="form-stack">
-            <span className="label">Verification code</span>
-            <TextInput icon={<FiShield />} name="code" placeholder="Enter OTP code" required disabled={isSubmitting} />
-            <span className="label">New password</span>
-            <TextInput icon={<FiLock />} name="newPassword" type="password" placeholder="Enter new password" required disabled={isSubmitting} />
-          </div>
-          <PrimaryButton type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Resetting..." : "Reset Password"}
-          </PrimaryButton>
-          <button
-            className="otp-resend-button"
-            type="button"
+      <form className={`auth-form reset-password-form reset-access-form ${email ? "has-email" : ""}`} onSubmit={handleSendOtp} noValidate>
+        <ResetMobileBrand />
+        <header className="reset-access-header">
+          <h1>Reset Password</h1>
+          <p>Enter your work email and we will send you a secure reset link.</p>
+        </header>
+        {status.message && (
+          <p className={`auth-alert auth-alert--${status.type}`} role="alert" aria-live="polite">
+            {status.message}
+          </p>
+        )}
+        <div className="form-stack">
+          <span className="label">Work Email</span>
+          <TextInput
+            autoComplete="email"
+            error={emailError}
+            icon={<FiMail />}
+            inputMode="email"
+            name="email"
+            type="email"
+            placeholder="identity@enterprise.ai"
+            required
             disabled={isSubmitting}
-            onClick={() => {
-              setStep("email");
-              setStatus({ type: "", message: "" });
-            }}
-          >
-            Use a different email
-          </button>
-          <ResetAccessFooter />
-        </form>
-      )}
-
-      {step === "done" && (
-        <div className="auth-form reset-password-form reset-access-form">
-          <ResetMobileBrand />
-          <div className="success-card">
-            <span aria-hidden="true" />
-            <div>
-              <h2>Password reset successful!</h2>
-              <p>Your password has been updated. You can now sign in with your new password.</p>
-              <a className="primary-button" href="#/signin">
-                Sign In
-              </a>
-            </div>
-          </div>
-          <ResetAccessFooter />
+            value={email}
+            onBlur={() => setTouched(true)}
+            onChange={(event) => updateEmail(event.target.value)}
+          />
         </div>
-      )}
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Sending...">
+          Send Reset Link
+        </PrimaryButton>
+        <p className="auth-switch">Remember your password? <a href="#/signin">Back to Login</a></p>
+        <ResetAccessFooter />
+      </form>
     </AuthLayout>
   );
+}
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getEmailError(value, isTouched, isSubmitted) {
+  const email = String(value || "").trim();
+  if (!email && isSubmitted) return "Email is required";
+  if (email && isTouched && !emailPattern.test(email)) return "Please enter a valid email address";
+  return "";
 }
 
 function ResetAccessVisual() {

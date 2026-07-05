@@ -34,7 +34,7 @@ export const aiInsights = [
       { label: "Activity overview", type: "dashboard", href: "#/dashboard" }
     ],
     actions: [
-      { label: "Enable summaries", href: "#/settings" },
+      { label: "Review profile", href: "#/profile" },
       { label: "View meetings", href: "#/meetings" }
     ]
   },
@@ -132,7 +132,7 @@ export const workspaceActivities = [
     actor: "Ahmed Alyazouri",
     title: "Updated user access scope",
     detail: "Sarah Johnson was added to Mobile Delivery Team as contributor",
-    workspace: "Company Settings",
+    workspace: "Company Access",
     time: "1 hour ago",
     href: "#/employees"
   }

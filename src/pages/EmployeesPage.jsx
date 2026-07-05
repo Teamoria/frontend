@@ -1,14 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FiArchive,
+  FiBriefcase,
+  FiCheckCircle,
   FiChevronLeft,
   FiChevronRight,
+  FiClock,
   FiEdit2,
   FiEye,
+  FiGlobe,
   FiMail,
+  FiPhone,
   FiRefreshCw,
   FiRotateCcw,
+  FiShield,
   FiTrash2,
+  FiUser,
   FiUserPlus,
   FiUserX,
   FiX
@@ -492,17 +500,6 @@ export default function EmployeesPage() {
           </div>
         </Panel>
 
-        <Panel title="Company Staff Roles">
-          <div className="role-matrix">
-            {roleOptions.map((role) => (
-              <article key={role.value}>
-                <b>{role.label}</b>
-                <span>{role.value}</span>
-                <p>{role.value === "company_manager" ? "Can manage operational work inside the company scope." : "Can access assigned company workspace features."}</p>
-              </article>
-            ))}
-          </div>
-        </Panel>
       </section>
 
       {modalMode ? (
@@ -553,7 +550,7 @@ function MessageRow({ text }) {
 function EmployeeModal({ form, isSaving, mode, onClose, onFieldChange, onSubmit }) {
   const isEdit = mode === "edit";
 
-  return (
+  return createPortal(
     <div className="employees-modal-overlay" role="presentation">
       <section className="employees-modal" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title">
         <header>
@@ -603,7 +600,8 @@ function EmployeeModal({ form, isSaving, mode, onClose, onFieldChange, onSubmit 
           </button>
         </footer>
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -619,14 +617,12 @@ function EmployeeProfileDrawer({ employee, onArchive, onClose, onEdit, showArchi
       >
         <header className="employee-profile-drawer-head">
           <div>
-            <button type="button" onClick={onClose} aria-label="Close employee profile">
-              <FiX aria-hidden="true" />
-            </button>
-            <nav aria-label="Profile breadcrumb">
-              <span>Directory</span>
-              <b>{employee.name}</b>
-            </nav>
+            <span>Employee profile</span>
+            <b>Team Directory</b>
           </div>
+          <button type="button" onClick={onClose} aria-label="Close employee profile">
+            <FiX aria-hidden="true" />
+          </button>
         </header>
 
         <div className="employee-profile-scroll">
@@ -635,9 +631,15 @@ function EmployeeProfileDrawer({ employee, onArchive, onClose, onEdit, showArchi
               <span>{getInitials(employee.name || employee.email)}</span>
               <i aria-hidden="true" />
             </div>
-            <h2>{employee.name || "Unnamed employee"}</h2>
-            <p>{formatLabel(employee.role)}</p>
-            <em><i aria-hidden="true" /> {formatLabel(employee.status)}</em>
+            <div>
+              <h2>{employee.name || "Unnamed employee"}</h2>
+              <p>{formatLabel(employee.role)}</p>
+              <a href={`mailto:${employee.email}`}>{employee.email || "No email"}</a>
+            </div>
+            <em className={`employee-profile-status employee-profile-status--${getStatusClass(employee.status)}`}>
+              <i aria-hidden="true" />
+              {formatLabel(employee.status)}
+            </em>
           </section>
 
           <section className="employee-profile-actions" aria-label="Profile actions">
@@ -648,14 +650,36 @@ function EmployeeProfileDrawer({ employee, onArchive, onClose, onEdit, showArchi
             <a href={`mailto:${employee.email}`}><FiMail aria-hidden="true" /><span>Email</span></a>
           </section>
 
-          <section>
-            <h3 className="employee-profile-section-title">Account Information</h3>
+          <section className="employee-profile-section">
+            <h3 className="employee-profile-section-title">Contact information</h3>
             <div className="employee-profile-details">
-              <ProfileDetail label="Work Email" value={employee.email || "No email"} />
-              <ProfileDetail label="Phone" value={employee.phone || "No phone"} />
-              <ProfileDetail label="Timezone" value={employee.timezone || "UTC"} />
-              <ProfileDetail label="Email Verified" value={employee.is_email_verified ? "Yes" : "No"} />
-              <ProfileDetail label="Created" value={formatDate(employee.created_at)} />
+              <ProfileDetail icon={FiMail} label="Work email" value={employee.email || "No email"} />
+              <ProfileDetail icon={FiPhone} label="Phone" value={employee.phone || "No phone"} />
+              <ProfileDetail icon={FiGlobe} label="Timezone" value={employee.timezone || "UTC"} />
+            </div>
+          </section>
+
+          <section className="employee-profile-section">
+            <h3 className="employee-profile-section-title">Account status</h3>
+            <div className="employee-profile-details">
+              <ProfileDetail icon={FiCheckCircle} label="Status" value={formatLabel(employee.status)} />
+              <ProfileDetail icon={FiShield} label="Email verified" value={employee.is_email_verified ? "Verified" : "Not verified"} />
+            </div>
+          </section>
+
+          <section className="employee-profile-section">
+            <h3 className="employee-profile-section-title">Role & permissions</h3>
+            <div className="employee-profile-details">
+              <ProfileDetail icon={FiBriefcase} label="Role" value={formatLabel(employee.role)} />
+              <ProfileDetail icon={FiUser} label="Access scope" value={employee.role === "company_manager" ? "Can manage company work" : "Assigned workspace access"} />
+            </div>
+          </section>
+
+          <section className="employee-profile-section">
+            <h3 className="employee-profile-section-title">Activity</h3>
+            <div className="employee-profile-details">
+              <ProfileDetail icon={FiClock} label="Joined" value={formatDate(employee.created_at)} />
+              <ProfileDetail icon={FiRefreshCw} label="Last updated" value={formatDate(employee.updated_at)} />
             </div>
           </section>
         </div>
@@ -664,13 +688,15 @@ function EmployeeProfileDrawer({ employee, onArchive, onClose, onEdit, showArchi
   );
 }
 
-function ProfileDetail({ label, value }) {
+function ProfileDetail({ icon: Icon, label, value }) {
   return (
     <div>
+      {Icon ? <Icon aria-hidden="true" /> : null}
       <span><small>{label}</small><b>{value}</b></span>
     </div>
   );
 }
+
 
 function normalizeEmployee(employee) {
   return {

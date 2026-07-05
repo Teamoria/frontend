@@ -3,12 +3,12 @@ import UploadCenterWorkspace from "../components/uploads/UploadCenterWorkspace.j
 import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/owner-upload-center.css";
 
-export default function OwnerUploadCenterPage() {
+export default function OwnerUploadedFilesPage() {
   const { user } = useAuth();
 
   return (
     <AppShell active="Upload Center" role="Company Owner" roleId="owner" user={user?.name || "Company Owner"}>
-      <UploadCenterWorkspace view="upload" />
+      <UploadCenterWorkspace view="files" />
     </AppShell>
   );
 }

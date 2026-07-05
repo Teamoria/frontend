@@ -5,15 +5,7 @@ import "../styles/super-admin-console.css";
 
 export default function SuperAdminProfilePage() {
   return (
-    <SuperAdminShell active="Profile / Settings">
-      <ProfileContent />
-    </SuperAdminShell>
-  );
-}
-
-export function SuperAdminProfileSettingsPage() {
-  return (
-    <SuperAdminShell active="Profile / Settings">
+    <SuperAdminShell active="Profile">
       <ProfileContent />
     </SuperAdminShell>
   );

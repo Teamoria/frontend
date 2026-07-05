@@ -1,7 +1,6 @@
 import {
   FiAlertTriangle,
   FiArrowRight,
-  FiBell,
   FiBookOpen,
   FiBriefcase,
   FiCalendar,
@@ -9,19 +8,15 @@ import {
   FiClock,
   FiCreditCard,
   FiDownload,
-  FiLogOut,
-  FiMenu,
   FiPlus,
-  FiSearch,
   FiShield,
   FiStar,
   FiTrendingUp,
-  FiUser,
   FiUsers,
   FiZap
 } from "react-icons/fi";
 import "../styles/dashboard.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityOverviewChart,
   AIInsightCard,
@@ -32,6 +27,7 @@ import {
 } from "../components/dashboard/DashboardComponents.jsx";
 import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashboardInsights.js";
 import { AppSidebar } from "../components/app/AppShell.jsx";
+import AppHeader from "../components/app/AppHeader.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { normalizeRole } from "../lib/authRoles.js";
 import { getDemoRole, getHashSearchParams, isDemoMode } from "../lib/demoMode.js";
@@ -113,16 +109,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
     <main className="owner-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
       <section className="owner-content">
-        <header className="owner-topbar">
-          <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={() => setMobileNavOpen((value) => !value)}>
-            <FiMenu aria-hidden="true" />
-          </button>
-          <label className="owner-search">
-            <FiSearch aria-hidden="true" />
-            <input placeholder="Search everywhere..." />
-          </label>
-          <TopActions classNamePrefix="owner" profile={profile} />
-        </header>
+        <AppHeader classNamePrefix="owner" profile={profile} onMobileNavToggle={() => setMobileNavOpen((value) => !value)} />
 
         <div className="owner-page">
           <section className="owner-hero-row">
@@ -264,16 +251,7 @@ function ExecutionDashboard({ isPreview, roleId, profile, onRoleChange }) {
     <main className="execution-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
       <section className="exec-shell">
-        <header className="exec-topbar">
-          <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={() => setMobileNavOpen((value) => !value)}>
-            <FiMenu aria-hidden="true" />
-          </button>
-          <label className="exec-search">
-            <FiSearch aria-hidden="true" />
-            <input placeholder="Search everywhere..." />
-          </label>
-          <TopActions classNamePrefix="exec" profile={profile} />
-        </header>
+        <AppHeader classNamePrefix="exec" profile={profile} onMobileNavToggle={() => setMobileNavOpen((value) => !value)} />
 
         <div className="exec-page">
           <section className="manager-hub-head">
@@ -456,16 +434,7 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
     <main className="employee-dashboard">
       <AppSidebar active="Dashboard" roleId={roleId} />
       <section className="employee-shell">
-        <header className="employee-topbar">
-          <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={() => setMobileNavOpen((value) => !value)}>
-            <FiMenu aria-hidden="true" />
-          </button>
-          <label className="employee-search">
-            <FiSearch aria-hidden="true" />
-            <input placeholder="Search everywhere..." />
-          </label>
-          <TopActions classNamePrefix="employee" profile={profile} />
-        </header>
+        <AppHeader classNamePrefix="employee" profile={profile} onMobileNavToggle={() => setMobileNavOpen((value) => !value)} />
 
         <div className="employee-page">
           <section className="employee-hero">
@@ -627,149 +596,6 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
       </section>
     </main>
   );
-}
-
-function TopActions({ classNamePrefix, profile }) {
-  const { logout, user } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const menuRef = useRef(null);
-  const notificationsRef = useRef(null);
-  const displayName = user?.name || user?.email || profile.label;
-  const displayRole = profile.label;
-  const initials = getInitials(displayName || profile.initials);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      const clickedOutsideMenu = menuRef.current && !menuRef.current.contains(event.target);
-      const clickedOutsideNotifications = notificationsRef.current && !notificationsRef.current.contains(event.target);
-
-      if (clickedOutsideMenu) {
-        setIsMenuOpen(false);
-      }
-
-      if (clickedOutsideNotifications) {
-        setIsNotificationsOpen(false);
-      }
-    }
-
-    function handleEsc(event) {
-      if (event.key === "Escape") {
-        setIsMenuOpen(false);
-        setIsNotificationsOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, []);
-
-  return (
-    <div className={`${classNamePrefix}-top-actions`}>
-      <div className="dashboard-notifications-wrap" ref={notificationsRef}>
-        <button
-          type="button"
-          aria-label="Notifications"
-          aria-expanded={isNotificationsOpen}
-          onClick={() => {
-            setIsMenuOpen(false);
-            setIsNotificationsOpen((current) => !current);
-          }}
-        >
-          <FiBell />
-          <span>3</span>
-        </button>
-        {isNotificationsOpen ? (
-          <section className="dashboard-notifications-panel" aria-label="Notifications panel">
-            <header>
-              <h3>Notifications</h3>
-              <button type="button">Mark all as read</button>
-            </header>
-            <div className="dashboard-notifications-list">
-              {[
-                { title: "New task assigned", text: "You received a new task in the onboarding project.", time: "5m ago", tone: "info", icon: FiBell },
-                { title: "Deadline approaching", text: "The launch checklist needs review soon.", time: "28m ago", tone: "warning", icon: FiAlertTriangle },
-                { title: "Update approved", text: "Your weekly update was approved by the team lead.", time: "1h ago", tone: "success", icon: FiCheckCircle }
-              ].map(({ icon: Icon, text, time, title, tone }) => (
-                <article className={`dashboard-notification-item tone-${tone}`} key={title}>
-                  <span>
-                    <Icon aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h4>{title}</h4>
-                    <p>{text}</p>
-                    <time>{time}</time>
-                  </div>
-                </article>
-              ))}
-            </div>
-            <footer>
-              <button type="button">View all notifications</button>
-            </footer>
-          </section>
-        ) : null}
-      </div>
-      <div className="dashboard-profile-menu-wrap" ref={menuRef}>
-        <div className="dashboard-account-summary">
-          <div className="avatar-image" aria-hidden="true" />
-          <div>
-            <b>{displayName}</b>
-            <small>{displayRole}</small>
-          </div>
-        </div>
-        <button
-          className={`${classNamePrefix}-avatar dashboard-avatar-button`}
-          type="button"
-          aria-label="Open account menu"
-          aria-expanded={isMenuOpen}
-          aria-haspopup="true"
-          onClick={() => setIsMenuOpen((current) => !current)}
-        >
-          {initials}
-        </button>
-        {isMenuOpen ? (
-          <div className="dashboard-profile-menu" role="menu">
-            <div className="dashboard-menu-header">
-              <div className="dashboard-menu-avatar">{initials}</div>
-              <div>
-                <b>{displayName}</b>
-                <small>{displayRole}</small>
-              </div>
-            </div>
-            <a className="dashboard-menu-item" href="#/profile" role="menuitem" onClick={() => setIsMenuOpen(false)}>
-              <FiUser aria-hidden="true" />
-              <span>Profile</span>
-            </a>
-            <button
-              className="dashboard-menu-item dashboard-menu-item--danger"
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setIsMenuOpen(false);
-                logout();
-              }}
-            >
-              <FiLogOut aria-hidden="true" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function getInitials(value) {
-  return String(value || "U")
-    .split(/\s|@/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "U";
 }
 
 function RoleSwitcher({ activeRole, variant, onRoleChange }) {

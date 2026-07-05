@@ -15,6 +15,7 @@ import {
   FiZap,
 } from "react-icons/fi";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import AppShell from "../components/app/AppShell.jsx";
 import { EmptyState, LoadingState, MetricCard, StatusBadge } from "../components/app/UiPrimitives.jsx";
 import {
@@ -282,6 +283,24 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [onClose]);
+
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
   }
@@ -338,8 +357,20 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
     }
   }
 
-  return (
-    <div className="initialize-project-backdrop" role="presentation">
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      className="initialize-project-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <form className="initialize-project-modal initialize-project-modal--single" role="dialog" aria-modal="true" aria-labelledby="initialize-project-title" onSubmit={submitProject}>
         <header className="initialize-project-header">
           <div className="initialize-project-title-row">
@@ -348,10 +379,10 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
               <h2 id="initialize-project-title">{isEditing ? "Edit Project" : "Create New Project"}</h2>
               <p>{isMembersOnly ? "Update who can work on this project." : "Add project details and assign employees in one step."}</p>
             </div>
-            <button className="initialize-project-close" type="button" aria-label="Close" onClick={onClose}>
-              <FiX aria-hidden="true" />
-            </button>
           </div>
+          <button className="initialize-project-close" type="button" aria-label="Close" onClick={onClose}>
+            <FiX aria-hidden="true" />
+          </button>
         </header>
 
         {status.message ? <p className={`auth-alert auth-alert--${status.type}`}>{status.message}</p> : null}
@@ -464,7 +495,8 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
           </div>
         </footer>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -18,15 +18,14 @@ import EmployeesPage from "./pages/EmployeesPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import TeamPerformanceOversightPage from "./pages/TeamPerformanceOversightPage.jsx";
 import OwnerProjectsPage from "./pages/OwnerProjectsPage.jsx";
-import OwnerOperationsPage from "./pages/OwnerOperationsPage.jsx";
 import OwnerUploadCenterPage from "./pages/OwnerUploadCenterPage.jsx";
-import SettingsPage from "./pages/SettingsPage.jsx";
+import OwnerUploadedFilesPage from "./pages/OwnerUploadedFilesPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import SuperAdminConsolePage from "./pages/SuperAdminConsolePage.jsx";
 import SuperAdminCompaniesPage from "./pages/SuperAdminCompaniesPage.jsx";
 import SuperAdminUsersPage from "./pages/SuperAdminUsersPage.jsx";
 import SuperAdminPaymentsPage from "./pages/SuperAdminPaymentsPage.jsx";
-import SuperAdminProfilePage, { SuperAdminProfileSettingsPage } from "./pages/SuperAdminProfilePage.jsx";
+import SuperAdminProfilePage from "./pages/SuperAdminProfilePage.jsx";
 import { useAuth } from "./lib/AuthContext.jsx";
 import { getDemoUser, isDemoMode } from "./lib/demoMode.js";
 import { normalizeRole } from "./lib/authRoles.js";
@@ -36,7 +35,6 @@ const adminRoutes = new Set([
   "/super-admin/companies",
   "/super-admin/users",
   "/super-admin/payments",
-  "/super-admin/profile-settings",
   "/super-admin/profile"
 ]);
 
@@ -53,25 +51,24 @@ const workspaceRoutes = new Set([
   "/workspace-graph",
   "/employees",
   "/owner/projects",
-  "/owner/operations",
   "/owner/uploads",
+  "/owner/uploads/files",
   "/team-performance",
   "/owner/team-performance",
   "/ower/team-performance",
   "/ower /team-performance",
   "/reports",
-  "/settings",
   "/profile"
 ]);
 
 const companyOwnerRoutes = new Set([
   "/dashboard",
+  "/tasks",
   "/employees",
   "/owner/projects",
-  "/owner/operations",
   "/owner/uploads",
+  "/owner/uploads/files",
   "/ai-chat",
-  "/settings",
   "/profile"
 ]);
 
@@ -110,20 +107,18 @@ const routes = {
   "/workspace-graph": WorkspaceGraphPage,
   "/employees": EmployeesPage,
   "/owner/projects": OwnerProjectsPage,
-  "/owner/operations": OwnerOperationsPage,
   "/owner/uploads": OwnerUploadCenterPage,
+  "/owner/uploads/files": OwnerUploadedFilesPage,
   "/team-performance": TeamPerformanceOversightPage,
   "/owner/team-performance": TeamPerformanceOversightPage,
   "/ower/team-performance": TeamPerformanceOversightPage,
   "/ower /team-performance": TeamPerformanceOversightPage,
   "/reports": ReportsPage,
-  "/settings": SettingsPage,
   "/profile": ProfilePage,
   "/super-admin": SuperAdminConsolePage,
   "/super-admin/companies": SuperAdminCompaniesPage,
   "/super-admin/users": SuperAdminUsersPage,
   "/super-admin/payments": SuperAdminPaymentsPage,
-  "/super-admin/profile-settings": SuperAdminProfileSettingsPage,
   "/super-admin/profile": SuperAdminProfilePage
 };
 
@@ -168,11 +163,6 @@ export default function App() {
 
     if (!user) {
       window.location.hash = "/signin";
-      return null;
-    }
-
-    if (normalizedRole === "company_owner" && path === "/tasks") {
-      window.location.hash = "/owner/operations";
       return null;
     }
 

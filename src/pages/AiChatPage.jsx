@@ -5,8 +5,8 @@ import {
   FiImage,
   FiLink,
   FiMic,
+  FiMoreHorizontal,
   FiPaperclip,
-  FiSearch,
   FiSend,
   FiUploadCloud,
   FiZap
@@ -15,9 +15,9 @@ import AppShell from "../components/app/AppShell.jsx";
 import "../styles/ai-chat.css";
 
 const conversations = [
-  ["Q3 Roadmap Analysis", "2 hours ago", true],
-  ["Resource Allocation AI", "Yesterday"],
-  ["Risk Mitigation Strategy", "Oct 12, 2026"]
+  ["Q3 Roadmap Analysis", "Delivery risks and next steps", "2 hours ago", true],
+  ["Resource Allocation AI", "Team capacity planning", "Yesterday"],
+  ["Risk Mitigation Strategy", "Executive summary", "Oct 12, 2026"]
 ];
 
 const activeSources = [
@@ -44,9 +44,8 @@ export default function AiChatPage() {
       <section className="ai-chat-command">
         <header className="ai-chat-header">
           <div>
-            <span className="section-kicker">AI Workspace Intelligence</span>
-            <h1>Chat Intelligence</h1>
-            <p>Ask Teamoria about projects, meetings, files, risks, and decisions with visible sources.</p>
+            <h1>AI Chat</h1>
+            <p>Ask about projects, meetings, files, risks, and decisions.</p>
           </div>
           <div className="ai-chat-header-actions">
             <button type="button"><FiUploadCloud /> Add Source</button>
@@ -56,53 +55,50 @@ export default function AiChatPage() {
 
         <div className="ai-chat-grid">
           <aside className="ai-context-rail">
-            <section>
-              <h2>Conversation History</h2>
-              <div className="ai-history-list">
-                {conversations.map(([title, time, active]) => (
-                  <button className={active ? "active" : ""} type="button" key={title}>
-                    <b>{title}</b>
-                    <span>{time}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h2>Active Sources</h2>
-              <div className="ai-source-list">
-                {activeSources.map(([name, type, note]) => (
-                  <article key={name}>
-                    <span className={`source-type source-type--${type}`}>{type.toUpperCase()}</span>
-                    <div>
-                      <b>{name}</b>
-                      <small>{note}</small>
-                    </div>
-                    <button type="button" aria-label={`Remove ${name}`}>×</button>
-                  </article>
-                ))}
-              </div>
-              <button className="ai-dashed-action" type="button">+ Add Source</button>
-            </section>
+            <div className="ai-rail-head">
+              <h2>Conversations</h2>
+              <button type="button" aria-label="New chat">+</button>
+            </div>
+            <div className="ai-history-list">
+              {conversations.map(([title, summary, time, active]) => (
+                <button className={active ? "active" : ""} type="button" key={title}>
+                  <b>{title}</b>
+                  <span>{summary}</span>
+                  <time>{time}</time>
+                </button>
+              ))}
+            </div>
           </aside>
 
           <main className="ai-chat-surface">
-            <div className="ai-chat-search">
-              <FiSearch aria-hidden="true" />
-              <input placeholder="Search insights, citations, or previous chats..." />
-            </div>
-
-            <div className="ai-prompt-strip">
-              {promptChips.map((prompt) => <button type="button" key={prompt}>{prompt}</button>)}
+            <div className="ai-chat-thread-head">
+              <div>
+                <h2>Q3 Roadmap Analysis</h2>
+                <span>3 sources available</span>
+              </div>
+              <details className="ai-advanced-menu">
+                <summary aria-label="Advanced tools">
+                  <FiMoreHorizontal aria-hidden="true" />
+                </summary>
+                <div>
+                  <button type="button"><FiZap /> AI Assistant</button>
+                  <button type="button"><FiBookOpen /> Ask Source</button>
+                  <button type="button"><FiFileText /> Cite</button>
+                  <button type="button"><FiClock /> History</button>
+                  <hr />
+                  {promptChips.map((prompt) => <button type="button" key={prompt}>{prompt}</button>)}
+                  <hr />
+                  {activeSources.map(([name, type]) => (
+                    <button type="button" key={name}>
+                      <span className={`source-type source-type--${type}`}>{type.toUpperCase()}</span>
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </details>
             </div>
 
             <section className="ai-message-window" aria-label="AI chat messages">
-              <article className="ai-empty-greeting">
-                <span><FiZap aria-hidden="true" /></span>
-                <h2>How can I help with Teamoria today?</h2>
-                <p>I can analyze project specs, summarize meetings, or forecast resource pressure based on your active sources.</p>
-              </article>
-
               <article className="ai-message ai-message--user">
                 <p>Based on the Alpha project specification, what are the key risks for the next phase?</p>
                 <time>10:42 AM</time>
@@ -111,7 +107,7 @@ export default function AiChatPage() {
               <article className="ai-message ai-message--assistant">
                 <div className="ai-message-label">
                   <FiZap aria-hidden="true" />
-                  <span>AI Intelligence</span>
+                  <span>Teamoria AI</span>
                 </div>
                 <p>
                   I found three high-impact risks across the project specification and the latest standup notes:
@@ -132,16 +128,11 @@ export default function AiChatPage() {
                     ))}
                   </div>
                 </div>
-                <div className="ai-message-actions">
-                  <button type="button">Create Tasks</button>
-                  <button type="button">Generate Risk Register</button>
-                  <button type="button">Copy</button>
-                </div>
               </article>
             </section>
 
             <section className="ai-composer-panel">
-              <textarea placeholder="Ask Teamoria anything about your projects..." rows="3" />
+              <textarea placeholder="Message Teamoria AI..." rows="2" />
               <div>
                 <div className="ai-composer-tools">
                   <button type="button" title="Attach files"><FiPaperclip /></button>
@@ -153,43 +144,8 @@ export default function AiChatPage() {
                   <FiSend aria-hidden="true" />
                 </button>
               </div>
-              <small>AI-generated content may be inaccurate. Verify critical decisions with team leads.</small>
             </section>
           </main>
-
-          <aside className="ai-insight-rail">
-            <section>
-              <h2>Context Health</h2>
-              <div className="ai-health-score">
-                <strong>94%</strong>
-                <span>3 active sources indexed</span>
-              </div>
-            </section>
-
-            <section>
-              <h2>Quick Tools</h2>
-              <div className="ai-tool-list">
-                <button type="button"><FiZap /> AI Assistant</button>
-                <button type="button"><FiBookOpen /> Ask Source</button>
-                <button type="button"><FiFileText /> Cite</button>
-                <button type="button"><FiClock /> History</button>
-              </div>
-            </section>
-
-            <section>
-              <h2>Suggested Actions</h2>
-              <div className="ai-suggestion-list">
-                <article>
-                  <b>Create risk tasks</b>
-                  <span>Convert the three detected risks into actionable tasks.</span>
-                </article>
-                <article>
-                  <b>Notify managers</b>
-                  <span>Send a short summary to the project manager and delivery lead.</span>
-                </article>
-              </div>
-            </section>
-          </aside>
         </div>
       </section>
     </AppShell>

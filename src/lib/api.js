@@ -622,19 +622,19 @@ export function uploadFiles({
 }
 
 export function listUploads(filters = {}) {
-  return uploadApiRequest("/uploads/list", { auth: true, query: filters });
+  return uploadApiRequest("/uploads/list", { auth: true, query: normalizeUploadListFilters(filters) });
 }
 
 export function listUploadCollection(filters = {}) {
-  return uploadApiRequest("/uploads/list", { auth: true, query: filters });
+  return uploadApiRequest("/uploads/list", { auth: true, query: normalizeUploadListFilters(filters) });
 }
 
 export function listMyUploads(filters = {}) {
-  return uploadApiRequest("/uploads/mine", { auth: true, query: filters });
+  return uploadApiRequest("/uploads/mine", { auth: true, query: normalizeUploadListFilters(filters) });
 }
 
 export function listProjectUploads(projectId, filters = {}) {
-  return uploadApiRequest(`/uploads/${projectId}/list`, { auth: true, query: filters });
+  return uploadApiRequest(`/uploads/${projectId}/list`, { auth: true, query: normalizeUploadListFilters(filters) });
 }
 
 export function getUpload(uploadId) {
@@ -651,6 +651,13 @@ export function previewUpload(uploadId) {
 
 export function deleteUpload(uploadId) {
   return uploadApiRequest(`/uploads/${uploadId}`, { method: "DELETE", auth: true });
+}
+
+function normalizeUploadListFilters(filters = {}) {
+  return {
+    per_page: 15,
+    ...filters
+  };
 }
 
 export function updateUploadPermissions(uploadId, body) {
@@ -873,6 +880,62 @@ export function removeCompanyProjectMember(id, userId) {
   return apiRequest(`/company/projects/${id}/members/${userId}`, { method: "DELETE", auth: true });
 }
 
+function getTasksBasePath(role) {
+  return normalizeRole(role) === "admin" ? "/admin/tasks" : "/company/tasks";
+}
+
+export function listTasks({ role, ...filters } = {}) {
+  return apiRequest(getTasksBasePath(role), { auth: true, query: filters });
+}
+
+export function createTask(body, { role } = {}) {
+  return apiRequest(getTasksBasePath(role), { method: "POST", auth: true, body: normalizeTaskBody(body) });
+}
+
+export function getTask(id, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}`, { auth: true });
+}
+
+export function updateTask(id, body, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}`, { method: "PUT", auth: true, body: normalizeTaskBody(body, { partial: true }) });
+}
+
+export function deleteTask(id, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}`, { method: "DELETE", auth: true });
+}
+
+export function restoreTask(id, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/restore`, { method: "PATCH", auth: true });
+}
+
+export function forceDeleteTask(id, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/force-delete`, { method: "DELETE", auth: true });
+}
+
+export function addTaskAssignees(id, body, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/assignees`, { method: "POST", auth: true, body });
+}
+
+export function removeTaskAssignee(id, userId, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/assignees/${userId}`, { method: "DELETE", auth: true });
+}
+
+export function addTaskDependencies(id, body, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/dependencies`, { method: "POST", auth: true, body });
+}
+
+export function removeTaskDependency(id, dependencyId, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/dependencies/${dependencyId}`, { method: "DELETE", auth: true });
+}
+
+export function addTaskNote(id, body, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/notes`, { method: "POST", auth: true, body });
+}
+
+export function deleteTaskNote(id, noteId, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/notes/${noteId}`, { method: "DELETE", auth: true });
+}
+
 export function getPayloadData(payload) {
   return normalizeData(payload);
 }
@@ -903,6 +966,36 @@ function normalizeCompanyProjectBody(body) {
       cleanBody[field] = body[field];
     }
   });
+
+  return cleanBody;
+}
+
+function normalizeTaskBody(body, { partial = false } = {}) {
+  const allowedFields = [
+    "project_id",
+    "title",
+    "description",
+    "status",
+    "priority",
+    "due_date",
+    "assignee_ids",
+    "dependency_ids"
+  ];
+  const cleanBody = {};
+
+  allowedFields.forEach((field) => {
+    const value = body?.[field];
+    if (Array.isArray(value)) {
+      cleanBody[field] = value.filter(Boolean);
+    } else if (value !== undefined && value !== "") {
+      cleanBody[field] = value;
+    }
+  });
+
+  if (!partial) {
+    cleanBody.status = cleanBody.status || "todo";
+    cleanBody.priority = cleanBody.priority || "medium";
+  }
 
   return cleanBody;
 }

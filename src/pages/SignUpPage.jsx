@@ -8,6 +8,7 @@ import { registerWithEmail } from "../lib/api.js";
 import { formatAuthErrorMessage } from "../lib/authErrors.js";
 import { PENDING_SIGNUP_KEY } from "./VerifyOtpPage.jsx";
 import "../styles/sign-up.css";
+import "../styles/auth-unified.css";
 
 const roleMap = {
   owner: "admin",
@@ -20,18 +21,45 @@ export default function SignUpPage() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [hasEmail, setHasEmail] = useState(false);
+  const [form, setForm] = useState({ fullName: "", email: "", role: "", password: "" });
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const fullNameError = getRequiredError(form.fullName, "Full name is required", submitted);
+  const emailError = getEmailError(form.email, touched.email, submitted);
+  const roleError = getRequiredError(form.role, "Please select your role", submitted);
+  const passwordError = getPasswordError(form.password, touched.password, submitted);
+
+  function updateField(field, value) {
+    setForm((current) => ({ ...current, [field]: value }));
+    setTouched((current) => ({ ...current, [field]: true }));
+    if (status.type === "error") {
+      setStatus({ type: "", message: "" });
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setIsSubmitting(true);
+    setSubmitted(true);
     setStatus({ type: "", message: "" });
 
-    const formData = new FormData(event.currentTarget);
-    const name = formData.get("fullName");
-    const email = formData.get("email");
-    const password = formData.get("password");
-    const selectedRole = formData.get("role") || "manager";
+    const nextErrors = [
+      getRequiredError(form.fullName, "Full name is required", true),
+      getEmailError(form.email, true, true),
+      getRequiredError(form.role, "Please select your role", true),
+      getPasswordError(form.password, true, true)
+    ];
+    if (nextErrors.some(Boolean)) {
+      setTouched({ fullName: true, email: true, role: true, password: true });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const name = form.fullName;
+    const email = form.email;
+    const password = form.password;
+    const selectedRole = form.role;
     const dashboardRole = roleMap[selectedRole] || "project-manager";
 
     try {
@@ -57,7 +85,7 @@ export default function SignUpPage() {
       text="Streamline your team collaboration with AI-powered meeting summaries and real-time operational insights."
       visualContent={<SignUpWorkspaceVisual />}
     >
-      <form className={`auth-form sign-up-form ${hasEmail ? "has-email" : ""}`} onSubmit={handleSubmit}>
+      <form className={`auth-form sign-up-form ${form.email ? "has-email" : ""}`} onSubmit={handleSubmit} noValidate>
         <div className="sign-up-mobile-brand">
           <span>Teamoria</span>
           <small>Enterprise AI PM</small>
@@ -84,11 +112,23 @@ export default function SignUpPage() {
 
         <div className="form-stack">
           <span className="label">Full Name</span>
-          <TextInput autoComplete="name" icon={<FiUser />} name="fullName" placeholder="Enter your full name" required disabled={isSubmitting} />
+          <TextInput
+            autoComplete="name"
+            error={fullNameError}
+            icon={<FiUser />}
+            name="fullName"
+            placeholder="Enter your full name"
+            required
+            disabled={isSubmitting}
+            value={form.fullName}
+            onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
+            onChange={(event) => updateField("fullName", event.target.value)}
+          />
 
           <span className="label">Work Email</span>
           <TextInput
             autoComplete="email"
+            error={emailError}
             icon={<FiMail />}
             inputMode="email"
             name="email"
@@ -96,31 +136,48 @@ export default function SignUpPage() {
             placeholder="name@company.com"
             required
             disabled={isSubmitting}
-            onChange={(event) => setHasEmail(event.target.value.trim().length > 0)}
+            value={form.email}
+            onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+            onChange={(event) => updateField("email", event.target.value)}
           />
 
           <span className="label">Role</span>
-          <label className="field sign-up-select-field">
+          <label className={`field sign-up-select-field ${roleError ? "field--invalid" : ""}`}>
             <span className="field-icon" aria-hidden="true"><FiAward /></span>
-            <select name="role" defaultValue="" required disabled={isSubmitting}>
+            <select
+              aria-describedby={roleError ? "signup-role-error" : undefined}
+              aria-invalid={roleError ? "true" : "false"}
+              aria-required="true"
+              name="role"
+              value={form.role}
+              disabled={isSubmitting}
+              onBlur={() => setTouched((current) => ({ ...current, role: true }))}
+              onChange={(event) => updateField("role", event.target.value)}
+            >
               <option value="" disabled>Select your role</option>
               <option value="owner">Company Owner</option>
               <option value="manager">Team Manager</option>
               <option value="employee">Employee</option>
               <option value="admin">Company Admin</option>
             </select>
+            {roleError ? <small className="field-error" id="signup-role-error">{roleError}</small> : null}
           </label>
 
           <span className="label">Password</span>
-          <label className="field input-wrapper sign-up-password-field">
+          <label className={`field input-wrapper sign-up-password-field ${passwordError ? "field--invalid" : ""}`}>
             <span className="field-icon icon" aria-hidden="true"><FiLock /></span>
             <input
+              aria-describedby={passwordError ? "signup-password-error" : undefined}
+              aria-invalid={passwordError ? "true" : "false"}
+              aria-required="true"
               name="password"
-              required
               autoComplete="new-password"
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               disabled={isSubmitting}
+              value={form.password}
+              onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+              onChange={(event) => updateField("password", event.target.value)}
             />
             <button
               className="password-toggle"
@@ -131,15 +188,37 @@ export default function SignUpPage() {
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
+            {passwordError ? <small className="field-error" id="signup-password-error">{passwordError}</small> : null}
           </label>
         </div>
 
-        <PrimaryButton type="submit" disabled={isSubmitting}>{isSubmitting ? "Creating..." : "Create Workspace"}</PrimaryButton>
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Creating Workspace...">Create Workspace</PrimaryButton>
         <p className="auth-switch">Already have an account? <a href="#/signin">Log in</a></p>
         <SignUpFooter />
       </form>
     </AuthLayout>
   );
+}
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getRequiredError(value, message, isSubmitted) {
+  if (isSubmitted && !String(value || "").trim()) return message;
+  return "";
+}
+
+function getEmailError(value, isTouched, isSubmitted) {
+  const email = String(value || "").trim();
+  if (!email && isSubmitted) return "Email is required";
+  if (email && isTouched && !emailPattern.test(email)) return "Please enter a valid email address";
+  return "";
+}
+
+function getPasswordError(value, isTouched, isSubmitted) {
+  const password = String(value || "");
+  if (!password && isSubmitted) return "Password is required";
+  if (password && isTouched && password.length < 8) return "Password must be at least 8 characters";
+  return "";
 }
 
 function SignUpWorkspaceVisual() {

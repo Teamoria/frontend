@@ -493,18 +493,6 @@
   line-height: 1.5;
 }
 
-.settings-list label {
-  align-items: center;
-  border-bottom: 1px solid #eff1f7;
-  display: flex;
-  justify-content: space-between;
-  min-height: 48px;
-}
-
-.settings-list label:last-child {
-  border-bottom: 0;
-}
-
 .profile-layout {
   grid-template-columns: 1.2fr 0.8fr;
 }

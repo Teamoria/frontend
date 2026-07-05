@@ -9,7 +9,6 @@ export const navItems = [
   { label: "Workspace Graph", ar: "خريطة العمل", path: "/workspace-graph", icon: "graph", roles: ["admin", "general-manager", "project-manager"] },
   { label: "Employees", ar: "الموظفون", path: "/employees", icon: "users", roles: ["admin", "general-manager"] },
   { label: "Reports", ar: "التقارير", path: "/reports", icon: "chart", roles: ["admin", "general-manager", "project-manager"] },
-  { label: "Settings", ar: "الإعدادات", path: "/settings", icon: "settings", roles: ["admin", "general-manager"] },
   { label: "Profile", ar: "الملف الشخصي", path: "/profile", icon: "profile", roles: ["admin", "general-manager", "project-manager", "employee"] }
 ];
 
@@ -170,7 +169,7 @@ export const meetingActions = [
 ];
 
 export const meetingDecisions = [
-  "Company admin can manage users, roles, settings, and all workspaces.",
+  "Company admin can manage users, roles, and all workspaces.",
   "Project managers can see assigned workspaces only.",
   "Employees see assigned tasks, meetings, uploads, and cited AI answers.",
   "AI answers must show sources when file or meeting context is used."

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FiDownload,
+  FiCheck,
   FiEye,
   FiFileText,
   FiFilter,
@@ -8,7 +9,6 @@ import {
   FiMic,
   FiMonitor,
   FiRefreshCw,
-  FiSearch,
   FiShare2,
   FiTrash2,
   FiUploadCloud,
@@ -19,6 +19,7 @@ import {
   deleteUpload,
   deleteUploadPermission,
   downloadUpload,
+  createTask,
   getConfiguredUploadApiBaseUrl,
   getInternalCompanyId,
   getPayloadData,
@@ -48,8 +49,10 @@ const visibilityOptions = [
   { value: "selected", label: "Selected users" }
 ];
 
-export default function UploadCenterWorkspace() {
-  const { isAdmin, user } = useAuth();
+export default function UploadCenterWorkspace({ view = "all", filesHref = "#/owner/uploads/files", uploadHref = "#/owner/uploads" }) {
+  const { isAdmin, normalizedRole, user } = useAuth();
+  const showUpload = view !== "files";
+  const showFiles = view !== "upload";
   const fileInputRef = useRef(null);
   const [projects, setProjects] = useState([]);
   const [shareUsers, setShareUsers] = useState([]);
@@ -70,7 +73,6 @@ export default function UploadCenterWorkspace() {
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
-  const [query, setQuery] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -84,16 +86,8 @@ export default function UploadCenterWorkspace() {
   }, []);
 
   useEffect(() => {
-    loadUploads();
-  }, [filters.scope, filters.visibility, filters.project_id, filters.task_id, filters.per_page, filters.mine]);
-
-  const filteredAssets = useMemo(() => {
-    const cleanQuery = query.trim().toLowerCase();
-    if (!cleanQuery) return assets;
-    return assets.filter((asset) => [asset.name, asset.type, asset.scope, asset.visibility, asset.project_name]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(cleanQuery)));
-  }, [assets, query]);
+    if (showFiles) loadUploads();
+  }, [filters.scope, filters.visibility, filters.project_id, filters.task_id, filters.per_page, filters.mine, showFiles]);
 
   function updateForm(field, value) {
     setForm((current) => {
@@ -190,19 +184,32 @@ export default function UploadCenterWorkspace() {
 
     setIsUploading(true);
     try {
-      await uploadFiles({
+      const payload = await uploadFiles({
         files: selectedFiles,
         scope: form.scope,
         visibility: form.visibility,
-        company_id: user?.company_id || user?.company?.id || getInternalCompanyId(),
+        company_id: getInternalCompanyId() || user?.company_id || user?.company?.id,
         project_id: form.scope === "project" ? form.project_id : undefined,
         task_id: form.scope === "task" ? form.task_id : undefined,
         shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : []
       });
+      const uploaded = getFirstUploadFromPayload(getPayloadData(payload));
+      const fallbackUpload = {
+        file_name: selectedFiles[0]?.name,
+        original_name: selectedFiles[0]?.name,
+        processing_status: uploaded?.processing_status || "queued",
+        status: uploaded?.status || "uploaded"
+      };
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setStatus({ type: "success", message: "Files uploaded successfully." });
-      await loadUploads();
+      setAiResultsModal({
+        asset: normalizeAsset(uploaded || fallbackUpload),
+        isLoading: false,
+        upload: uploaded || fallbackUpload,
+        error: ""
+      });
+      if (showFiles) await loadUploads();
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
@@ -298,25 +305,23 @@ export default function UploadCenterWorkspace() {
   return (
     <section className="owner-upload-page">
       <div className="owner-upload-toprow">
-        <label className="owner-upload-search">
-          <FiSearch aria-hidden="true" />
-          <input placeholder="Search uploaded files..." value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
-        <button className="owner-upload-refresh" type="button" onClick={loadUploads} disabled={isLoading}>
+        {view === "upload" ? <a className="owner-upload-nav-link" href={filesHref}>View Uploaded Files</a> : null}
+        {view === "files" ? <a className="owner-upload-nav-link" href={uploadHref}>Upload New File</a> : null}
+        <button className="owner-upload-refresh" type="button" onClick={showFiles ? loadUploads : () => { loadProjects(); loadShareUsers(); }} disabled={showFiles ? isLoading : false}>
           <FiRefreshCw aria-hidden="true" />
           Refresh
         </button>
       </div>
 
       <header className="owner-upload-header">
-        <h1>Upload Center</h1>
-        <p>Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls.</p>
-        <code className="owner-upload-api-url">API: {getConfiguredUploadApiBaseUrl()}/uploads</code>
+        <h1>{view === "files" ? "Uploaded Files" : "Upload Center"}</h1>
+        <p>{view === "files" ? "Review uploaded files, AI processing results, sharing, downloads, and deletion controls." : "Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls."}</p>
+        {view === "files" ? null : <code className="owner-upload-api-url">API: {getConfiguredUploadApiBaseUrl()}/uploads</code>}
       </header>
 
       {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
 
-      <form className="owner-upload-dropzone" onSubmit={submitUpload}>
+      {showUpload ? <form className="owner-upload-dropzone owner-upload-dropzone--focused" onSubmit={submitUpload}>
         <input hidden multiple ref={fileInputRef} type="file" onChange={(event) => addFiles(event.target.files)} />
         <FiUploadCloud aria-hidden="true" />
         <h2>Upload files to backend storage</h2>
@@ -394,12 +399,12 @@ export default function UploadCenterWorkspace() {
           </div>
         ) : null}
 
-        <button type="submit" disabled={isUploading || isLoading}>
+        <button type="submit" disabled={isUploading || (showFiles && isLoading)}>
           {isUploading ? "Uploading..." : "Upload Files"}
         </button>
-      </form>
+      </form> : null}
 
-      <section className="owner-upload-assets">
+      {showFiles ? <section className="owner-upload-assets">
         <div className="owner-upload-section-head">
           <h2>Backend Uploads</h2>
           <div className="owner-upload-actions">
@@ -469,9 +474,9 @@ export default function UploadCenterWorkspace() {
                 </tr>
               </thead>
               <tbody>
-                {!filteredAssets.length ? (
+                {!assets.length ? (
                   <tr><td colSpan="6">{isLoading ? "Loading uploads from API..." : "No uploaded files found."}</td></tr>
-                ) : filteredAssets.map((asset) => (
+                ) : assets.map((asset) => (
                   <tr key={asset.id || asset.path || asset.name}>
                     <td><FileIcon category={asset.category} /><span>{asset.name}</span></td>
                     <td>{formatLabel(asset.scope)}</td>
@@ -498,7 +503,7 @@ export default function UploadCenterWorkspace() {
             </table>
           </div>
         </div>
-      </section>
+      </section> : null}
 
       {permissionsModal ? (
         <PermissionsModal
@@ -517,7 +522,11 @@ export default function UploadCenterWorkspace() {
       {aiResultsModal ? (
         <AiResultsModal
           state={aiResultsModal}
+          people={shareUsers}
+          projects={projects}
+          role={normalizedRole}
           onClose={() => setAiResultsModal(null)}
+          onStatus={(nextStatus) => setStatus(nextStatus)}
         />
       ) : null}
 
@@ -594,12 +603,54 @@ function PreviewModal({ state, onClose }) {
   );
 }
 
-function AiResultsModal({ state, onClose }) {
+function AiResultsModal({ onClose, onStatus, people, projects, role, state }) {
   const upload = state.upload || {};
-  const summary = upload.summary || null;
+  const summary = normalizeSummary(upload);
   const decisions = Array.isArray(upload.decisions) ? upload.decisions : [];
-  const tasks = Array.isArray(upload.tasks) ? upload.tasks : [];
+  const extractedTasks = normalizeExtractedTasks(upload);
+  const [taskDrafts, setTaskDrafts] = useState(() => extractedTasks);
+  const [savingTaskId, setSavingTaskId] = useState("");
   const chunks = Array.isArray(upload.chunks) ? upload.chunks : [];
+  const processingStatus = upload.processing_status || upload.processingStatus || upload.status || "queued";
+  const isReady = ["processed", "completed", "done", "success"].includes(String(processingStatus).toLowerCase());
+
+  function updateTaskDraft(id, field, value) {
+    setTaskDrafts((current) => current.map((task) => task.localId === id ? { ...task, [field]: value } : task));
+  }
+
+  function rejectTaskDraft(id) {
+    setTaskDrafts((current) => current.map((task) => task.localId === id ? { ...task, rejected: true } : task));
+  }
+
+  async function approveTaskDraft(task) {
+    if (!task.title.trim()) {
+      onStatus?.({ type: "error", message: "Task title is required before creating a task." });
+      return;
+    }
+    if (!task.project_id) {
+      onStatus?.({ type: "error", message: "Choose a project before creating a task." });
+      return;
+    }
+
+    setSavingTaskId(task.localId);
+    try {
+      await createTask({
+        project_id: task.project_id,
+        title: task.title,
+        description: task.description,
+        due_date: task.due_date,
+        priority: task.priority,
+        status: "todo",
+        assignee_ids: task.assignee_id ? [task.assignee_id] : []
+      }, { role });
+      setTaskDrafts((current) => current.map((item) => item.localId === task.localId ? { ...item, created: true } : item));
+      onStatus?.({ type: "success", message: "Task created from uploaded file result." });
+    } catch (error) {
+      onStatus?.({ type: "error", message: error.message });
+    } finally {
+      setSavingTaskId("");
+    }
+  }
 
   return (
     <div className="owner-upload-modal-layer" role="presentation">
@@ -620,16 +671,18 @@ function AiResultsModal({ state, onClose }) {
           <div className="owner-upload-ai-results">
             <section>
               <h3>Processing</h3>
-              <p>{formatLabel(upload.processing_status || "unknown")}</p>
+              <p><strong>Upload status:</strong> {formatLabel(upload.status || "uploaded")}</p>
+              <p><strong>Processing status:</strong> {formatLabel(processingStatus)}</p>
               {upload.processing_error ? <p className="auth-alert auth-alert--error">{upload.processing_error}</p> : null}
+              {!isReady ? <p className="owner-upload-processing-note">File is still processing. Please refresh or check again later.</p> : null}
             </section>
             <section>
               <h3>Summary</h3>
-              <p>{summary?.summary || "No summary available yet."}</p>
+              <p>{summary.summary || "No summary available yet."}</p>
             </section>
             <section>
               <h3>Transcript</h3>
-              <pre>{summary?.transcript || "No transcript available yet."}</pre>
+              <pre>{summary.transcript || upload.transcript || "No transcript available yet."}</pre>
             </section>
             <section>
               <h3>Decisions</h3>
@@ -637,11 +690,61 @@ function AiResultsModal({ state, onClose }) {
                 <ul>{decisions.map((item) => <li key={item.id}>{item.decision_text}</li>)}</ul>
               ) : <p>No decisions extracted.</p>}
             </section>
-            <section>
-              <h3>Tasks</h3>
-              {tasks.length ? (
-                <ul>{tasks.map((item) => <li key={item.id}>{item.task_text} <small>{formatLabel(item.status)}</small></li>)}</ul>
-              ) : <p>No tasks extracted.</p>}
+            <section className="owner-upload-task-review">
+              <h3>Extracted Tasks</h3>
+              {!taskDrafts.length ? <p>No tasks extracted.</p> : null}
+              {taskDrafts.map((task) => (
+                <article className={`owner-upload-task-draft ${task.rejected ? "is-rejected" : ""} ${task.created ? "is-created" : ""}`} key={task.localId}>
+                  <div className="owner-upload-task-draft-head">
+                    <span>{task.created ? "Created" : task.rejected ? "Rejected" : "Needs review"}</span>
+                    <div>
+                      <button type="button" disabled={task.created || task.rejected || savingTaskId === task.localId} onClick={() => approveTaskDraft(task)}>
+                        {savingTaskId === task.localId ? "Saving..." : <><FiCheck aria-hidden="true" />Create</>}
+                      </button>
+                      <button type="button" disabled={task.created || task.rejected} onClick={() => rejectTaskDraft(task.localId)}>
+                        <FiTrash2 aria-hidden="true" />Reject
+                      </button>
+                    </div>
+                  </div>
+                  <label>
+                    <span>Task title</span>
+                    <input value={task.title} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "title", event.target.value)} />
+                  </label>
+                  <label>
+                    <span>Description</span>
+                    <textarea value={task.description} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "description", event.target.value)} />
+                  </label>
+                  <div className="owner-upload-task-grid">
+                    <label>
+                      <span>Project</span>
+                      <select value={task.project_id} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "project_id", event.target.value)}>
+                        <option value="">Choose project</option>
+                        {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Assignee</span>
+                      <select value={task.assignee_id} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "assignee_id", event.target.value)}>
+                        <option value="">Unassigned</option>
+                        {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Deadline</span>
+                      <input type="date" value={task.due_date} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "due_date", event.target.value)} />
+                    </label>
+                    <label>
+                      <span>Priority</span>
+                      <select value={task.priority} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "priority", event.target.value)}>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="emergency">Emergency</option>
+                      </select>
+                    </label>
+                  </div>
+                </article>
+              ))}
             </section>
             <section>
               <h3>Knowledge chunks</h3>
@@ -780,6 +883,72 @@ function normalizeAsset(asset) {
     date: formatDate(asset.created_at || asset.uploaded_at || asset.date),
     url: asset.url || asset.public_url || asset.path || ""
   };
+}
+
+function getFirstUploadFromPayload(data) {
+  if (!data) return null;
+  if (Array.isArray(data)) return data[0] || null;
+  if (Array.isArray(data.uploads)) return data.uploads[0] || null;
+  if (Array.isArray(data.files)) return data.files[0] || null;
+  if (Array.isArray(data.data?.uploads)) return data.data.uploads[0] || null;
+  if (Array.isArray(data.data?.files)) return data.data.files[0] || null;
+  return data.upload || data.file || data.data || data;
+}
+
+function normalizeSummary(upload) {
+  const rawSummary = upload.summary || upload.ai_summary || upload.result?.summary || "";
+  if (typeof rawSummary === "string") {
+    return {
+      summary: rawSummary,
+      transcript: upload.transcript || upload.result?.transcript || ""
+    };
+  }
+
+  return {
+    summary: rawSummary?.summary || rawSummary?.text || upload.summary_text || "",
+    transcript: rawSummary?.transcript || upload.transcript || upload.result?.transcript || ""
+  };
+}
+
+function normalizeExtractedTasks(upload) {
+  const candidates = [
+    upload.tasks,
+    upload.action_items,
+    upload.actionItems,
+    upload.summary?.tasks,
+    upload.summary?.action_items,
+    upload.result?.tasks,
+    upload.result?.action_items
+  ].find((collection) => Array.isArray(collection)) || [];
+
+  return candidates.map((item, index) => {
+    const title = item.title || item.task_title || item.task_text || item.text || item.action || `Task ${index + 1}`;
+    return {
+      localId: String(item.id || item.uuid || `task-${index}`),
+      title,
+      description: item.description || item.details || item.notes || item.task_description || "",
+      due_date: normalizeDateInput(item.due_date || item.deadline || item.date),
+      priority: normalizePriority(item.priority),
+      project_id: String(item.project_id || item.project?.id || ""),
+      assignee_id: String(item.assignee_id || item.user_id || item.owner_id || ""),
+      created: false,
+      rejected: false
+    };
+  });
+}
+
+function normalizeDateInput(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
+function normalizePriority(value) {
+  const priority = String(value || "medium").toLowerCase();
+  if (["low", "medium", "high", "emergency"].includes(priority)) return priority;
+  if (priority === "urgent" || priority === "critical") return "emergency";
+  return "medium";
 }
 
 function getSharedUserIds(asset) {

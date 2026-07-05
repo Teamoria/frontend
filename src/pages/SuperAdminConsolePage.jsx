@@ -11,7 +11,6 @@ import {
   FiLogOut,
   FiMoreVertical,
   FiSearch,
-  FiSettings,
   FiShield,
   FiUser,
   FiUsers
@@ -24,7 +23,7 @@ const navItems = [
   { label: "Dashboard", icon: FiBarChart2, path: "/super-admin" },
   { label: "Companies Management", icon: FiBriefcase, path: "/super-admin/companies" },
   { label: "User Management", icon: FiUsers, path: "/super-admin/users" },
-  { label: "Profile / Settings", icon: FiSettings, path: "/super-admin/profile-settings" }
+  { label: "Profile", icon: FiUser, path: "/super-admin/profile" }
 ];
 
 const adoptionBars = [
@@ -347,9 +346,9 @@ function ProfileContextMenu({ user, initials }) {
         </div>
       </header>
       <nav aria-label="Profile actions">
-        <a href="#/super-admin/profile-settings">
+        <a href="#/super-admin/profile">
           <FiUser aria-hidden="true" />
-          <span>Profile Settings</span>
+          <span>Profile</span>
         </a>
       </nav>
     </section>

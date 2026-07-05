@@ -39,7 +39,6 @@
 .manager-recommendation-grid,
 .manager-insight-grid,
 .projects-grid-modern,
-.settings-grid,
 .profile-command-stats,
 .profile-access-grid,
 .ai-chat-grid,
@@ -51,7 +50,6 @@
 .graph-layout,
 .agent-grid,
 .tool-grid,
-.tasks-kanban-board,
 .create-owner-task-grid,
 .extracted-grid,
 .home-footer-grid,
@@ -80,7 +78,6 @@
     .manager-recommendation-grid,
     .manager-insight-grid,
     .projects-grid-modern,
-    .settings-grid,
     .profile-command-stats,
     .profile-access-grid,
     .ai-chat-grid,
@@ -116,7 +113,6 @@
     .manager-recommendation-grid,
     .manager-insight-grid,
     .projects-grid-modern,
-    .settings-grid,
     .profile-command-stats,
     .profile-access-grid,
     .ai-chat-grid,
@@ -219,8 +215,7 @@
     }
 
     .graph-layout,
-    .run-detail-layout,
-    .tasks-kanban-board {
+    .run-detail-layout {
         grid-template-columns: 1fr !important;
     }
 
@@ -257,7 +252,6 @@
     }
 
     .profile-form-stack,
-    .settings-list,
     .employees-modal-grid,
     .modal-grid,
     .modal-grid--single,

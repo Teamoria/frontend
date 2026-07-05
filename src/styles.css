@@ -3663,7 +3663,6 @@ select {
 .role-list,
 .upload-mini-list,
 .related-list,
-.settings-list,
 .insight-stack {
   display: grid;
   gap: 12px;
@@ -3760,8 +3759,7 @@ select {
 }
 
 .extracted-grid,
-.agent-grid,
-.settings-grid {
+.agent-grid {
   display: grid;
   gap: 20px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4053,18 +4051,6 @@ select {
 .role-matrix p {
   color: #3f485b;
   line-height: 1.5;
-}
-
-.settings-list label {
-  align-items: center;
-  border-bottom: 1px solid #eff1f7;
-  display: flex;
-  justify-content: space-between;
-  min-height: 48px;
-}
-
-.settings-list label:last-child {
-  border-bottom: 0;
 }
 
 .profile-layout {
@@ -5849,7 +5835,6 @@ select {
   .meeting-grid,
   .extracted-grid,
   .agent-grid,
-  .settings-grid,
   .flow-steps,
   .pipeline-rail,
   .profile-stat-grid {
