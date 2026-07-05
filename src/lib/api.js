@@ -602,7 +602,7 @@ export function uploadFiles({
   const fileList = Array.from(files || []);
 
   fileList.forEach((file) => {
-    formData.append("files", file);
+    formData.append("files[]", file);
   });
 
   formData.append("scope", scope);
