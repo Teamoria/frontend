@@ -365,7 +365,7 @@ export function getConfiguredApiBaseUrl() {
 }
 
 export function getConfiguredUploadApiBaseUrl() {
-  return UPLOAD_API_BASE_URL.replace(/\/$/, "");
+  return buildUploadUrl("").replace(/\/$/, "");
 }
 
 export function getInternalCompanyId() {
@@ -625,7 +625,7 @@ export function uploadFiles({
 }
 
 export function listUploads(filters = {}) {
-  return uploadApiRequest("/uploads", { auth: true, query: filters });
+  return uploadApiRequest("/uploads/list", { auth: true, query: filters });
 }
 
 export function listUploadCollection(filters = {}) {
