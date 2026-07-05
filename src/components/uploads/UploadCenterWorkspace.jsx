@@ -1,108 +1,297 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FiDownload, FiFileText, FiFilter, FiMic, FiRefreshCw, FiSearch, FiUploadCloud, FiVideo, FiX } from "react-icons/fi";
-import { getPayloadData, listAdminProjects, listCompanyProjects, listProjectUploads, listUploads, uploadFiles } from "../../lib/api.js";
+import {
+  FiDownload,
+  FiEye,
+  FiFileText,
+  FiFilter,
+  FiLock,
+  FiMic,
+  FiMonitor,
+  FiRefreshCw,
+  FiSearch,
+  FiShare2,
+  FiTrash2,
+  FiUploadCloud,
+  FiVideo,
+  FiX
+} from "react-icons/fi";
+import {
+  deleteUpload,
+  deleteUploadPermission,
+  downloadUpload,
+  getConfiguredUploadApiBaseUrl,
+  getInternalCompanyId,
+  getPayloadData,
+  getUpload,
+  listAdminProjects,
+  listCompanyProjects,
+  listMyUploads,
+  listStaff,
+  listUploads,
+  listUsers,
+  previewUpload,
+  updateUploadPermissions,
+  uploadFiles
+} from "../../lib/api.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
 
-const categories = [
-  { value: "document", label: "Document" },
-  { value: "image", label: "Image" },
-  { value: "audio", label: "Audio" },
-  { value: "video", label: "Video" }
+const scopeOptions = [
+  { value: "personal", label: "Personal" },
+  { value: "company", label: "Company" },
+  { value: "project", label: "Project" },
+  { value: "task", label: "Task" }
+];
+
+const visibilityOptions = [
+  { value: "private", label: "Private" },
+  { value: "members", label: "Members" },
+  { value: "selected", label: "Selected users" }
 ];
 
 export default function UploadCenterWorkspace() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const fileInputRef = useRef(null);
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [category, setCategory] = useState("document");
+  const [shareUsers, setShareUsers] = useState([]);
+  const [form, setForm] = useState({
+    scope: "personal",
+    visibility: "private",
+    project_id: "",
+    task_id: "",
+    shared_with_user_ids: []
+  });
+  const [filters, setFilters] = useState({
+    scope: "",
+    visibility: "",
+    project_id: "",
+    task_id: "",
+    per_page: 15,
+    mine: false
+  });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [permissionsModal, setPermissionsModal] = useState(null);
+  const [aiResultsModal, setAiResultsModal] = useState(null);
+  const [previewModal, setPreviewModal] = useState(null);
 
   useEffect(() => {
     loadProjects();
+    loadShareUsers();
   }, []);
 
   useEffect(() => {
-    loadUploads(selectedProjectId);
-  }, [selectedProjectId]);
+    loadUploads();
+  }, [filters.scope, filters.visibility, filters.project_id, filters.task_id, filters.per_page, filters.mine]);
 
   const filteredAssets = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
     if (!cleanQuery) return assets;
-    return assets.filter((asset) => `${asset.name} ${asset.type} ${asset.category}`.toLowerCase().includes(cleanQuery));
+    return assets.filter((asset) => [asset.name, asset.type, asset.scope, asset.visibility, asset.project_name]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(cleanQuery)));
   }, [assets, query]);
 
+  function updateForm(field, value) {
+    setForm((current) => {
+      const next = { ...current, [field]: value };
+      if (field === "scope" && value !== "project") next.project_id = "";
+      if (field === "scope" && value !== "task") next.task_id = "";
+      if (field === "visibility" && value !== "selected") next.shared_with_user_ids = [];
+      return next;
+    });
+  }
+
+  function updateFilter(field, value) {
+    setFilters((current) => ({ ...current, [field]: value }));
+  }
+
   async function loadProjects() {
+    try {
+      const payload = isAdmin ? await listAdminProjects() : await listCompanyProjects();
+      setProjects(extractRows(getPayloadData(payload), ["projects"]).map(normalizeProject).filter((project) => project.id));
+    } catch {
+      setProjects([]);
+    }
+  }
+
+  async function loadShareUsers() {
+    try {
+      const payload = isAdmin ? await listUsers({ page: 1 }) : await listStaff({ page: 1 });
+      setShareUsers(extractRows(getPayloadData(payload), ["users", "staff"]).map(normalizeShareUser).filter((item) => item.id));
+    } catch {
+      setShareUsers([]);
+    }
+  }
+
+  async function loadUploads() {
     setIsLoading(true);
     setStatus({ type: "", message: "" });
 
     try {
-      const payload = isAdmin ? await listAdminProjects() : await listCompanyProjects();
-      const rows = extractRows(getPayloadData(payload), ["projects"]);
-      const normalizedProjects = rows.map(normalizeProject).filter((project) => project.id);
-      setProjects(normalizedProjects);
-      setSelectedProjectId((current) => current || normalizedProjects[0]?.id || "");
+      const cleanFilters = cleanObject({
+        scope: filters.scope,
+        visibility: filters.visibility,
+        project_id: filters.project_id,
+        task_id: filters.task_id,
+        per_page: filters.per_page
+      });
+      const payload = filters.mine ? await listMyUploads(cleanFilters) : await listUploads(cleanFilters);
+      setAssets(extractRows(getPayloadData(payload), ["files", "uploads", "assets"]).map(normalizeAsset));
     } catch (error) {
-      setProjects([]);
+      setAssets([]);
       setStatus({ type: "error", message: error.message });
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function loadUploads(projectId = selectedProjectId) {
-    try {
-      const payload = projectId ? await listProjectUploads(projectId) : await listUploads();
-      const rows = extractRows(getPayloadData(payload), ["files", "uploads", "assets"]);
-      setAssets(rows.map(normalizeAsset));
-    } catch (error) {
-      setAssets([]);
-      if (projectId) setStatus({ type: "error", message: error.message });
-    }
-  }
-
   function addFiles(files) {
     const incoming = Array.from(files || []);
-    if (incoming.length === 0) return;
-
+    if (!incoming.length) return;
     setSelectedFiles((current) => {
       const seen = new Set(current.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
-      const next = incoming.filter((file) => !seen.has(`${file.name}-${file.size}-${file.lastModified}`));
-      return [...current, ...next];
+      return [...current, ...incoming.filter((file) => !seen.has(`${file.name}-${file.size}-${file.lastModified}`))];
     });
+  }
+
+  function toggleSelectedUser(userId) {
+    setForm((current) => ({
+      ...current,
+      shared_with_user_ids: current.shared_with_user_ids.includes(userId)
+        ? current.shared_with_user_ids.filter((id) => id !== userId)
+        : [...current.shared_with_user_ids, userId]
+    }));
   }
 
   async function submitUpload(event) {
     event.preventDefault();
     setStatus({ type: "", message: "" });
 
-    if (!selectedProjectId) {
-      setStatus({ type: "error", message: "Choose a project before uploading files." });
+    if (!selectedFiles.length) {
+      setStatus({ type: "error", message: "Select at least one file to upload." });
       return;
     }
-
-    if (selectedFiles.length === 0) {
-      setStatus({ type: "error", message: "Select at least one file to upload." });
+    if (form.scope === "project" && !form.project_id) {
+      setStatus({ type: "error", message: "Choose a project for project files." });
+      return;
+    }
+    if (form.scope === "task" && !form.task_id.trim()) {
+      setStatus({ type: "error", message: "Enter a task id for task files." });
+      return;
+    }
+    if (form.visibility === "selected" && !form.shared_with_user_ids.length) {
+      setStatus({ type: "error", message: "Choose at least one user for selected sharing." });
       return;
     }
 
     setIsUploading(true);
-
     try {
-      await uploadFiles({ files: selectedFiles, project_id: selectedProjectId, category });
+      await uploadFiles({
+        files: selectedFiles,
+        scope: form.scope,
+        visibility: form.visibility,
+        company_id: user?.company_id || user?.company?.id || getInternalCompanyId(),
+        project_id: form.scope === "project" ? form.project_id : undefined,
+        task_id: form.scope === "task" ? form.task_id : undefined,
+        shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : []
+      });
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setStatus({ type: "success", message: "Files uploaded successfully." });
-      await loadUploads(selectedProjectId);
+      await loadUploads();
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
       setIsUploading(false);
+    }
+  }
+
+  async function handleDownload(asset) {
+    if (!asset.id) {
+      setStatus({ type: "error", message: "This file does not have an upload id." });
+      return;
+    }
+    try {
+      const result = await downloadUpload(asset.id);
+      if (result?.blob) {
+        const url = URL.createObjectURL(result.blob);
+        triggerDownload(url, result.filename || asset.name);
+        URL.revokeObjectURL(url);
+        return;
+      }
+      const url = result?.data?.url || result?.url || asset.url;
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      setStatus({ type: "error", message: error.message });
+    }
+  }
+
+  async function handleDelete(asset) {
+    if (!asset.id) {
+      setStatus({ type: "error", message: "This file does not have an upload id." });
+      return;
+    }
+    if (!window.confirm(`Delete ${asset.name}?`)) return;
+
+    try {
+      await deleteUpload(asset.id);
+      setStatus({ type: "success", message: "File deleted successfully." });
+      await loadUploads();
+    } catch (error) {
+      setStatus({ type: "error", message: error.message });
+    }
+  }
+
+  async function handlePreview(asset) {
+    if (!asset.id) {
+      setStatus({ type: "error", message: "This file does not have an upload id." });
+      return;
+    }
+
+    setPreviewModal({ asset, isLoading: true, url: "", blob: null, filename: asset.name, contentType: "", error: "" });
+    try {
+      const result = await previewUpload(asset.id);
+      if (!result?.blob) {
+        setPreviewModal({ asset, isLoading: false, url: "", blob: null, filename: asset.name, contentType: "", error: "Preview is not available for this file." });
+        return;
+      }
+      const url = URL.createObjectURL(result.blob);
+      setPreviewModal({
+        asset,
+        isLoading: false,
+        url,
+        blob: result.blob,
+        filename: result.filename || asset.name,
+        contentType: result.blob.type || asset.mime_type || asset.type || "",
+        error: ""
+      });
+    } catch (error) {
+      setPreviewModal({ asset, isLoading: false, url: "", blob: null, filename: asset.name, contentType: "", error: error.message });
+    }
+  }
+
+  function closePreview() {
+    if (previewModal?.url) URL.revokeObjectURL(previewModal.url);
+    setPreviewModal(null);
+  }
+
+  async function handleViewAiResults(asset) {
+    if (!asset.id) {
+      setStatus({ type: "error", message: "This file does not have an upload id." });
+      return;
+    }
+
+    setAiResultsModal({ asset, isLoading: true, upload: null, error: "" });
+    try {
+      const payload = await getUpload(asset.id);
+      const upload = getPayloadData(payload)?.upload || getPayloadData(payload);
+      setAiResultsModal({ asset, isLoading: false, upload, error: "" });
+    } catch (error) {
+      setAiResultsModal({ asset, isLoading: false, upload: null, error: error.message });
     }
   }
 
@@ -111,9 +300,9 @@ export default function UploadCenterWorkspace() {
       <div className="owner-upload-toprow">
         <label className="owner-upload-search">
           <FiSearch aria-hidden="true" />
-          <input placeholder="Search uploaded assets..." value={query} onChange={(event) => setQuery(event.target.value)} />
+          <input placeholder="Search uploaded files..." value={query} onChange={(event) => setQuery(event.target.value)} />
         </label>
-        <button className="owner-upload-refresh" type="button" onClick={() => loadUploads(selectedProjectId)}>
+        <button className="owner-upload-refresh" type="button" onClick={loadUploads} disabled={isLoading}>
           <FiRefreshCw aria-hidden="true" />
           Refresh
         </button>
@@ -121,7 +310,8 @@ export default function UploadCenterWorkspace() {
 
       <header className="owner-upload-header">
         <h1>Upload Center</h1>
-        <p>Upload project documents, images, audio, and video directly into the authenticated workspace.</p>
+        <p>Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls.</p>
+        <code className="owner-upload-api-url">API: {getConfiguredUploadApiBaseUrl()}/uploads</code>
       </header>
 
       {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
@@ -129,24 +319,42 @@ export default function UploadCenterWorkspace() {
       <form className="owner-upload-dropzone" onSubmit={submitUpload}>
         <input hidden multiple ref={fileInputRef} type="file" onChange={(event) => addFiles(event.target.files)} />
         <FiUploadCloud aria-hidden="true" />
-        <h2>Drag and drop files to upload</h2>
-        <p>Choose the project and category, then send one or more files to the uploads API.</p>
+        <h2>Upload files to backend storage</h2>
+        <p>Choose scope and visibility before sending files to the authenticated uploads API.</p>
 
-        <div className="owner-upload-controls">
+        <div className="owner-upload-controls owner-upload-controls--expanded">
           <label>
-            <span>Project</span>
-            <select disabled={isLoading || projects.length === 0} value={selectedProjectId} onChange={(event) => setSelectedProjectId(event.target.value)}>
-              {projects.length === 0 ? <option value="">No projects available</option> : null}
-              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            <span>Scope</span>
+            <select value={form.scope} onChange={(event) => updateForm("scope", event.target.value)}>
+              {scopeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
           <label>
-            <span>Category</span>
-            <select value={category} onChange={(event) => setCategory(event.target.value)}>
-              {categories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            <span>Visibility</span>
+            <select value={form.visibility} onChange={(event) => updateForm("visibility", event.target.value)}>
+              {visibilityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
+          {form.scope === "project" ? (
+            <label>
+              <span>Project</span>
+              <select value={form.project_id} onChange={(event) => updateForm("project_id", event.target.value)}>
+                <option value="">Choose project</option>
+                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              </select>
+            </label>
+          ) : null}
+          {form.scope === "task" ? (
+            <label>
+              <span>Task ID</span>
+              <input value={form.task_id} onChange={(event) => updateForm("task_id", event.target.value)} placeholder="Task id" />
+            </label>
+          ) : null}
         </div>
+
+        {form.visibility === "selected" ? (
+          <UserPicker users={shareUsers} selectedIds={form.shared_with_user_ids} onToggle={toggleSelectedUser} />
+        ) : null}
 
         <div
           className="owner-upload-picker"
@@ -169,11 +377,11 @@ export default function UploadCenterWorkspace() {
           <span>or drop them here</span>
         </div>
 
-        {selectedFiles.length > 0 ? (
+        {selectedFiles.length ? (
           <div className="owner-upload-selected-list">
             {selectedFiles.map((file, index) => (
               <article key={`${file.name}-${file.size}-${file.lastModified}`}>
-                <FileIcon category={category} />
+                <FileIcon category={inferCategory(file.name)} />
                 <div>
                   <b>{file.name}</b>
                   <span>{formatBytes(file.size)}</span>
@@ -186,41 +394,104 @@ export default function UploadCenterWorkspace() {
           </div>
         ) : null}
 
-        <button type="submit" disabled={isUploading || isLoading || projects.length === 0}>
+        <button type="submit" disabled={isUploading || isLoading}>
           {isUploading ? "Uploading..." : "Upload Files"}
         </button>
       </form>
 
       <section className="owner-upload-assets">
         <div className="owner-upload-section-head">
-          <h2>Recent Knowledge Assets</h2>
+          <h2>Backend Uploads</h2>
           <div className="owner-upload-actions">
-            <button type="button"><FiFilter aria-hidden="true" />Filter</button>
-            <button type="button"><FiDownload aria-hidden="true" />Export</button>
+            <button type="button" onClick={() => setFilters({ scope: "", visibility: "", project_id: "", task_id: "", per_page: 15, mine: false })}>
+              <FiFilter aria-hidden="true" />
+              Clear
+            </button>
+            <button type="button" onClick={loadUploads}>
+              <FiRefreshCw aria-hidden="true" />
+              Apply
+            </button>
           </div>
         </div>
+
+        <div className="owner-upload-filter-panel">
+          <label>
+            <span>Scope</span>
+            <select value={filters.scope} onChange={(event) => updateFilter("scope", event.target.value)}>
+              <option value="">All scopes</option>
+              {scopeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Visibility</span>
+            <select value={filters.visibility} onChange={(event) => updateFilter("visibility", event.target.value)}>
+              <option value="">All visibility</option>
+              {visibilityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Project</span>
+            <select value={filters.project_id} onChange={(event) => updateFilter("project_id", event.target.value)}>
+              <option value="">All projects</option>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Task ID</span>
+            <input value={filters.task_id} onChange={(event) => updateFilter("task_id", event.target.value)} placeholder="Any task" />
+          </label>
+          <label>
+            <span>Per page</span>
+            <select value={filters.per_page} onChange={(event) => updateFilter("per_page", event.target.value)}>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <label className="owner-upload-checkbox">
+            <input checked={filters.mine} type="checkbox" onChange={(event) => updateFilter("mine", event.target.checked)} />
+            <span>Mine only</span>
+          </label>
+        </div>
+
         <div className="owner-upload-table-wrap">
           <div className="container--scroll-x">
             <table className="owner-upload-table">
               <thead>
                 <tr>
                   <th>File Name</th>
-                  <th>Type</th>
+                  <th>Scope</th>
+                  <th>Visibility</th>
                   <th>Uploaded Date</th>
                   <th>Source</th>
-                  <th />
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredAssets.length === 0 ? (
-                  <tr><td colSpan="5">{isLoading ? "Loading uploads from API..." : "No uploaded files found for this project."}</td></tr>
+                {!filteredAssets.length ? (
+                  <tr><td colSpan="6">{isLoading ? "Loading uploads from API..." : "No uploaded files found."}</td></tr>
                 ) : filteredAssets.map((asset) => (
                   <tr key={asset.id || asset.path || asset.name}>
                     <td><FileIcon category={asset.category} /><span>{asset.name}</span></td>
-                    <td>{asset.type}</td>
+                    <td>{formatLabel(asset.scope)}</td>
+                    <td>
+                      <span className="owner-upload-visibility">
+                        {asset.visibility === "private" ? <FiLock aria-hidden="true" /> : <FiShare2 aria-hidden="true" />}
+                        {formatLabel(asset.visibility)}
+                      </span>
+                    </td>
                     <td>{asset.date}</td>
-                    <td><div className="owner-upload-tags"><span>{asset.categoryLabel}</span></div></td>
-                    <td>{asset.url ? <a href={asset.url} target="_blank" rel="noreferrer">Open</a> : <button type="button">Indexed</button>}</td>
+                    <td><div className="owner-upload-tags"><span>{asset.sourceLabel}</span></div></td>
+                    <td>
+                      <div className="owner-upload-row-actions">
+                        <button type="button" title="Preview file" onClick={() => handlePreview(asset)}><FiEye aria-hidden="true" /></button>
+                        <button type="button" title="Download file" onClick={() => handleDownload(asset)}><FiDownload aria-hidden="true" /></button>
+                        <button type="button" title="View AI results" onClick={() => handleViewAiResults(asset)}><FiMonitor aria-hidden="true" /></button>
+                        <button type="button" title="Manage permissions" onClick={() => setPermissionsModal(asset)}><FiShare2 aria-hidden="true" /></button>
+                        <button className="owner-upload-danger" type="button" title="Delete file" onClick={() => handleDelete(asset)}><FiTrash2 aria-hidden="true" /></button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -228,7 +499,233 @@ export default function UploadCenterWorkspace() {
           </div>
         </div>
       </section>
+
+      {permissionsModal ? (
+        <PermissionsModal
+          asset={permissionsModal}
+          users={shareUsers}
+          onClose={() => setPermissionsModal(null)}
+          onSaved={() => {
+            setPermissionsModal(null);
+            setStatus({ type: "success", message: "Permissions updated successfully." });
+            loadUploads();
+          }}
+          onError={(message) => setStatus({ type: "error", message })}
+        />
+      ) : null}
+
+      {aiResultsModal ? (
+        <AiResultsModal
+          state={aiResultsModal}
+          onClose={() => setAiResultsModal(null)}
+        />
+      ) : null}
+
+      {previewModal ? (
+        <PreviewModal
+          state={previewModal}
+          onClose={closePreview}
+        />
+      ) : null}
     </section>
+  );
+}
+
+function PreviewModal({ state, onClose }) {
+  const contentType = String(state.contentType || "").toLowerCase();
+  const filename = state.filename || state.asset?.name || "File preview";
+  const extension = String(filename).split(".").pop()?.toLowerCase() || "";
+  const isPdf = contentType.includes("pdf") || extension === "pdf";
+  const isImage = contentType.startsWith("image/");
+  const isVideo = contentType.startsWith("video/");
+  const isAudio = contentType.startsWith("audio/");
+  const isText = contentType.startsWith("text/") || ["txt", "md", "csv", "json", "log"].includes(extension);
+  const [textContent, setTextContent] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!state.blob || !isText) {
+      setTextContent("");
+      return undefined;
+    }
+
+    state.blob.text().then((value) => {
+      if (!cancelled) setTextContent(value);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state.blob, isText]);
+
+  return (
+    <div className="owner-upload-modal-layer" role="presentation">
+      <button className="owner-upload-modal-backdrop" type="button" aria-label="Close preview modal" onClick={onClose} />
+      <section className="owner-upload-permissions-modal owner-upload-preview-modal" role="dialog" aria-modal="true" aria-labelledby="upload-preview-title">
+        <header>
+          <div>
+            <h2 id="upload-preview-title">File preview</h2>
+            <p>{filename}</p>
+          </div>
+          <button type="button" aria-label="Close preview modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+        </header>
+
+        {state.isLoading ? <p>Loading preview...</p> : null}
+        {state.error ? <p className="auth-alert auth-alert--error">{state.error}</p> : null}
+
+        {!state.isLoading && !state.error && state.url ? (
+          <div className="owner-upload-preview-body">
+            {isPdf ? <iframe title={filename} src={state.url} /> : null}
+            {isImage ? <img alt={filename} src={state.url} /> : null}
+            {isVideo ? <video controls src={state.url} /> : null}
+            {isAudio ? <audio controls src={state.url} /> : null}
+            {isText ? <pre>{textContent || "Loading text..."}</pre> : null}
+            {!isPdf && !isImage && !isVideo && !isAudio && !isText ? (
+              <div className="owner-upload-preview-fallback">
+                <FiFileText aria-hidden="true" />
+                <p>Preview is not available for this file type.</p>
+                <a href={state.url} download={filename}>Download file</a>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
+    </div>
+  );
+}
+
+function AiResultsModal({ state, onClose }) {
+  const upload = state.upload || {};
+  const summary = upload.summary || null;
+  const decisions = Array.isArray(upload.decisions) ? upload.decisions : [];
+  const tasks = Array.isArray(upload.tasks) ? upload.tasks : [];
+  const chunks = Array.isArray(upload.chunks) ? upload.chunks : [];
+
+  return (
+    <div className="owner-upload-modal-layer" role="presentation">
+      <button className="owner-upload-modal-backdrop" type="button" aria-label="Close AI results modal" onClick={onClose} />
+      <section className="owner-upload-permissions-modal owner-upload-ai-modal" role="dialog" aria-modal="true" aria-labelledby="upload-ai-results-title">
+        <header>
+          <div>
+            <h2 id="upload-ai-results-title">AI results</h2>
+            <p>{state.asset?.name || upload.original_name || "Uploaded file"}</p>
+          </div>
+          <button type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+        </header>
+
+        {state.isLoading ? <p>Loading AI results...</p> : null}
+        {state.error ? <p className="auth-alert auth-alert--error">{state.error}</p> : null}
+
+        {!state.isLoading && !state.error ? (
+          <div className="owner-upload-ai-results">
+            <section>
+              <h3>Processing</h3>
+              <p>{formatLabel(upload.processing_status || "unknown")}</p>
+              {upload.processing_error ? <p className="auth-alert auth-alert--error">{upload.processing_error}</p> : null}
+            </section>
+            <section>
+              <h3>Summary</h3>
+              <p>{summary?.summary || "No summary available yet."}</p>
+            </section>
+            <section>
+              <h3>Transcript</h3>
+              <pre>{summary?.transcript || "No transcript available yet."}</pre>
+            </section>
+            <section>
+              <h3>Decisions</h3>
+              {decisions.length ? (
+                <ul>{decisions.map((item) => <li key={item.id}>{item.decision_text}</li>)}</ul>
+              ) : <p>No decisions extracted.</p>}
+            </section>
+            <section>
+              <h3>Tasks</h3>
+              {tasks.length ? (
+                <ul>{tasks.map((item) => <li key={item.id}>{item.task_text} <small>{formatLabel(item.status)}</small></li>)}</ul>
+              ) : <p>No tasks extracted.</p>}
+            </section>
+            <section>
+              <h3>Knowledge chunks</h3>
+              {chunks.length ? (
+                <ul>{chunks.map((item) => <li key={item.id}>{item.content}</li>)}</ul>
+              ) : <p>No chunks available.</p>}
+            </section>
+          </div>
+        ) : null}
+      </section>
+    </div>
+  );
+}
+
+function UserPicker({ users, selectedIds, onToggle }) {
+  return (
+    <fieldset className="owner-upload-user-picker">
+      <legend>Shared with</legend>
+      {!users.length ? <p>No users available for selected sharing.</p> : users.map((user) => (
+        <label key={user.id}>
+          <input checked={selectedIds.includes(user.id)} type="checkbox" onChange={() => onToggle(user.id)} />
+          <span>{user.initials}</span>
+          <b>{user.name}</b>
+          <small>{user.email}</small>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function PermissionsModal({ asset, users, onClose, onError, onSaved }) {
+  const currentIds = getSharedUserIds(asset);
+  const [selectedIds, setSelectedIds] = useState(currentIds);
+  const [accessLevel, setAccessLevel] = useState("view");
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function savePermissions(event) {
+    event.preventDefault();
+    setIsSaving(true);
+    try {
+      await updateUploadPermissions(asset.id, {
+        user_ids: selectedIds,
+        shared_with_user_ids: selectedIds,
+        access_level: accessLevel
+      });
+      const removedIds = currentIds.filter((id) => !selectedIds.includes(id));
+      await Promise.all(removedIds.map((userId) => deleteUploadPermission(asset.id, userId)));
+      onSaved();
+    } catch (error) {
+      onError(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="owner-upload-modal-layer" role="presentation">
+      <button className="owner-upload-modal-backdrop" type="button" aria-label="Close permissions modal" onClick={onClose} />
+      <form className="owner-upload-permissions-modal" role="dialog" aria-modal="true" aria-labelledby="upload-permissions-title" onSubmit={savePermissions}>
+        <header>
+          <div>
+            <h2 id="upload-permissions-title">File permissions</h2>
+            <p>{asset.name}</p>
+          </div>
+          <button type="button" aria-label="Close permissions modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+        </header>
+        <label className="owner-upload-access-level">
+          <span>Access level</span>
+          <select value={accessLevel} onChange={(event) => setAccessLevel(event.target.value)}>
+            <option value="view">View</option>
+            <option value="manage">Manage</option>
+          </select>
+        </label>
+        <UserPicker
+          users={users}
+          selectedIds={selectedIds}
+          onToggle={(userId) => setSelectedIds((current) => current.includes(userId) ? current.filter((id) => id !== userId) : [...current, userId])}
+        />
+        <footer>
+          <button type="button" onClick={onClose}>Cancel</button>
+          <button type="submit" disabled={isSaving}>{isSaving ? "Saving..." : "Save permissions"}</button>
+        </footer>
+      </form>
+    </div>
   );
 }
 
@@ -251,18 +748,45 @@ function normalizeProject(project) {
   return { id: String(project.id || project.uuid || ""), name: project.name || project.title || "Untitled project" };
 }
 
+function normalizeShareUser(user) {
+  const value = user.user || user;
+  const name = value.name || value.full_name || value.email || "User";
+  return {
+    id: String(value.id || value.user_id || ""),
+    name,
+    email: value.email || "",
+    initials: getInitials(name)
+  };
+}
+
 function normalizeAsset(asset) {
   const name = asset.name || asset.original_name || asset.file_name || getNameFromPath(asset.path || asset.url) || "Uploaded file";
   const category = String(asset.category || inferCategory(name)).toLowerCase();
+  const scope = String(asset.scope || "personal").toLowerCase();
+  const visibility = String(asset.visibility || "private").toLowerCase();
+  const projectName = asset.project?.name || asset.project_name || "";
+  const sourceLabel = projectName || asset.task_id || scope;
+
   return {
     ...asset,
+    id: asset.id || asset.upload_id || asset.uuid,
     name,
     category,
-    categoryLabel: formatLabel(category),
+    scope,
+    visibility,
+    project_name: projectName,
+    sourceLabel: formatLabel(sourceLabel),
     type: asset.type || asset.mime_type || formatLabel(category),
     date: formatDate(asset.created_at || asset.uploaded_at || asset.date),
     url: asset.url || asset.public_url || asset.path || ""
   };
+}
+
+function getSharedUserIds(asset) {
+  return [asset.shared_with_user_ids, asset.shared_users, asset.users, asset.permissions]
+    .flatMap((collection) => Array.isArray(collection) ? collection : [])
+    .map((item) => String(item.user_id || item.id || item.user?.id || item))
+    .filter(Boolean);
 }
 
 function inferCategory(name) {
@@ -275,6 +799,28 @@ function inferCategory(name) {
 
 function getNameFromPath(path) {
   return String(path || "").split(/[\\/]/).pop();
+}
+
+function getInitials(value) {
+  return String(value || "User")
+    .split(/\s|@/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+}
+
+function cleanObject(value) {
+  return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== null && item !== ""));
+}
+
+function triggerDownload(url, filename) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 function formatLabel(value) {

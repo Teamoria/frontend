@@ -4,8 +4,13 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_ORIGIN ||
   "http://localhost:8000";
+const UPLOAD_API_BASE_URL = import.meta.env.VITE_UPLOAD_API_BASE_URL || API_BASE_URL;
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
+const INTERNAL_API_KEY = import.meta.env.VITE_INTERNAL_API_KEY || import.meta.env.VITE_AI_INTERNAL_API_KEY || "";
+const INTERNAL_USER_ID = import.meta.env.VITE_INTERNAL_USER_ID || "";
+const INTERNAL_USER_ROLE = import.meta.env.VITE_INTERNAL_USER_ROLE || "";
+const INTERNAL_COMPANY_ID = import.meta.env.VITE_INTERNAL_COMPANY_ID || "";
 const TOKEN_KEY = "teamoria_access_token";
 const USER_KEY = "teamoria_current_user";
 
@@ -97,6 +102,21 @@ function demoPagination(items, page = 1) {
 function buildUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   const cleanBaseUrl = getRuntimeApiBaseUrl().replace(/\/$/, "");
+
+  if (cleanPath.startsWith("/api/")) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
+
+  if (cleanBaseUrl.endsWith(`/api/${API_VERSION}`)) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
+
+  return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
+}
+
+function buildUploadUrl(path) {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const cleanBaseUrl = UPLOAD_API_BASE_URL.replace(/\/$/, "");
 
   if (cleanPath.startsWith("/api/")) {
     return `${cleanBaseUrl}${cleanPath}`;
@@ -266,7 +286,13 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
   const payload = await response.json().catch(() => null);
 
   if (!response.ok || payload?.success === false) {
-    let message = payload?.message || "Something went wrong. Please try again.";
+    let message = payload?.message || payload?.detail || "Something went wrong. Please try again.";
+
+    if (Array.isArray(payload?.detail)) {
+      message = payload.detail
+        .map((item) => item.msg || item.message || JSON.stringify(item))
+        .join("\n");
+    }
 
     // Teamoria API returns validation errors in payload.data when error_code is VALIDATION_ERROR
     // Format: { data: { field: ["error1", "error2"], ... }, error_code: "VALIDATION_ERROR" }
@@ -332,6 +358,72 @@ export async function loginWithEmail({ email, password }) {
 
 export function getApiHealth() {
   return apiRequest("/api/health");
+}
+
+export function getConfiguredApiBaseUrl() {
+  return getRuntimeApiBaseUrl().replace(/\/$/, "");
+}
+
+export function getConfiguredUploadApiBaseUrl() {
+  return UPLOAD_API_BASE_URL.replace(/\/$/, "");
+}
+
+export function getInternalCompanyId() {
+  return INTERNAL_COMPANY_ID;
+}
+
+async function uploadApiRequest(path, { method = "GET", body, auth = false, query } = {}) {
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  const headers = { Accept: "application/json" };
+
+  if (body && !isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  addTemporaryInternalHeaders(headers);
+
+  if (auth) {
+    const token = getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  const url = new URL(buildUploadUrl(path));
+
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item !== undefined && item !== null && item !== "") {
+            url.searchParams.append(key, item);
+          }
+        });
+      } else if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, value);
+      }
+    });
+  }
+
+  const response = await fetch(url.toString(), {
+    method,
+    headers,
+    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || payload?.success === false) {
+    let message = payload?.message || payload?.detail || "Something went wrong. Please try again.";
+
+    if (Array.isArray(payload?.detail)) {
+      message = payload.detail.map((item) => item.msg || item.message || JSON.stringify(item)).join("\n");
+    }
+
+    throw new ApiError(message, { status: response.status, payload });
+  }
+
+  return payload;
 }
 
 export async function loginWithGoogle(providerToken) {
@@ -446,30 +538,126 @@ export async function updateProfile(body) {
   });
 }
 
-export function uploadFiles({ files, project_id, category }) {
+async function apiBlobRequest(path, { auth = true, upload = false } = {}) {
+  const headers = { Accept: "*/*" };
+
+  if (API_KEY) {
+    headers["x-api-key"] = API_KEY;
+  }
+
+  if (upload) {
+    addTemporaryInternalHeaders(headers);
+  }
+
+  if (auth) {
+    const token = getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  const response = await fetch(upload ? buildUploadUrl(path) : buildUrl(path), { method: "GET", headers });
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!response.ok) {
+    const payload = contentType.includes("application/json") ? await response.json().catch(() => null) : null;
+    throw new ApiError(payload?.message || "Unable to download file.", { status: response.status, payload });
+  }
+
+  if (contentType.includes("application/json")) {
+    return response.json();
+  }
+
+  const disposition = response.headers.get("content-disposition") || "";
+  const filenameMatch = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+
+  return {
+    blob: await response.blob(),
+    filename: filenameMatch ? decodeURIComponent(filenameMatch[1]) : "download"
+  };
+}
+
+function addTemporaryInternalHeaders(headers) {
+  if (INTERNAL_API_KEY) headers["X-Internal-API-Key"] = INTERNAL_API_KEY;
+  if (INTERNAL_USER_ID) headers["X-User-Id"] = INTERNAL_USER_ID;
+  if (INTERNAL_USER_ROLE) headers["X-User-Role"] = INTERNAL_USER_ROLE;
+  if (INTERNAL_COMPANY_ID) headers["X-Company-Id"] = INTERNAL_COMPANY_ID;
+}
+
+export function uploadFiles({
+  files,
+  scope = "personal",
+  visibility = "private",
+  company_id,
+  project_id,
+  task_id,
+  shared_with_user_ids,
+  category
+}) {
   const formData = new FormData();
   const fileList = Array.from(files || []);
 
   fileList.forEach((file) => {
-    formData.append("files[]", file);
+    formData.append("files", file);
   });
 
-  formData.append("project_id", project_id);
-  formData.append("category", category);
+  formData.append("scope", scope);
+  formData.append("visibility", visibility);
 
-  return apiRequest("/uploads", {
+  if (company_id) formData.append("company_id", company_id);
+  if (project_id) formData.append("project_id", project_id);
+  if (task_id) formData.append("task_id", task_id);
+  if (category) formData.append("category", category);
+
+  Array.from(shared_with_user_ids || []).forEach((userId) => {
+    formData.append("shared_with_user_ids[]", userId);
+  });
+
+  return uploadApiRequest("/uploads", {
     method: "POST",
     auth: true,
     body: formData
   });
 }
 
-export function listUploads() {
-  return apiRequest("/uploads/list", { auth: true });
+export function listUploads(filters = {}) {
+  return uploadApiRequest("/uploads", { auth: true, query: filters });
 }
 
-export function listProjectUploads(projectId) {
-  return apiRequest(`/uploads/${projectId}/list`, { auth: true });
+export function listUploadCollection(filters = {}) {
+  return uploadApiRequest("/uploads/list", { auth: true, query: filters });
+}
+
+export function listMyUploads(filters = {}) {
+  return uploadApiRequest("/uploads/mine", { auth: true, query: filters });
+}
+
+export function listProjectUploads(projectId, filters = {}) {
+  return uploadApiRequest(`/uploads/${projectId}/list`, { auth: true, query: filters });
+}
+
+export function getUpload(uploadId) {
+  return uploadApiRequest(`/uploads/${uploadId}`, { auth: true });
+}
+
+export function downloadUpload(uploadId) {
+  return apiBlobRequest(`/uploads/${uploadId}/download`, { auth: true, upload: true });
+}
+
+export function previewUpload(uploadId) {
+  return apiBlobRequest(`/uploads/${uploadId}/download`, { auth: true, upload: true });
+}
+
+export function deleteUpload(uploadId) {
+  return uploadApiRequest(`/uploads/${uploadId}`, { method: "DELETE", auth: true });
+}
+
+export function updateUploadPermissions(uploadId, body) {
+  return uploadApiRequest(`/uploads/${uploadId}/permissions`, { method: "POST", auth: true, body });
+}
+
+export function deleteUploadPermission(uploadId, userId) {
+  return uploadApiRequest(`/uploads/${uploadId}/permissions/${userId}`, { method: "DELETE", auth: true });
 }
 
 export function listUsers({ page, archived } = {}) {
