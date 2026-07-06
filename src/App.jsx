@@ -21,6 +21,7 @@ import OwnerProjectsPage from "./pages/OwnerProjectsPage.jsx";
 import OwnerUploadCenterPage from "./pages/OwnerUploadCenterPage.jsx";
 import OwnerUploadedFilesPage from "./pages/OwnerUploadedFilesPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import NotificationsPage from "./pages/NotificationsPage.jsx";
 import SuperAdminConsolePage from "./pages/SuperAdminConsolePage.jsx";
 import SuperAdminCompaniesPage from "./pages/SuperAdminCompaniesPage.jsx";
 import SuperAdminUsersPage from "./pages/SuperAdminUsersPage.jsx";
@@ -35,7 +36,8 @@ const adminRoutes = new Set([
   "/super-admin/companies",
   "/super-admin/users",
   "/super-admin/payments",
-  "/super-admin/profile"
+  "/super-admin/profile",
+  "/super-admin/notifications"
 ]);
 
 const workspaceRoutes = new Set([
@@ -58,7 +60,8 @@ const workspaceRoutes = new Set([
   "/ower/team-performance",
   "/ower /team-performance",
   "/reports",
-  "/profile"
+  "/profile",
+  "/notifications"
 ]);
 
 const companyOwnerRoutes = new Set([
@@ -69,7 +72,8 @@ const companyOwnerRoutes = new Set([
   "/owner/uploads",
   "/owner/uploads/files",
   "/ai-chat",
-  "/profile"
+  "/profile",
+  "/notifications"
 ]);
 
 const companyManagerRoutes = new Set([
@@ -78,7 +82,8 @@ const companyManagerRoutes = new Set([
   "/tasks",
   "/uploads",
   "/ai-chat",
-  "/profile"
+  "/profile",
+  "/notifications"
 ]);
 
 const companyMemberRoutes = new Set([
@@ -86,7 +91,8 @@ const companyMemberRoutes = new Set([
   "/tasks",
   "/uploads",
   "/ai-chat",
-  "/profile"
+  "/profile",
+  "/notifications"
 ]);
 
 const routes = {
@@ -115,11 +121,13 @@ const routes = {
   "/ower /team-performance": TeamPerformanceOversightPage,
   "/reports": ReportsPage,
   "/profile": ProfilePage,
+  "/notifications": NotificationsPage,
   "/super-admin": SuperAdminConsolePage,
   "/super-admin/companies": SuperAdminCompaniesPage,
   "/super-admin/users": SuperAdminUsersPage,
   "/super-admin/payments": SuperAdminPaymentsPage,
-  "/super-admin/profile": SuperAdminProfilePage
+  "/super-admin/profile": SuperAdminProfilePage,
+  "/super-admin/notifications": NotificationsPage
 };
 
 function getPath() {

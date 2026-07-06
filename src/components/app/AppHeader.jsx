@@ -1,21 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  FiAlertTriangle,
   FiBell,
-  FiCheckCircle,
   FiLogOut,
   FiMenu,
   FiSearch,
   FiUser
 } from "react-icons/fi";
+import {
+  getUnreadNotificationsCount,
+  listNotifications,
+  markAllNotificationsRead,
+  markNotificationRead
+} from "../../lib/api.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
+import {
+  extractNotifications,
+  extractUnreadCount,
+  formatNotificationTime,
+  isNotificationsRouteUnavailable,
+  notificationIconByType
+} from "../../lib/notifications.js";
 import "../../styles/app-header.css";
-
-const defaultNotifications = [
-  { title: "New task assigned", text: "You received a new task in the onboarding project.", time: "5m ago", tone: "info", icon: FiBell },
-  { title: "Deadline approaching", text: "The launch checklist needs review soon.", time: "28m ago", tone: "warning", icon: FiAlertTriangle },
-  { title: "Update approved", text: "Your weekly update was approved by the team lead.", time: "1h ago", tone: "success", icon: FiCheckCircle }
-];
 
 export default function AppHeader({
   classNamePrefix = "product",
@@ -27,11 +32,41 @@ export default function AppHeader({
   const { logout, user: authUser } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsError, setNotificationsError] = useState("");
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const menuRef = useRef(null);
   const notificationsRef = useRef(null);
   const displayName = authUser?.name || authUser?.email || user || profile?.label || "Teamoria User";
   const displayRole = role || profile?.label || authUser?.role || "Workspace Member";
   const initials = getInitials(displayName || profile?.initials);
+
+  async function loadNotifications({ silent = false } = {}) {
+    if (!silent) {
+      setNotificationsLoading(true);
+    }
+    setNotificationsError("");
+
+    try {
+      const [notificationsPayload, countPayload] = await Promise.all([
+        listNotifications(),
+        getUnreadNotificationsCount()
+      ]);
+
+      const nextNotifications = extractNotifications(notificationsPayload);
+      setNotifications(nextNotifications);
+      setUnreadCount(extractUnreadCount(countPayload));
+    } catch (error) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setNotificationsError(isNotificationsRouteUnavailable(error) ? "" : error.message || "Unable to load notifications.");
+    } finally {
+      if (!silent) {
+        setNotificationsLoading(false);
+      }
+    }
+  }
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -63,6 +98,81 @@ export default function AppHeader({
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialNotifications() {
+      setNotificationsLoading(true);
+      setNotificationsError("");
+
+      try {
+        const [notificationsPayload, countPayload] = await Promise.all([
+          listNotifications(),
+          getUnreadNotificationsCount()
+        ]);
+
+        if (!isMounted) return;
+
+        const nextNotifications = extractNotifications(notificationsPayload);
+        setNotifications(nextNotifications);
+        setUnreadCount(extractUnreadCount(countPayload));
+      } catch (error) {
+        if (!isMounted) return;
+        setNotifications([]);
+        setUnreadCount(0);
+        setNotificationsError(isNotificationsRouteUnavailable(error) ? "" : error.message || "Unable to load notifications.");
+      } finally {
+        if (isMounted) setNotificationsLoading(false);
+      }
+    }
+
+    loadInitialNotifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleNotificationClick(notification) {
+    if (!notification.is_read) {
+      setNotifications((current) => current.map((item) => (
+        item.id === notification.id ? { ...item, is_read: true } : item
+      )));
+      setUnreadCount((current) => Math.max(0, current - 1));
+
+      try {
+        await markNotificationRead(notification.id);
+      } catch (error) {
+        if (!isNotificationsRouteUnavailable(error)) {
+          setNotificationsError(error.message || "Unable to mark notification as read.");
+        }
+      }
+    }
+
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    }
+  }
+
+  async function handleMarkAllRead() {
+    setNotificationsError("");
+
+    try {
+      await markAllNotificationsRead();
+      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      if (!isNotificationsRouteUnavailable(error)) {
+        setNotificationsError(error.message || "Unable to mark notifications as read.");
+      }
+    }
+  }
+
+  function openAllNotifications() {
+    setIsNotificationsOpen(false);
+    window.location.hash = "/notifications";
+  }
+
   return (
     <header className={`${classNamePrefix}-topbar app-header`}>
       <button className="mobile-nav-toggle" type="button" aria-label="Open navigation menu" onClick={onMobileNavToggle}>
@@ -86,31 +196,35 @@ export default function AppHeader({
             }}
           >
             <FiBell aria-hidden="true" />
-            <span>3</span>
+            {unreadCount > 0 ? <span>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
           </button>
 
           {isNotificationsOpen ? (
             <section className="dashboard-notifications-panel" aria-label="Notifications panel">
               <header>
                 <h3>Notifications</h3>
-                <button type="button">Mark all as read</button>
+                {notifications.length > 0 || unreadCount > 0 ? (
+                  <button type="button" onClick={handleMarkAllRead} disabled={unreadCount === 0 || notificationsLoading}>
+                    Mark all as read
+                  </button>
+                ) : null}
               </header>
               <div className="dashboard-notifications-list">
-                {defaultNotifications.map(({ icon: Icon, text, time, title, tone }) => (
-                  <article className={`dashboard-notification-item tone-${tone}`} key={title}>
-                    <span>
-                      <Icon aria-hidden="true" />
-                    </span>
-                    <div>
-                      <h4>{title}</h4>
-                      <p>{text}</p>
-                      <time>{time}</time>
-                    </div>
-                  </article>
-                ))}
+                {notificationsLoading ? <NotificationSkeleton /> : null}
+                {!notificationsLoading && notificationsError ? (
+                  <div className="dashboard-notifications-error">
+                    <h4>Could not load notifications</h4>
+                    <p>{notificationsError}</p>
+                    <button type="button" onClick={() => loadNotifications()}>Retry</button>
+                  </div>
+                ) : null}
+                {!notificationsLoading && !notificationsError && notifications.length === 0 ? <NotificationEmptyState /> : null}
+                {!notificationsLoading && !notificationsError && notifications.length > 0 ? (
+                  <NotificationSections notifications={notifications.slice(0, 8)} onOpen={handleNotificationClick} />
+                ) : null}
               </div>
               <footer>
-                <button type="button">View all notifications</button>
+                <button type="button" onClick={openAllNotifications}>View all notifications</button>
               </footer>
             </section>
           ) : null}
@@ -169,6 +283,97 @@ export default function AppHeader({
       </div>
     </header>
   );
+}
+
+function NotificationEmptyState() {
+  return (
+    <div className="dashboard-notifications-empty">
+      <span aria-hidden="true">
+        <FiBell />
+      </span>
+      <h4>No notifications yet</h4>
+      <p>New updates about tasks, files, and AI activity will appear here.</p>
+    </div>
+  );
+}
+
+function NotificationSections({ notifications, onOpen }) {
+  const groups = groupNotificationsByDay(notifications);
+
+  return groups.map((group) => (
+    <section className="dashboard-notifications-section" key={group.label}>
+      <h4>{group.label}</h4>
+      <div>
+        {group.items.map((notification) => {
+          const Icon = notificationIconByType[notification.type] || FiBell;
+          return (
+            <button
+              className={`dashboard-notification-item tone-${notification.type} ${notification.is_read ? "is-read" : "is-unread"}`}
+              key={notification.id}
+              type="button"
+              onClick={() => onOpen(notification)}
+            >
+              <span>
+                <Icon aria-hidden="true" />
+              </span>
+              <div>
+                <h5>{notification.title}</h5>
+                <p>{notification.message}</p>
+                <time>{formatNotificationTime(notification.created_at)}</time>
+              </div>
+              {!notification.is_read ? <i aria-label="Unread notification" /> : null}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  ));
+}
+
+function NotificationSkeleton() {
+  return (
+    <div className="dashboard-notifications-skeleton" aria-label="Loading notifications">
+      {[0, 1, 2].map((item) => (
+        <div key={item}>
+          <span />
+          <p />
+          <p />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function groupNotificationsByDay(notifications) {
+  const groups = [
+    { label: "Today", items: [] },
+    { label: "Yesterday", items: [] },
+    { label: "Earlier", items: [] }
+  ];
+  const now = new Date();
+  const todayKey = getDateKey(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const yesterdayKey = getDateKey(yesterday);
+
+  notifications.forEach((notification) => {
+    const date = new Date(notification.created_at);
+    const key = Number.isNaN(date.getTime()) ? "" : getDateKey(date);
+
+    if (key === todayKey) {
+      groups[0].items.push(notification);
+    } else if (key === yesterdayKey) {
+      groups[1].items.push(notification);
+    } else {
+      groups[2].items.push(notification);
+    }
+  });
+
+  return groups.filter((group) => group.items.length > 0);
+}
+
+function getDateKey(date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
 function getInitials(value) {

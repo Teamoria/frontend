@@ -2291,3 +2291,1246 @@ body > .employees-modal-overlay .employees-modal footer {
   }
 }
 
+/* Centered employee profile modal. */
+body > .employee-profile-overlay {
+  align-items: center !important;
+  animation: modalBackdropIn var(--modal-open-dur) var(--modal-ease) both !important;
+  background: rgba(15, 23, 42, 0.25) !important;
+  backdrop-filter: blur(2px) !important;
+  display: flex !important;
+  inset: 0 !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  padding: 24px !important;
+  position: fixed !important;
+  z-index: 2147483000 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-modal {
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both !important;
+  background: #f6f8fc !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 18px !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  margin: 0 !important;
+  max-height: 88vh !important;
+  max-width: calc(100vw - 48px) !important;
+  overflow: hidden !important;
+  width: min(860px, calc(100vw - 48px)) !important;
+}
+
+body > .employee-profile-overlay .employee-profile-modal-head {
+  align-items: flex-start !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #edf1f7 !important;
+  display: grid !important;
+  gap: 18px !important;
+  grid-template-columns: 1fr !important;
+  min-height: 0 !important;
+  padding: 24px !important;
+  position: relative !important;
+}
+
+body > .employee-profile-overlay .employee-profile-modal-head::before {
+  background: #244bd4;
+  content: "";
+  inset: 0 auto 0 0;
+  position: absolute;
+  width: 4px;
+}
+
+body > .employee-profile-overlay .employee-profile-header-top {
+  align-items: flex-start !important;
+  display: grid !important;
+  gap: 18px !important;
+  grid-template-columns: minmax(0, 1fr) 36px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+body > .employee-profile-overlay .employee-profile-header-main {
+  align-items: start !important;
+  display: grid !important;
+  gap: 18px !important;
+  grid-template-columns: 76px minmax(0, 1fr) !important;
+  min-width: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-avatar {
+  background: #eef4ff !important;
+  border: 1px solid #dbe6ff !important;
+  border-radius: 18px !important;
+  box-shadow: none !important;
+  height: 76px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  width: 76px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-avatar span {
+  align-items: center !important;
+  background: #244bd4 !important;
+  border-radius: 17px !important;
+  color: #ffffff !important;
+  display: flex !important;
+  font-size: 22px !important;
+  font-weight: 950 !important;
+  height: 100% !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+body > .employee-profile-overlay .employee-profile-avatar i {
+  background: #16a34a !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  bottom: -2px !important;
+  height: 14px !important;
+  position: absolute !important;
+  right: -2px !important;
+  width: 14px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-title-block,
+body > .employee-profile-overlay .employee-profile-title-row {
+  min-width: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-title-block {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-title-row {
+  align-items: flex-start !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  row-gap: 9px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-title-row h2 {
+  color: #111827 !important;
+  flex-basis: 100% !important;
+  font-size: 24px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+body > .employee-profile-overlay .employee-profile-title-row .employees-role-pill {
+  align-items: center !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+  min-height: 25px !important;
+  padding: 6px 9px !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
+
+body > .employee-profile-overlay .employee-profile-status {
+  align-items: center !important;
+  align-self: auto !important;
+  background: #ecfdf3 !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 999px !important;
+  color: #15803d !important;
+  display: inline-flex !important;
+  font-size: 11px !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  gap: 6px !important;
+  line-height: 1 !important;
+  padding: 6px 9px !important;
+  white-space: nowrap !important;
+}
+
+body > .employee-profile-overlay .employee-profile-status i {
+  background: currentColor !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+  height: 7px !important;
+  width: 7px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-status--pending,
+body > .employee-profile-overlay .employee-profile-status--invited {
+  background: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-status--inactive,
+body > .employee-profile-overlay .employee-profile-status--suspended,
+body > .employee-profile-overlay .employee-profile-status--archived {
+  background: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+body > .employee-profile-overlay .employee-profile-contact-line {
+  align-items: center !important;
+  color: #667085 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px 16px !important;
+  margin-top: 0 !important;
+  min-width: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-contact-line a,
+body > .employee-profile-overlay .employee-profile-contact-line span {
+  align-items: center !important;
+  color: #667085 !important;
+  display: inline-flex !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+  overflow-wrap: anywhere !important;
+  text-decoration: none !important;
+}
+
+body > .employee-profile-overlay .employee-profile-contact-line svg {
+  color: #244bd4 !important;
+  flex: 0 0 auto !important;
+  height: 15px !important;
+  width: 15px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-close {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 10px !important;
+  color: #475467 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  height: 36px !important;
+  justify-content: center !important;
+  width: 36px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-close:hover,
+body > .employee-profile-overlay .employee-profile-close:focus-visible {
+  background: #f4f7ff !important;
+  border-color: #c8d7fb !important;
+  color: #244bd4 !important;
+  outline: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-scroll {
+  background: #f6f8fc !important;
+  display: grid !important;
+  flex: 1 1 auto !important;
+  gap: 16px !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 18px 20px 22px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-actions {
+  align-items: center !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  grid-template-columns: none !important;
+  padding-left: 94px !important;
+  width: 100% !important;
+}
+
+body > .employee-profile-overlay .employee-profile-actions button,
+body > .employee-profile-overlay .employee-profile-actions a {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  color: #243047 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  gap: 8px !important;
+  justify-content: center !important;
+  min-height: 38px !important;
+  padding: 0 13px !important;
+  text-decoration: none !important;
+}
+
+body > .employee-profile-overlay .employee-profile-actions button:first-child {
+  background: #244bd4 !important;
+  border-color: #244bd4 !important;
+  color: #ffffff !important;
+}
+
+body > .employee-profile-overlay .employee-profile-actions button:hover,
+body > .employee-profile-overlay .employee-profile-actions a:hover,
+body > .employee-profile-overlay .employee-profile-actions button:focus-visible,
+body > .employee-profile-overlay .employee-profile-actions a:focus-visible {
+  border-color: #c8d7fb !important;
+  box-shadow: 0 0 0 3px rgba(36, 75, 212, 0.12) !important;
+  outline: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-tabs {
+  align-items: center !important;
+  border-bottom: 1px solid #dbe3ef !important;
+  display: flex !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+  padding-bottom: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-tabs button {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  color: #667085 !important;
+  cursor: pointer !important;
+  flex: 0 0 auto !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  padding: 11px 12px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-tabs button.is-active {
+  border-bottom-color: #244bd4 !important;
+  color: #244bd4 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-tabs button:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(36, 75, 212, 0.2) !important;
+  outline: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-card-grid {
+  display: grid !important;
+  gap: 14px !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+body > .employee-profile-overlay .employee-profile-card-grid--single {
+  grid-template-columns: 1fr !important;
+}
+
+body > .employee-profile-overlay .employee-profile-section {
+  background: #ffffff !important;
+  border: 1px solid #e3e8f2 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05) !important;
+  overflow: hidden !important;
+}
+
+body > .employee-profile-overlay .employee-profile-section-title {
+  background: #ffffff !important;
+  border-bottom: 1px solid #edf1f7 !important;
+  color: #344054 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  margin: 0 !important;
+  padding: 14px 16px !important;
+  text-transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-profile-details {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: grid !important;
+  overflow: hidden !important;
+}
+
+body > .employee-profile-overlay .employee-profile-details > div {
+  align-items: center !important;
+  border-bottom: 1px solid #edf1f7 !important;
+  display: grid !important;
+  gap: 12px !important;
+  grid-template-columns: 32px minmax(0, 1fr) !important;
+  min-height: 58px !important;
+  padding: 12px 16px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-details > div:last-child {
+  border-bottom: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-details svg,
+body > .employee-profile-overlay .employee-profile-empty svg {
+  background: #eef4ff !important;
+  border-radius: 9px !important;
+  color: #244bd4 !important;
+  height: 32px !important;
+  padding: 8px !important;
+  width: 32px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-details small {
+  color: #667085 !important;
+  display: block !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-profile-details b {
+  color: #111827 !important;
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  margin-top: 2px !important;
+  overflow-wrap: anywhere !important;
+}
+
+body > .employee-profile-overlay .employee-profile-empty {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #e3e8f2 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05) !important;
+  display: grid !important;
+  justify-items: center !important;
+  min-height: 220px !important;
+  padding: 34px 22px !important;
+  text-align: center !important;
+}
+
+body > .employee-profile-overlay .employee-profile-empty h3 {
+  color: #111827 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  margin: 12px 0 4px !important;
+}
+
+body > .employee-profile-overlay .employee-profile-empty p {
+  color: #667085 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  max-width: 380px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body > .employee-profile-overlay,
+  body > .employee-profile-overlay .employee-profile-modal {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  body > .employee-profile-overlay {
+    padding: 16px !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-modal {
+    max-height: calc(100vh - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    width: calc(100vw - 32px) !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-modal-head {
+    padding: 20px !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-header-top {
+    grid-template-columns: 1fr auto !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-header-main {
+    align-items: flex-start !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-actions {
+    padding-left: 0 !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body > .employee-profile-overlay .employee-profile-header-top {
+    gap: 12px !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-close {
+    justify-self: end !important;
+    order: -1 !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-scroll {
+    padding: 14px !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-actions button,
+  body > .employee-profile-overlay .employee-profile-actions a {
+    width: 100% !important;
+  }
+}
+
+/* Employee profile modal final layout contract. */
+body > .employee-profile-overlay .employee-modal-container {
+  animation: modalDialogIn var(--modal-open-dur) var(--modal-ease) both;
+  background: #f6f8fc;
+  border: 1px solid #d7dfec;
+  border-radius: 18px;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  max-width: calc(100vw - 48px);
+  overflow: hidden;
+  width: min(860px, calc(100vw - 48px));
+}
+
+body > .employee-profile-overlay .employee-modal-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 16px;
+  min-height: auto;
+  overflow: visible;
+  padding: 24px 28px;
+  position: relative;
+  z-index: auto;
+}
+
+body > .employee-profile-overlay .employee-modal-header::before {
+  background: #244bd4;
+  content: "";
+  inset: 0 auto 0 0;
+  position: absolute;
+  width: 4px;
+}
+
+body > .employee-profile-overlay .employee-modal-identity-row {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+body > .employee-profile-overlay .employee-modal-person {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  gap: 16px;
+  min-width: 0;
+}
+
+body > .employee-profile-overlay .employee-modal-avatar {
+  align-items: center;
+  background: #eef4ff;
+  border: 1px solid #dbe6ff;
+  border-radius: 18px;
+  box-shadow: none;
+  display: flex;
+  flex: 0 0 76px;
+  height: 76px;
+  justify-content: center;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: static;
+  transform: none;
+  width: 76px;
+}
+
+body > .employee-profile-overlay .employee-modal-avatar span {
+  align-items: center;
+  background: #244bd4;
+  border-radius: 17px;
+  color: #ffffff;
+  display: flex;
+  font-size: 22px;
+  font-weight: 950;
+  height: 100%;
+  justify-content: center;
+  letter-spacing: 0;
+  position: static;
+  text-transform: none;
+  transform: none;
+  width: 100%;
+}
+
+body > .employee-profile-overlay .employee-modal-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row h2 {
+  color: #111827;
+  flex: 1 0 100%;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 1.2;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row .employees-role-pill,
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 900;
+  gap: 6px;
+  letter-spacing: 0;
+  line-height: 1;
+  margin: 0;
+  min-height: 25px;
+  padding: 6px 9px;
+  position: static;
+  text-transform: none;
+  transform: none;
+  white-space: nowrap;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status {
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  color: #15803d;
+  font-style: normal;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status i {
+  background: currentColor;
+  border: 0;
+  border-radius: 50%;
+  display: inline-block;
+  height: 7px;
+  position: static;
+  width: 7px;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status--pending,
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status--invited {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status--inactive,
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status--suspended,
+body > .employee-profile-overlay .employee-modal-name-row .employee-profile-status--archived {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+body > .employee-profile-overlay .employee-modal-contact-row {
+  align-items: center;
+  color: #667085;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-width: 0;
+}
+
+body > .employee-profile-overlay .employee-modal-contact-row a,
+body > .employee-profile-overlay .employee-modal-contact-row span {
+  align-items: center;
+  color: #667085;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 7px;
+  letter-spacing: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  position: static;
+  text-decoration: none;
+  text-transform: none;
+  transform: none;
+}
+
+body > .employee-profile-overlay .employee-modal-contact-row svg {
+  color: #244bd4;
+  flex: 0 0 auto;
+  height: 15px;
+  width: 15px;
+}
+
+body > .employee-profile-overlay .employee-profile-close {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d7dfec;
+  border-radius: 10px;
+  color: #475467;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 36px;
+  height: 36px;
+  justify-content: center;
+  margin: 0;
+  position: static;
+  transform: none;
+  width: 36px;
+}
+
+body > .employee-profile-overlay .employee-modal-actions-row {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 0 92px;
+  position: static;
+  transform: none;
+  z-index: auto;
+}
+
+body > .employee-profile-overlay .employee-modal-actions-row button,
+body > .employee-profile-overlay .employee-modal-actions-row a {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d7dfec;
+  border-radius: 10px;
+  box-shadow: none;
+  color: #243047;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  gap: 8px;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 13px;
+  position: static;
+  text-decoration: none;
+  transform: none;
+  z-index: auto;
+}
+
+body > .employee-profile-overlay .employee-modal-actions-row button:first-child {
+  background: #244bd4;
+  border-color: #244bd4;
+  color: #ffffff;
+}
+
+body > .employee-profile-overlay .employee-modal-tabs {
+  align-items: center;
+  background: #ffffff;
+  border-bottom: 1px solid #dbe3ef;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 28px;
+  position: static;
+  transform: none;
+  z-index: auto;
+}
+
+body > .employee-profile-overlay .employee-modal-tabs button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #667085;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  margin: 0;
+  padding: 13px 12px 12px;
+  position: static;
+  transform: none;
+  white-space: nowrap;
+}
+
+body > .employee-profile-overlay .employee-modal-tabs button.is-active {
+  border-bottom-color: #244bd4;
+  color: #244bd4;
+}
+
+body > .employee-profile-overlay .employee-modal-body {
+  background: #f6f8fc;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 28px 28px;
+  position: static;
+  transform: none;
+  z-index: auto;
+}
+
+body > .employee-profile-overlay .employee-profile-tab-panel {
+  position: static;
+  transform: none;
+  z-index: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body > .employee-profile-overlay .employee-modal-container {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  body > .employee-profile-overlay .employee-modal-container {
+    max-height: calc(100vh - 32px);
+    max-width: calc(100vw - 32px);
+    width: calc(100vw - 32px);
+  }
+
+  body > .employee-profile-overlay .employee-modal-header {
+    padding: 20px;
+  }
+
+  body > .employee-profile-overlay .employee-modal-identity-row,
+  body > .employee-profile-overlay .employee-modal-person {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body > .employee-profile-overlay .employee-profile-close {
+    align-self: flex-end;
+    order: -1;
+  }
+
+  body > .employee-profile-overlay .employee-modal-actions-row {
+    padding-left: 0;
+  }
+
+  body > .employee-profile-overlay .employee-modal-tabs {
+    padding: 0 20px;
+  }
+
+  body > .employee-profile-overlay .employee-modal-body {
+    padding: 18px 20px 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  body > .employee-profile-overlay .employee-modal-actions-row {
+    align-items: stretch;
+  }
+
+  body > .employee-profile-overlay .employee-modal-actions-row button,
+  body > .employee-profile-overlay .employee-modal-actions-row a {
+    flex: 1 1 100%;
+  }
+}
+
+/* Employee profile header crop fix: keep all header content in normal flow. */
+body > .employee-profile-overlay {
+  align-items: center !important;
+  overflow: hidden !important;
+  padding: 32px 24px !important;
+}
+
+body > .employee-profile-overlay .employee-modal-container {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 88vh !important;
+  overflow: hidden !important;
+  padding-top: 0 !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  overflow: hidden !important;
+  padding: 28px !important;
+  position: relative !important;
+  transform: none !important;
+  z-index: auto !important;
+}
+
+body > .employee-profile-overlay .employee-modal-header::before {
+  content: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-identity-row {
+  align-items: flex-start !important;
+  display: flex !important;
+  gap: 20px !important;
+  justify-content: space-between !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-person {
+  align-items: center !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  gap: 16px !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-avatar,
+body > .employee-profile-overlay .employee-modal-avatar span,
+body > .employee-profile-overlay .employee-modal-info,
+body > .employee-profile-overlay .employee-modal-name-row,
+body > .employee-profile-overlay .employee-modal-contact-row,
+body > .employee-profile-overlay .employee-modal-controls,
+body > .employee-profile-overlay .employee-modal-actions-row,
+body > .employee-profile-overlay .employee-profile-close,
+body > .employee-profile-overlay .employee-modal-tabs,
+body > .employee-profile-overlay .employee-modal-body {
+  margin-top: 0 !important;
+  position: static !important;
+  top: auto !important;
+  transform: none !important;
+  z-index: auto !important;
+}
+
+body > .employee-profile-overlay .employee-modal-avatar {
+  align-items: center !important;
+  display: flex !important;
+  flex: 0 0 76px !important;
+  height: 76px !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  width: 76px !important;
+}
+
+body > .employee-profile-overlay .employee-modal-info {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row {
+  align-items: center !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row h2 {
+  flex: 1 1 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-contact-row {
+  align-items: center !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px 16px !important;
+}
+
+body > .employee-profile-overlay .employee-modal-controls {
+  align-items: flex-end !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-profile-close {
+  flex: 0 0 36px !important;
+  margin: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-modal-actions-row {
+  align-items: center !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body > .employee-profile-overlay .employee-modal-tabs {
+  background: #ffffff !important;
+  border-bottom: 1px solid #dbe3ef !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  gap: 4px !important;
+  margin: 12px 0 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 0 28px !important;
+}
+
+body > .employee-profile-overlay .employee-modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 20px 28px 28px !important;
+}
+
+@media (max-width: 720px) {
+  body > .employee-profile-overlay {
+    padding: 16px !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-header {
+    padding: 24px 20px !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-identity-row,
+  body > .employee-profile-overlay .employee-modal-person,
+  body > .employee-profile-overlay .employee-modal-controls {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-controls {
+    width: 100% !important;
+  }
+
+  body > .employee-profile-overlay .employee-profile-close {
+    align-self: flex-end !important;
+    order: -1 !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-actions-row {
+    justify-content: flex-start !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-tabs {
+    padding: 0 20px !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-body {
+    padding: 18px 20px 22px !important;
+  }
+}
+
+/* Employee profile header visibility fix. */
+body > .employee-profile-overlay .employee-modal-container {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 88vh !important;
+  overflow: hidden !important;
+}
+
+body > .employee-profile-overlay .employee-modal-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  padding: 28px 28px 22px !important;
+  position: relative !important;
+}
+
+body > .employee-profile-overlay .employee-modal-identity-row {
+  align-items: flex-start !important;
+  display: flex !important;
+  gap: 20px !important;
+  justify-content: space-between !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+body > .employee-profile-overlay .employee-modal-person {
+  align-items: center !important;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+body > .employee-profile-overlay .employee-modal-avatar {
+  flex: 0 0 76px !important;
+  height: 76px !important;
+  overflow: hidden !important;
+  position: static !important;
+  transform: none !important;
+  width: 76px !important;
+}
+
+body > .employee-profile-overlay .employee-modal-info,
+body > .employee-profile-overlay .employee-modal-name-row,
+body > .employee-profile-overlay .employee-modal-contact-row {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: static !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-controls {
+  align-items: flex-end !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  justify-content: flex-start !important;
+  position: static !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-actions-row {
+  align-items: center !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: flex-start !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 0 0 92px !important;
+  position: static !important;
+  transform: none !important;
+}
+
+body > .employee-profile-overlay .employee-modal-tabs {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  position: static !important;
+  transform: none !important;
+  z-index: auto !important;
+}
+
+body > .employee-profile-overlay .employee-modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+@media (max-width: 720px) {
+  body > .employee-profile-overlay .employee-modal-header {
+    padding: 24px 20px 20px !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-identity-row,
+  body > .employee-profile-overlay .employee-modal-person {
+    flex-direction: column !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-actions-row {
+    padding-left: 0 !important;
+  }
+}
+
+/* Employee profile left-aligned header. */
+body > .employee-profile-overlay .employee-modal-header {
+  text-align: left !important;
+}
+
+body > .employee-profile-overlay .employee-modal-identity-row {
+  align-items: flex-start !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+body > .employee-profile-overlay .employee-modal-person {
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+body > .employee-profile-overlay .employee-modal-info,
+body > .employee-profile-overlay .employee-modal-name-row,
+body > .employee-profile-overlay .employee-modal-contact-row {
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+body > .employee-profile-overlay .employee-modal-name-row {
+  align-items: center !important;
+}
+
+body > .employee-profile-overlay .employee-modal-controls {
+  align-items: flex-end !important;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
+body > .employee-profile-overlay .employee-modal-actions-row {
+  align-items: center !important;
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+  padding-left: 92px !important;
+  text-align: left !important;
+}
+
+@media (max-width: 720px) {
+  body > .employee-profile-overlay .employee-modal-identity-row,
+  body > .employee-profile-overlay .employee-modal-person {
+    align-items: flex-start !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-controls {
+    align-items: flex-end !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  body > .employee-profile-overlay .employee-modal-actions-row {
+    padding-left: 0 !important;
+    width: 100% !important;
+  }
+}
+

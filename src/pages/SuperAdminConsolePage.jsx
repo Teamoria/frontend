@@ -6,7 +6,6 @@ import {
   FiBriefcase,
   FiCalendar,
   FiChevronDown,
-  FiCreditCard,
   FiMenu,
   FiLogOut,
   FiMoreVertical,
@@ -15,8 +14,22 @@ import {
   FiUser,
   FiUsers
 } from "react-icons/fi";
-import { listCompanies, listUsers } from "../lib/api.js";
+import {
+  getUnreadNotificationsCount,
+  listCompanies,
+  listNotifications,
+  listUsers,
+  markAllNotificationsRead,
+  markNotificationRead
+} from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import {
+  extractNotifications,
+  extractUnreadCount,
+  formatNotificationTime,
+  isNotificationsRouteUnavailable,
+  notificationIconByType
+} from "../lib/notifications.js";
 import "../styles/super-admin-console.css";
 
 const navItems = [
@@ -60,37 +73,6 @@ const companies = [
   ["NT", "NexuTech Solutions", "Enterprise", "Active", "1,240", "Oct 29, 2023", "primary"],
   ["QL", "Quantum Labs", "Growth", "Pending", "12", "Oct 28, 2023", "secondary"],
   ["VA", "Velo Analytics", "Enterprise", "Active", "850", "Oct 27, 2023", "tertiary"]
-];
-
-const notifications = [
-  {
-    title: "Critical: Gateway latency increase",
-    text: "Latency spike detected in the eastern operations cluster.",
-    time: "2 mins ago",
-    tone: "critical",
-    icon: FiAlertTriangle
-  },
-  {
-    title: "New Company Onboarded",
-    text: "NexuTech Solutions has joined the platform.",
-    time: "15 mins ago",
-    tone: "company",
-    icon: FiBriefcase
-  },
-  {
-    title: "Security Insight",
-    text: "3 users flagged for unusual login patterns.",
-    time: "1 hour ago",
-    tone: "security",
-    icon: FiShield
-  },
-  {
-    title: "Payment Received",
-    text: "Quantum Labs completed Enterprise Plan renewal.",
-    time: "3 hours ago",
-    tone: "payment",
-    icon: FiCreditCard
-  }
 ];
 
 export default function SuperAdminConsolePage() {
@@ -240,8 +222,82 @@ function SuperAdminTopbar() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsStatus, setNotificationsStatus] = useState({ loading: true, error: "" });
+  const [unreadCount, setUnreadCount] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const initials = getInitials(user?.name || user?.email || "Admin User");
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadNotifications() {
+      setNotificationsStatus({ loading: true, error: "" });
+
+      try {
+        const [notificationsPayload, countPayload] = await Promise.all([
+          listNotifications(),
+          getUnreadNotificationsCount()
+        ]);
+
+        if (!ignore) {
+          setNotifications(extractNotifications(notificationsPayload));
+          setUnreadCount(extractUnreadCount(countPayload));
+          setNotificationsStatus({ loading: false, error: "" });
+        }
+      } catch (error) {
+        if (!ignore) {
+          setNotifications([]);
+          setUnreadCount(0);
+          setNotificationsStatus({
+            loading: false,
+            error: isNotificationsRouteUnavailable(error) ? "" : error.message || "Unable to load notifications."
+          });
+        }
+      }
+    }
+
+    loadNotifications();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  async function openNotification(notification) {
+    if (!notification.is_read) {
+      setNotifications((current) => current.map((item) => (
+        item.id === notification.id ? { ...item, is_read: true } : item
+      )));
+      setUnreadCount((current) => Math.max(0, current - 1));
+
+      try {
+        await markNotificationRead(notification.id);
+      } catch (error) {
+        if (!isNotificationsRouteUnavailable(error)) {
+          setNotificationsStatus({ loading: false, error: error.message || "Unable to mark notification as read." });
+        }
+        return;
+      }
+    }
+
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    }
+  }
+
+  async function markAllRead() {
+    try {
+      await markAllNotificationsRead();
+      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+      setUnreadCount(0);
+      setNotificationsStatus({ loading: false, error: "" });
+    } catch (error) {
+      if (!isNotificationsRouteUnavailable(error)) {
+        setNotificationsStatus({ loading: false, error: error.message || "Unable to mark notifications as read." });
+      }
+    }
+  }
 
   return (
     <header className="super-admin-topbar">
@@ -270,10 +326,18 @@ function SuperAdminTopbar() {
             }}
           >
             <FiBell aria-hidden="true" />
-            <i />
-            <span className="super-admin-notification-count">3</span>
+            {unreadCount > 0 ? <i /> : null}
+            {unreadCount > 0 ? <span className="super-admin-notification-count">{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
           </button>
-          {notificationsOpen ? <NotificationsOverlay /> : null}
+          {notificationsOpen ? (
+            <NotificationsOverlay
+              notifications={notifications}
+              onMarkAllRead={markAllRead}
+              onOpenNotification={openNotification}
+              status={notificationsStatus}
+              unreadCount={unreadCount}
+            />
+          ) : null}
         </div>
         <div className="super-admin-profile-anchor">
           <button
@@ -355,34 +419,40 @@ function ProfileContextMenu({ user, initials }) {
   );
 }
 
-function NotificationsOverlay() {
+function NotificationsOverlay({ notifications, onMarkAllRead, onOpenNotification, status, unreadCount }) {
   return (
     <section className="super-admin-notifications-overlay" aria-label="Notifications overlay">
       <header>
         <h2>Notifications</h2>
-        <button type="button">Mark all as read</button>
+        <button type="button" onClick={onMarkAllRead} disabled={unreadCount === 0 || status.loading}>Mark all as read</button>
       </header>
-      <nav aria-label="Notification filters">
-        <button className="active" type="button">All</button>
-        <button type="button">System</button>
-        <button type="button">Activity</button>
-      </nav>
       <div className="super-admin-notification-list">
-        {notifications.map(({ icon: Icon, text, time, title, tone }) => (
-          <article className={`tone-${tone}`} key={title}>
-            <span>
-              <Icon aria-hidden="true" />
-            </span>
-            <div>
-              <h3>{title}</h3>
-              <p>{text}</p>
-              <time>{time}</time>
-            </div>
-          </article>
-        ))}
+        {status.loading ? <p className="super-admin-notification-state">Loading notifications...</p> : null}
+        {!status.loading && status.error ? <p className="super-admin-notification-state super-admin-notification-state--error">{status.error}</p> : null}
+        {!status.loading && !status.error && notifications.length === 0 ? <p className="super-admin-notification-state">No notifications yet.</p> : null}
+        {!status.loading && !status.error ? notifications.slice(0, 5).map((notification) => {
+          const Icon = notificationIconByType[notification.type] || FiBell;
+          return (
+            <button
+              className={`tone-${notification.type} ${notification.is_read ? "is-read" : "is-unread"}`}
+              key={notification.id}
+              type="button"
+              onClick={() => onOpenNotification(notification)}
+            >
+              <span>
+                <Icon aria-hidden="true" />
+              </span>
+              <div>
+                <h3>{notification.title}</h3>
+                <p>{notification.message}</p>
+                <time>{formatNotificationTime(notification.created_at)}</time>
+              </div>
+            </button>
+          );
+        }) : null}
       </div>
       <footer>
-        <button type="button">View all notifications</button>
+        <button type="button" onClick={() => { window.location.hash = "/super-admin/notifications"; }}>View all notifications</button>
       </footer>
     </section>
   );

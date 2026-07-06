@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   FiArchive,
@@ -425,7 +425,15 @@ export default function EmployeesPage() {
                       <td>{employee.is_email_verified ? "Yes" : "No"}</td>
                       <td>
                         <div className="employees-actions">
-                          <button type="button" title="View profile" aria-label={`View ${employee.name} profile`} onClick={(event) => event.stopPropagation()}>
+                          <button
+                            type="button"
+                            title="View profile"
+                            aria-label={`View ${employee.name} profile`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedEmployee(employee);
+                            }}
+                          >
                             <FiEye aria-hidden="true" />
                           </button>
                           <button
@@ -514,7 +522,7 @@ export default function EmployeesPage() {
       ) : null}
 
       {selectedEmployee && !modalMode ? (
-        <EmployeeProfileDrawer
+        <EmployeeProfileModal
           employee={selectedEmployee}
           onArchive={() => runAction(() => deleteStaffMember(selectedEmployee.id), "Employee archived successfully.")}
           onClose={() => setSelectedEmployee(null)}
@@ -605,86 +613,210 @@ function EmployeeModal({ form, isSaving, mode, onClose, onFieldChange, onSubmit 
   );
 }
 
-function EmployeeProfileDrawer({ employee, onArchive, onClose, onEdit, showArchive }) {
-  return (
-    <div className="employee-profile-overlay" role="presentation" onClick={onClose}>
-      <aside
-        className="employee-profile-drawer"
+const employeeProfileTabs = ["Overview", "Activity", "Projects", "Tasks", "Files", "Permissions"];
+
+function EmployeeProfileModal({ employee, onArchive, onClose, onEdit, showArchive }) {
+  const [activeTab, setActiveTab] = useState("Overview");
+  const dialogRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const statusLabel = getProfileStatusLabel(employee);
+  const statusClass = getProfileStatusClass(employee);
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (!first || !last) return;
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div className="employee-profile-overlay" role="presentation" onMouseDown={onClose}>
+      <section
+        ref={dialogRef}
+        className="employee-modal-container"
         role="dialog"
         aria-modal="true"
-        aria-label={`${employee.name} profile`}
-        onClick={(event) => event.stopPropagation()}
+        aria-labelledby="employee-profile-title"
+        onMouseDown={(event) => event.stopPropagation()}
       >
-        <header className="employee-profile-drawer-head">
-          <div>
-            <span>Employee profile</span>
-            <b>Team Directory</b>
+        <header className="employee-modal-header">
+          <div className="employee-modal-identity-row">
+            <div className="employee-modal-person">
+              <div className="employee-modal-avatar" aria-hidden="true">
+                <span>{getInitials(employee.name || employee.email)}</span>
+              </div>
+              <div className="employee-modal-info">
+                <div className="employee-modal-name-row">
+                  <h2 id="employee-profile-title">{employee.name || "Unnamed employee"}</h2>
+                  <span className={`employees-role-pill employees-role-pill--${getRoleClass(employee.role)}`}>
+                    {formatLabel(employee.role)}
+                  </span>
+                  <em className={`employee-profile-status employee-profile-status--${statusClass}`}>
+                    <i aria-hidden="true" />
+                    {statusLabel}
+                  </em>
+                </div>
+                <div className="employee-modal-contact-row">
+                  <a href={`mailto:${employee.email}`}><FiMail aria-hidden="true" />{employee.email || "No email"}</a>
+                  <span><FiPhone aria-hidden="true" />{employee.phone || "No phone"}</span>
+                </div>
+              </div>
+            </div>
+            <div className="employee-modal-controls">
+              <button className="employee-profile-close" ref={closeButtonRef} type="button" onClick={onClose} aria-label="Close employee profile">
+                <FiX aria-hidden="true" />
+              </button>
+            </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close employee profile">
-            <FiX aria-hidden="true" />
-          </button>
-        </header>
-
-        <div className="employee-profile-scroll">
-          <section className="employee-profile-hero">
-            <div className="employee-profile-avatar">
-              <span>{getInitials(employee.name || employee.email)}</span>
-              <i aria-hidden="true" />
-            </div>
-            <div>
-              <h2>{employee.name || "Unnamed employee"}</h2>
-              <p>{formatLabel(employee.role)}</p>
-              <a href={`mailto:${employee.email}`}>{employee.email || "No email"}</a>
-            </div>
-            <em className={`employee-profile-status employee-profile-status--${getStatusClass(employee.status)}`}>
-              <i aria-hidden="true" />
-              {formatLabel(employee.status)}
-            </em>
-          </section>
-
-          <section className="employee-profile-actions" aria-label="Profile actions">
+          <section className="employee-modal-actions-row" aria-label="Profile actions">
             <button type="button" onClick={onEdit}><FiEdit2 aria-hidden="true" /><span>Edit</span></button>
             {showArchive ? (
               <button type="button" onClick={onArchive}><FiArchive aria-hidden="true" /><span>Archive</span></button>
             ) : null}
             <a href={`mailto:${employee.email}`}><FiMail aria-hidden="true" /><span>Email</span></a>
           </section>
+        </header>
 
-          <section className="employee-profile-section">
-            <h3 className="employee-profile-section-title">Contact information</h3>
-            <div className="employee-profile-details">
-              <ProfileDetail icon={FiMail} label="Work email" value={employee.email || "No email"} />
-              <ProfileDetail icon={FiPhone} label="Phone" value={employee.phone || "No phone"} />
-              <ProfileDetail icon={FiGlobe} label="Timezone" value={employee.timezone || "UTC"} />
-            </div>
-          </section>
+        <nav className="employee-modal-tabs" aria-label="Employee profile sections">
+          {employeeProfileTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={activeTab === tab ? "is-active" : ""}
+              onClick={() => setActiveTab(tab)}
+              aria-selected={activeTab === tab}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
 
-          <section className="employee-profile-section">
-            <h3 className="employee-profile-section-title">Account status</h3>
-            <div className="employee-profile-details">
-              <ProfileDetail icon={FiCheckCircle} label="Status" value={formatLabel(employee.status)} />
-              <ProfileDetail icon={FiShield} label="Email verified" value={employee.is_email_verified ? "Verified" : "Not verified"} />
-            </div>
-          </section>
-
-          <section className="employee-profile-section">
-            <h3 className="employee-profile-section-title">Role & permissions</h3>
-            <div className="employee-profile-details">
-              <ProfileDetail icon={FiBriefcase} label="Role" value={formatLabel(employee.role)} />
-              <ProfileDetail icon={FiUser} label="Access scope" value={employee.role === "company_manager" ? "Can manage company work" : "Assigned workspace access"} />
-            </div>
-          </section>
-
-          <section className="employee-profile-section">
-            <h3 className="employee-profile-section-title">Activity</h3>
-            <div className="employee-profile-details">
-              <ProfileDetail icon={FiClock} label="Joined" value={formatDate(employee.created_at)} />
-              <ProfileDetail icon={FiRefreshCw} label="Last updated" value={formatDate(employee.updated_at)} />
-            </div>
-          </section>
+        <div className="employee-modal-body">
+          <div className="employee-profile-tab-panel">
+            {activeTab === "Overview" ? <EmployeeOverviewTab employee={employee} statusLabel={statusLabel} /> : null}
+            {activeTab === "Activity" ? (
+              <EmployeeEmptyTab
+                icon={FiClock}
+                title="No activity yet"
+                message="Recent employee activity will appear here once actions are recorded."
+              />
+            ) : null}
+            {activeTab === "Projects" ? (
+              <EmployeeEmptyTab
+                icon={FiBriefcase}
+                title="No projects assigned"
+                message="Assigned projects will appear here when this employee is added to project work."
+              />
+            ) : null}
+            {activeTab === "Tasks" ? (
+              <EmployeeEmptyTab
+                icon={FiCheckCircle}
+                title="No tasks assigned"
+                message="Tasks owned by this employee will appear here."
+              />
+            ) : null}
+            {activeTab === "Files" ? (
+              <EmployeeEmptyTab
+                icon={FiArchive}
+                title="No files shared"
+                message="Shared files and employee documents will appear here."
+              />
+            ) : null}
+            {activeTab === "Permissions" ? <EmployeePermissionsTab employee={employee} /> : null}
+          </div>
         </div>
-      </aside>
+      </section>
+    </div>,
+    document.body
+  );
+}
+
+function EmployeeOverviewTab({ employee, statusLabel }) {
+  return (
+    <div className="employee-profile-card-grid">
+      <EmployeeProfileCard title="Contact information">
+        <ProfileDetail icon={FiMail} label="Work email" value={employee.email || "No email"} />
+        <ProfileDetail icon={FiPhone} label="Phone" value={employee.phone || "No phone"} />
+        <ProfileDetail icon={FiGlobe} label="Timezone" value={employee.timezone || "UTC"} />
+      </EmployeeProfileCard>
+
+      <EmployeeProfileCard title="Account status">
+        <ProfileDetail icon={FiCheckCircle} label="Status" value={statusLabel} />
+        <ProfileDetail icon={FiShield} label="Email verified" value={employee.is_email_verified ? "Verified" : "Not verified"} />
+      </EmployeeProfileCard>
+
+      <EmployeeProfileCard title="Role & permissions">
+        <ProfileDetail icon={FiBriefcase} label="Role" value={formatLabel(employee.role)} />
+        <ProfileDetail icon={FiUser} label="Access scope" value={getAccessScope(employee.role)} />
+      </EmployeeProfileCard>
+
+      <EmployeeProfileCard title="Additional information">
+        <ProfileDetail icon={FiClock} label="Joined" value={formatDate(employee.created_at)} />
+        <ProfileDetail icon={FiRefreshCw} label="Last updated" value={formatDate(employee.updated_at)} />
+      </EmployeeProfileCard>
     </div>
+  );
+}
+
+function EmployeePermissionsTab({ employee }) {
+  return (
+    <div className="employee-profile-card-grid employee-profile-card-grid--single">
+      <EmployeeProfileCard title="Permissions">
+        <ProfileDetail icon={FiShield} label="Access scope" value={getAccessScope(employee.role)} />
+        <ProfileDetail icon={FiBriefcase} label="Role" value={formatLabel(employee.role)} />
+        <ProfileDetail icon={FiCheckCircle} label="Account state" value={getProfileStatusLabel(employee)} />
+      </EmployeeProfileCard>
+    </div>
+  );
+}
+
+function EmployeeProfileCard({ title, children }) {
+  return (
+    <section className="employee-profile-section">
+      <h3 className="employee-profile-section-title">{title}</h3>
+      <div className="employee-profile-details">{children}</div>
+    </section>
+  );
+}
+
+function EmployeeEmptyTab({ icon: Icon, title, message }) {
+  return (
+    <section className="employee-profile-empty">
+      {Icon ? <Icon aria-hidden="true" /> : null}
+      <h3>{title}</h3>
+      <p>{message}</p>
+    </section>
   );
 }
 
@@ -731,6 +863,20 @@ function getRoleClass(role) {
 
 function getStatusClass(status) {
   return String(status || "active").toLowerCase().replace(/\s+/g, "-");
+}
+
+function getProfileStatusLabel(employee) {
+  if (employee.deleted_at) return "Archived";
+  return formatLabel(employee.status || "active");
+}
+
+function getProfileStatusClass(employee) {
+  if (employee.deleted_at) return "archived";
+  return getStatusClass(employee.status);
+}
+
+function getAccessScope(role) {
+  return role === "company_manager" ? "Can manage company work" : "Assigned workspace access";
 }
 
 function formatLabel(value) {

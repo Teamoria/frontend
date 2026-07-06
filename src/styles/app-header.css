@@ -137,13 +137,15 @@
 .dashboard-notifications-panel {
   background: #ffffff !important;
   border: 1px solid rgba(196, 197, 214, 0.7) !important;
-  border-radius: 14px !important;
+  border-radius: 16px !important;
   box-shadow: 0 16px 42px rgba(15, 23, 42, 0.16) !important;
-  min-width: 320px !important;
-  padding: 12px !important;
+  min-width: 360px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
   position: absolute !important;
   right: 0 !important;
   top: calc(100% + 8px) !important;
+  width: min(420px, calc(100vw - 32px)) !important;
   z-index: 80 !important;
 }
 
@@ -155,7 +157,8 @@
 }
 
 .dashboard-notifications-panel header {
-  margin-bottom: 10px !important;
+  border-bottom: 1px solid #edf1f7 !important;
+  padding: 14px 16px !important;
 }
 
 .dashboard-notifications-panel h3 {
@@ -178,16 +181,33 @@
 
 .dashboard-notifications-list {
   display: grid !important;
-  gap: 8px !important;
+  gap: 10px !important;
+  max-height: 390px !important;
+  overflow-y: auto !important;
+  padding: 12px !important;
 }
 
 .dashboard-notification-item {
   align-items: flex-start !important;
+  background: #ffffff !important;
   border: 1px solid #edf2f7 !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
+  color: inherit !important;
+  cursor: pointer !important;
   display: flex !important;
   gap: 10px !important;
-  padding: 10px !important;
+  padding: 12px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.dashboard-notification-item:hover,
+.dashboard-notification-item.is-unread {
+  background: #f7f9ff !important;
+}
+
+.dashboard-notification-item.is-read {
+  opacity: 0.78 !important;
 }
 
 .dashboard-notification-item span {
@@ -211,6 +231,16 @@
   color: #16a34a !important;
 }
 
+.dashboard-notification-item.tone-file span {
+  background: #ecfdf3 !important;
+  color: #15803d !important;
+}
+
+.dashboard-notification-item.tone-ai span {
+  background: #f5f3ff !important;
+  color: #6d28d9 !important;
+}
+
 .dashboard-notification-item h4 {
   color: #111827 !important;
   font-size: 13px !important;
@@ -228,6 +258,354 @@
 .dashboard-notification-item time {
   color: #6b7280 !important;
   font-size: 11px !important;
+}
+
+.dashboard-notification-meta {
+  align-items: center !important;
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.dashboard-notification-meta i {
+  background: #244bd4 !important;
+  border-radius: 50% !important;
+  display: inline-block !important;
+  height: 7px !important;
+  width: 7px !important;
+}
+
+.dashboard-notifications-state {
+  color: #526070 !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+  padding: 12px !important;
+}
+
+.dashboard-notifications-state--error {
+  color: #b42318 !important;
+}
+
+.dashboard-notifications-panel header button:disabled {
+  color: #98a2b3 !important;
+  cursor: not-allowed !important;
+}
+
+.dashboard-notifications-empty,
+.dashboard-notifications-error {
+  align-items: center !important;
+  background: #fbfcff !important;
+  border: 1px solid #edf1f7 !important;
+  border-radius: 14px !important;
+  display: grid !important;
+  justify-items: center !important;
+  padding: 26px 18px !important;
+  text-align: center !important;
+}
+
+.dashboard-notifications-empty > span {
+  align-items: center !important;
+  background: #eef4ff !important;
+  border-radius: 18px !important;
+  color: #244bd4 !important;
+  display: inline-flex !important;
+  height: 56px !important;
+  justify-content: center !important;
+  margin-bottom: 12px !important;
+  width: 56px !important;
+}
+
+.dashboard-notifications-empty h4,
+.dashboard-notifications-error h4 {
+  color: #111827 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  margin: 0 0 6px !important;
+}
+
+.dashboard-notifications-empty p,
+.dashboard-notifications-error p {
+  color: #667085 !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+  max-width: 290px !important;
+}
+
+.dashboard-notifications-error {
+  background: #fffafa !important;
+}
+
+.dashboard-notifications-error h4 {
+  color: #b42318 !important;
+}
+
+.dashboard-notifications-error button {
+  background: #ffffff !important;
+  border: 1px solid #fecdca !important;
+  border-radius: 10px !important;
+  color: #b42318 !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  margin-top: 12px !important;
+  min-height: 34px !important;
+  padding: 0 12px !important;
+}
+
+.dashboard-notifications-skeleton {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.dashboard-notifications-skeleton div {
+  background: #ffffff !important;
+  border: 1px solid #edf1f7 !important;
+  border-radius: 12px !important;
+  display: grid !important;
+  gap: 8px !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  padding: 12px !important;
+}
+
+.dashboard-notifications-skeleton span,
+.dashboard-notifications-skeleton p {
+  animation: notificationSkeletonPulse 1.1s ease-in-out infinite alternate !important;
+  background: #eef2f7 !important;
+  border-radius: 999px !important;
+  margin: 0 !important;
+}
+
+.dashboard-notifications-skeleton span {
+  grid-row: span 2 !important;
+  height: 34px !important;
+  width: 34px !important;
+}
+
+.dashboard-notifications-skeleton p {
+  height: 10px !important;
+}
+
+.dashboard-notifications-skeleton p:last-child {
+  width: 70% !important;
+}
+
+@keyframes notificationSkeletonPulse {
+  from {
+    opacity: 0.55;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.dashboard-notifications-panel footer {
+  background: #fbfcff !important;
+  border-top: 1px solid #edf1f7 !important;
+  padding: 12px 16px !important;
+}
+
+.dashboard-notifications-panel footer button {
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid #d7dfec !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  min-height: 38px !important;
+  width: 100% !important;
+}
+
+/* Compact SaaS notifications dropdown. */
+.dashboard-notifications-panel {
+  border-radius: 14px !important;
+  max-height: 500px !important;
+  min-width: 360px !important;
+  overflow: hidden !important;
+  width: min(380px, calc(100vw - 24px)) !important;
+}
+
+.dashboard-notifications-panel header {
+  background: #ffffff !important;
+  min-height: 48px !important;
+  padding: 12px 14px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+}
+
+.dashboard-notifications-panel h3 {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.dashboard-notifications-panel header button {
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+.dashboard-notifications-list {
+  gap: 0 !important;
+  max-height: 398px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 8px 0 !important;
+}
+
+.dashboard-notifications-section {
+  display: grid !important;
+  gap: 2px !important;
+}
+
+.dashboard-notifications-section > h4 {
+  color: #667085 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0 !important;
+  margin: 0 !important;
+  padding: 8px 14px 5px !important;
+}
+
+.dashboard-notifications-section > div {
+  display: grid !important;
+}
+
+.dashboard-notification-item {
+  align-items: center !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: grid !important;
+  gap: 10px !important;
+  grid-template-columns: 32px minmax(0, 1fr) 8px !important;
+  min-height: 72px !important;
+  overflow: hidden !important;
+  padding: 10px 14px !important;
+  transition: background-color 160ms ease !important;
+}
+
+.dashboard-notification-item span {
+  border-radius: 9px !important;
+  flex: none !important;
+  height: 32px !important;
+  width: 32px !important;
+}
+
+.dashboard-notification-item > div {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.dashboard-notification-item h5 {
+  color: #111827 !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  margin: 0 0 3px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.dashboard-notification-item p {
+  color: #667085 !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  margin: 0 0 4px !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.dashboard-notification-item time {
+  color: #98a2b3 !important;
+  display: block !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.dashboard-notification-item > i {
+  background: #244bd4 !important;
+  border-radius: 50% !important;
+  display: block !important;
+  height: 7px !important;
+  justify-self: end !important;
+  width: 7px !important;
+}
+
+.dashboard-notification-item.is-read > i {
+  display: none !important;
+}
+
+.dashboard-notifications-empty {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  min-height: 210px !important;
+  padding: 34px 28px !important;
+}
+
+.dashboard-notifications-empty > span {
+  border-radius: 16px !important;
+  height: 52px !important;
+  margin-bottom: 12px !important;
+  width: 52px !important;
+}
+
+.dashboard-notifications-empty h4 {
+  font-size: 14px !important;
+}
+
+.dashboard-notifications-empty p {
+  font-size: 12px !important;
+  max-width: 250px !important;
+}
+
+.dashboard-notifications-error {
+  background: transparent !important;
+  border: 0 !important;
+  min-height: 180px !important;
+  padding: 34px 24px !important;
+}
+
+.dashboard-notifications-error button {
+  min-height: 32px !important;
+}
+
+.dashboard-notifications-skeleton {
+  gap: 0 !important;
+}
+
+.dashboard-notifications-skeleton div {
+  border: 0 !important;
+  border-radius: 0 !important;
+  grid-template-columns: 32px minmax(0, 1fr) !important;
+  min-height: 72px !important;
+  padding: 12px 14px !important;
+}
+
+.dashboard-notifications-skeleton span {
+  height: 32px !important;
+  width: 32px !important;
+}
+
+.dashboard-notifications-panel footer {
+  background: #ffffff !important;
+  bottom: 0 !important;
+  padding: 10px 14px !important;
+  position: sticky !important;
+  z-index: 2 !important;
+}
+
+.dashboard-notifications-panel footer button {
+  background: transparent !important;
+  border: 0 !important;
+  color: #244bd4 !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  min-height: 30px !important;
+  padding: 0 !important;
 }
 
 .dashboard-profile-menu-wrap {

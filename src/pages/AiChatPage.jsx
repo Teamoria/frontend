@@ -1,153 +1,405 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  FiBookOpen,
-  FiClock,
-  FiFileText,
-  FiImage,
-  FiLink,
+  FiFilePlus,
   FiMic,
-  FiMoreHorizontal,
   FiPaperclip,
+  FiPlus,
+  FiRefreshCw,
   FiSend,
-  FiUploadCloud,
+  FiTrash2,
   FiZap
 } from "react-icons/fi";
 import AppShell from "../components/app/AppShell.jsx";
+import {
+  createAiConversation,
+  deleteAiConversation,
+  getAiConversationMessages,
+  getPayloadData,
+  listAiConversations,
+  sendAiConversationMessage
+} from "../lib/api.js";
 import "../styles/ai-chat.css";
 
-const conversations = [
-  ["Q3 Roadmap Analysis", "Delivery risks and next steps", "2 hours ago", true],
-  ["Resource Allocation AI", "Team capacity planning", "Yesterday"],
-  ["Risk Mitigation Strategy", "Executive summary", "Oct 12, 2026"]
-];
-
-const activeSources = [
-  ["Project_Alpha_Spec.pdf", "pdf", "risk requirements"],
-  ["Standup_Notes_Oct15.docx", "doc", "meeting actions"],
-  ["Q4_Budget_Export.xlsx", "sheet", "budget signals"]
-];
-
-const citations = [
-  "Project_Alpha_Spec.pdf",
-  "Standup_Notes_Oct15.docx",
-  "Security_Log.log"
-];
-
-const promptChips = [
-  "Analyze project risks",
-  "Summarize active sources",
-  "Create mitigation tasks"
-];
-
 export default function AiChatPage() {
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [draft, setDraft] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [status, setStatus] = useState({ loadingConversations: true, loadingMessages: false, sending: false, error: "" });
+  const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
+    [activeConversationId, conversations]
+  );
+
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  useEffect(() => {
+    if (activeConversationId) {
+      loadMessages(activeConversationId);
+    } else {
+      setMessages([]);
+    }
+  }, [activeConversationId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, status.sending]);
+
+  function setStatusPatch(patch) {
+    setStatus((current) => ({ ...current, ...patch }));
+  }
+
+  async function loadConversations() {
+    setStatusPatch({ loadingConversations: true, error: "" });
+
+    try {
+      const payload = await listAiConversations();
+      const nextConversations = extractConversations(getPayloadData(payload));
+      setConversations(nextConversations);
+      setActiveConversationId((current) => current || nextConversations[0]?.id || "");
+      setStatusPatch({ loadingConversations: false, error: "" });
+    } catch (error) {
+      setConversations([]);
+      setActiveConversationId("");
+      setStatusPatch({ loadingConversations: false, error: error.message || "Unable to load conversations." });
+    }
+  }
+
+  async function loadMessages(conversationId) {
+    setStatusPatch({ loadingMessages: true, error: "" });
+
+    try {
+      const payload = await getAiConversationMessages(conversationId);
+      setMessages(extractMessages(getPayloadData(payload)));
+      setStatusPatch({ loadingMessages: false, error: "" });
+    } catch (error) {
+      setMessages([]);
+      setStatusPatch({ loadingMessages: false, error: error.message || "Unable to load messages." });
+    }
+  }
+
+  async function startConversation() {
+    setStatusPatch({ error: "" });
+
+    try {
+      const payload = await createAiConversation({ title: "New chat" });
+      const conversation = normalizeConversation(getPayloadData(payload)?.conversation || getPayloadData(payload));
+      if (!conversation.id) {
+        await loadConversations();
+        return;
+      }
+      setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)]);
+      setActiveConversationId(conversation.id);
+      setMessages([]);
+    } catch (error) {
+      setStatusPatch({ error: error.message || "Unable to create a new chat." });
+    }
+  }
+
+  async function removeConversation(conversationId) {
+    setStatusPatch({ error: "" });
+
+    try {
+      await deleteAiConversation(conversationId);
+      setConversations((current) => current.filter((conversation) => conversation.id !== conversationId));
+      if (activeConversationId === conversationId) {
+        const nextConversation = conversations.find((conversation) => conversation.id !== conversationId);
+        setActiveConversationId(nextConversation?.id || "");
+      }
+    } catch (error) {
+      setStatusPatch({ error: error.message || "Unable to delete this chat." });
+    }
+  }
+
+  async function submitMessage(event) {
+    event.preventDefault();
+    const message = draft.trim();
+
+    if (!message || status.sending) return;
+
+    let conversationId = activeConversationId;
+    setStatusPatch({ sending: true, error: "" });
+
+    try {
+      if (!conversationId) {
+        const conversationPayload = await createAiConversation({ title: getConversationTitle(message) });
+        const conversation = normalizeConversation(getPayloadData(conversationPayload)?.conversation || getPayloadData(conversationPayload));
+        conversationId = conversation.id;
+
+        if (!conversationId) {
+          throw new Error("The AI service did not return a conversation id.");
+        }
+
+        setConversations((current) => [conversation, ...current]);
+        setActiveConversationId(conversationId);
+      }
+
+      const userMessage = createLocalMessage({ content: message, role: "user" });
+      setMessages((current) => [...current, userMessage]);
+      setDraft("");
+      resizeComposer("");
+
+      const payload = await sendAiConversationMessage(conversationId, {
+        message,
+        source_ids: [],
+        project_id: null
+      });
+      const aiMessage = normalizeAiAnswer(getPayloadData(payload));
+
+      setMessages((current) => [...current, aiMessage]);
+      setConversations((current) => current.map((conversation) => (
+        conversation.id === conversationId
+          ? { ...conversation, title: conversation.title || getConversationTitle(message), summary: message, updated_at: new Date().toISOString() }
+          : conversation
+      )));
+      setSelectedFiles([]);
+      setStatusPatch({ sending: false, error: "" });
+    } catch (error) {
+      setStatusPatch({ sending: false, error: error.message || "Unable to send message." });
+    }
+  }
+
+  function updateDraft(value) {
+    setDraft(value);
+    resizeComposer(value);
+  }
+
+  function resizeComposer(value) {
+    if (!textareaRef.current) return;
+    textareaRef.current.style.height = "auto";
+    textareaRef.current.style.height = `${Math.min(160, Math.max(48, textareaRef.current.scrollHeight || value.length))}px`;
+  }
+
+  function handleFiles(event) {
+    setSelectedFiles(Array.from(event.target.files || []));
+  }
+
   return (
     <AppShell active="AI Chat">
       <section className="ai-chat-command">
-        <header className="ai-chat-header">
-          <div>
+        <aside className="ai-chat-sidebar" aria-label="Conversations">
+          <div className="ai-sidebar-head">
             <h1>AI Chat</h1>
-            <p>Ask about projects, meetings, files, risks, and decisions.</p>
+            <button type="button" onClick={startConversation}>
+              <FiPlus aria-hidden="true" />
+              New Chat
+            </button>
           </div>
-          <div className="ai-chat-header-actions">
-            <button type="button"><FiUploadCloud /> Add Source</button>
-            <button className="primary" type="button"><FiZap /> New Chat</button>
+
+          <div className="ai-conversation-list">
+            {status.loadingConversations ? <p className="ai-chat-state">Loading conversations...</p> : null}
+            {!status.loadingConversations && conversations.length === 0 ? (
+              <div className="ai-chat-empty">
+                <FiZap aria-hidden="true" />
+                <h2>No conversations yet</h2>
+                <p>Start a new chat to ask about projects, files, tasks, and risks.</p>
+              </div>
+            ) : null}
+            {!status.loadingConversations ? conversations.map((conversation) => (
+              <button
+                className={conversation.id === activeConversationId ? "is-active" : ""}
+                key={conversation.id}
+                type="button"
+                onClick={() => setActiveConversationId(conversation.id)}
+              >
+                <b>{conversation.title}</b>
+                <span>{conversation.summary || "No messages yet"}</span>
+                <time>{formatConversationTime(conversation.updated_at || conversation.created_at)}</time>
+              </button>
+            )) : null}
           </div>
-        </header>
+        </aside>
 
-        <div className="ai-chat-grid">
-          <aside className="ai-context-rail">
-            <div className="ai-rail-head">
-              <h2>Conversations</h2>
-              <button type="button" aria-label="New chat">+</button>
+        <main className="ai-chat-surface">
+          <header className="ai-chat-thread-head">
+            <div>
+              <h2>{activeConversation?.title || "New conversation"}</h2>
+              <span>{activeConversation ? "Backend AI/RAG conversation" : "Create or select a conversation"}</span>
             </div>
-            <div className="ai-history-list">
-              {conversations.map(([title, summary, time, active]) => (
-                <button className={active ? "active" : ""} type="button" key={title}>
-                  <b>{title}</b>
-                  <span>{summary}</span>
-                  <time>{time}</time>
+            <div className="ai-thread-actions">
+              <label>
+                <input type="file" multiple onChange={handleFiles} />
+                <FiFilePlus aria-hidden="true" />
+                Add Source
+              </label>
+              <button type="button" onClick={loadConversations} aria-label="Refresh conversations">
+                <FiRefreshCw aria-hidden="true" />
+              </button>
+              {activeConversation ? (
+                <button type="button" onClick={() => removeConversation(activeConversation.id)} aria-label="Delete conversation">
+                  <FiTrash2 aria-hidden="true" />
                 </button>
-              ))}
+              ) : null}
             </div>
-          </aside>
+          </header>
 
-          <main className="ai-chat-surface">
-            <div className="ai-chat-thread-head">
-              <div>
-                <h2>Q3 Roadmap Analysis</h2>
-                <span>3 sources available</span>
+          {status.error ? <p className="ai-chat-alert">{status.error}</p> : null}
+
+          <section className="ai-message-window" aria-label="AI chat messages">
+            {status.loadingMessages ? <p className="ai-chat-state">Loading messages...</p> : null}
+            {!status.loadingMessages && messages.length === 0 ? (
+              <div className="ai-message-empty">
+                <FiZap aria-hidden="true" />
+                <h2>Ask Teamoria AI</h2>
+                <p>Choose a conversation or send a first message. Answers will appear here with sources when the backend returns them.</p>
               </div>
-              <details className="ai-advanced-menu">
-                <summary aria-label="Advanced tools">
-                  <FiMoreHorizontal aria-hidden="true" />
-                </summary>
-                <div>
-                  <button type="button"><FiZap /> AI Assistant</button>
-                  <button type="button"><FiBookOpen /> Ask Source</button>
-                  <button type="button"><FiFileText /> Cite</button>
-                  <button type="button"><FiClock /> History</button>
-                  <hr />
-                  {promptChips.map((prompt) => <button type="button" key={prompt}>{prompt}</button>)}
-                  <hr />
-                  {activeSources.map(([name, type]) => (
-                    <button type="button" key={name}>
-                      <span className={`source-type source-type--${type}`}>{type.toUpperCase()}</span>
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              </details>
+            ) : null}
+            {!status.loadingMessages ? messages.map((message) => <ChatMessage key={message.id} message={message} />) : null}
+            {status.sending ? (
+              <article className="ai-message ai-message--assistant ai-message--loading">
+                <span />
+                <span />
+                <span />
+              </article>
+            ) : null}
+            <div ref={messagesEndRef} />
+          </section>
+
+          <form className="ai-composer-panel" onSubmit={submitMessage}>
+            {selectedFiles.length > 0 ? (
+              <div className="ai-selected-sources">
+                {selectedFiles.map((file) => <span key={`${file.name}-${file.size}`}>{file.name}</span>)}
+              </div>
+            ) : null}
+            <div className="ai-composer-row">
+              <label className="ai-composer-icon-button" title="Attach files">
+                <input type="file" multiple onChange={handleFiles} />
+                <FiPaperclip aria-hidden="true" />
+              </label>
+              <textarea
+                ref={textareaRef}
+                placeholder="Message Teamoria AI..."
+                rows="1"
+                value={draft}
+                onChange={(event) => updateDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    submitMessage(event);
+                  }
+                }}
+              />
+              <button className="ai-composer-icon-button" type="button" title="Record voice">
+                <FiMic aria-hidden="true" />
+              </button>
+              <button className="ai-send-button" type="submit" disabled={!draft.trim() || status.sending}>
+                {status.sending ? "Sending" : "Send"}
+                <FiSend aria-hidden="true" />
+              </button>
             </div>
-
-            <section className="ai-message-window" aria-label="AI chat messages">
-              <article className="ai-message ai-message--user">
-                <p>Based on the Alpha project specification, what are the key risks for the next phase?</p>
-                <time>10:42 AM</time>
-              </article>
-
-              <article className="ai-message ai-message--assistant">
-                <div className="ai-message-label">
-                  <FiZap aria-hidden="true" />
-                  <span>Teamoria AI</span>
-                </div>
-                <p>
-                  I found three high-impact risks across the project specification and the latest standup notes:
-                </p>
-                <ul>
-                  <li><b>Delivery delay:</b> Core dependencies have a 30% delay probability because of regional logistics constraints.</li>
-                  <li><b>Resource overlap:</b> Senior developers are assigned to two overlapping November milestones.</li>
-                  <li><b>Security review gap:</b> Phase B code review is behind the planned checkpoint.</li>
-                </ul>
-                <div className="ai-citation-block">
-                  <b>Sources</b>
-                  <div>
-                    {citations.map((source, index) => (
-                      <button type="button" key={source}>
-                        <FiLink aria-hidden="true" />
-                        [{index + 1}] {source}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </article>
-            </section>
-
-            <section className="ai-composer-panel">
-              <textarea placeholder="Message Teamoria AI..." rows="2" />
-              <div>
-                <div className="ai-composer-tools">
-                  <button type="button" title="Attach files"><FiPaperclip /></button>
-                  <button type="button" title="Record voice"><FiMic /></button>
-                  <button type="button" title="Capture image"><FiImage /></button>
-                </div>
-                <button className="ai-send-button" type="button">
-                  <span>Send Message</span>
-                  <FiSend aria-hidden="true" />
-                </button>
-              </div>
-            </section>
-          </main>
-        </div>
+          </form>
+        </main>
       </section>
     </AppShell>
   );
+}
+
+function ChatMessage({ message }) {
+  const isUser = message.role === "user";
+
+  return (
+    <article className={`ai-message ${isUser ? "ai-message--user" : "ai-message--assistant"}`}>
+      {!isUser ? (
+        <div className="ai-message-label">
+          <FiZap aria-hidden="true" />
+          <span>Teamoria AI</span>
+        </div>
+      ) : null}
+      <p>{message.content}</p>
+      {message.sources?.length ? (
+        <div className="ai-citation-block">
+          <b>Sources</b>
+          <div>
+            {message.sources.map((source, index) => (
+              <a href={source.url || "#"} key={source.id || source.title || index}>
+                [{index + 1}] {source.title || source.name || "Source"}
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      <time>{formatMessageTime(message.created_at)}</time>
+    </article>
+  );
+}
+
+function extractConversations(data) {
+  const rows = data?.conversations || data?.data || data?.items || data || [];
+  return Array.isArray(rows) ? rows.map(normalizeConversation).filter((conversation) => conversation.id) : [];
+}
+
+function normalizeConversation(conversation = {}) {
+  return {
+    id: conversation.id || conversation.conversation_id || conversation.uuid || "",
+    title: conversation.title || conversation.name || "Untitled chat",
+    summary: conversation.summary || conversation.last_message || conversation.preview || "",
+    created_at: conversation.created_at || conversation.createdAt || "",
+    updated_at: conversation.updated_at || conversation.updatedAt || conversation.created_at || ""
+  };
+}
+
+function extractMessages(data) {
+  const rows = data?.messages || data?.data || data?.items || data || [];
+  return Array.isArray(rows) ? rows.map(normalizeMessage).filter((message) => message.id || message.content) : [];
+}
+
+function normalizeMessage(message = {}) {
+  return {
+    id: message.id || message.uuid || `${message.role || "message"}-${message.created_at || Math.random()}`,
+    role: normalizeRole(message.role || message.sender || message.type),
+    content: message.content || message.message || message.answer || message.text || "",
+    sources: Array.isArray(message.sources) ? message.sources : [],
+    created_at: message.created_at || message.createdAt || ""
+  };
+}
+
+function normalizeAiAnswer(data = {}) {
+  const payload = data?.message || data?.data || data;
+  return {
+    id: payload.id || `assistant-${Date.now()}`,
+    role: "assistant",
+    content: payload.answer || payload.content || payload.message || "",
+    sources: Array.isArray(payload.sources) ? payload.sources : [],
+    created_at: payload.created_at || new Date().toISOString()
+  };
+}
+
+function createLocalMessage({ content, role }) {
+  return {
+    id: `${role}-${Date.now()}`,
+    role,
+    content,
+    sources: [],
+    created_at: new Date().toISOString()
+  };
+}
+
+function normalizeRole(role) {
+  const value = String(role || "").toLowerCase();
+  if (["assistant", "ai", "bot"].includes(value)) return "assistant";
+  return "user";
+}
+
+function getConversationTitle(message) {
+  return message.length > 42 ? `${message.slice(0, 42)}...` : message;
+}
+
+function formatConversationTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
+}
+
+function formatMessageTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(date);
 }

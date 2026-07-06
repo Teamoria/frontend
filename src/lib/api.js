@@ -824,6 +824,46 @@ export function forceDeleteStaffMember(id) {
   return apiRequest(`/company/staff/${id}/force-delete`, { method: "DELETE", auth: true });
 }
 
+export function listNotifications() {
+  return apiRequest("/notifications", { auth: true });
+}
+
+export function getUnreadNotificationsCount() {
+  return apiRequest("/notifications/unread-count", { auth: true });
+}
+
+export function markNotificationRead(id) {
+  return apiRequest(`/notifications/${id}/read`, { method: "PATCH", auth: true });
+}
+
+export function markAllNotificationsRead() {
+  return apiRequest("/notifications/read-all", { method: "PATCH", auth: true });
+}
+
+export function listAiConversations() {
+  return apiRequest("/ai/conversations", { auth: true });
+}
+
+export function createAiConversation(body = {}) {
+  return apiRequest("/ai/conversations", { method: "POST", auth: true, body });
+}
+
+export function getAiConversationMessages(conversationId) {
+  return apiRequest(`/ai/conversations/${conversationId}/messages`, { auth: true });
+}
+
+export function sendAiConversationMessage(conversationId, body) {
+  return apiRequest(`/ai/conversations/${conversationId}/messages`, { method: "POST", auth: true, body });
+}
+
+export function deleteAiConversation(conversationId) {
+  return apiRequest(`/ai/conversations/${conversationId}`, { method: "DELETE", auth: true });
+}
+
+export function updateAiConversation(conversationId, body) {
+  return apiRequest(`/ai/conversations/${conversationId}`, { method: "PATCH", auth: true, body });
+}
+
 export function listAdminProjects({ page, archived } = {}) {
   return apiRequest("/admin/projects", { auth: true, query: { page, archived: archived ? "1" : undefined } });
 }

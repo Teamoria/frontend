@@ -1,0 +1,145 @@
+.notifications-page {
+  display: grid;
+  gap: 20px;
+}
+
+.notifications-summary {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 180px));
+}
+
+.notifications-summary article,
+.notifications-panel {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, 0.06);
+}
+
+.notifications-summary article {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+}
+
+.notifications-summary span {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.notifications-summary strong {
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.notifications-panel {
+  overflow: hidden;
+}
+
+.notifications-list {
+  display: grid;
+}
+
+.notifications-item {
+  align-items: flex-start;
+  background: #ffffff;
+  border: 0;
+  border-bottom: 1px solid #edf1f7;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  padding: 18px;
+  text-align: left;
+}
+
+.notifications-item:last-child {
+  border-bottom: 0;
+}
+
+.notifications-item:hover {
+  background: #f8fbff;
+}
+
+.notifications-item.is-unread {
+  background: #f7f9ff;
+}
+
+.notifications-icon {
+  align-items: center;
+  background: #eef4ff;
+  border-radius: 12px;
+  color: #244bd4;
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.notifications-item--file .notifications-icon {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.notifications-item--ai .notifications-icon {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.notifications-item-head {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.notifications-item h2 {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 900;
+  margin: 0;
+}
+
+.notifications-item p {
+  color: #526070;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+
+.notifications-item time {
+  color: #667085;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.notifications-state {
+  color: #526070;
+  font-size: 14px;
+  margin: 0;
+  padding: 26px;
+}
+
+.notifications-state--error {
+  color: #b42318;
+}
+
+@media (max-width: 640px) {
+  .notifications-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-item,
+  .notifications-item-head {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-item-head {
+    display: grid;
+  }
+}
