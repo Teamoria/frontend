@@ -131,28 +131,61 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
 export function AppSidebar({ active = "Dashboard", roleId = "project-manager", onNavigate }) {
   const { isAdmin, normalizedRole } = useAuth();
   const visibleNav = getRoleNavItems(normalizedRole, isAdmin, roleId);
+  const groupedNav = groupSidebarNavItems(visibleNav);
 
   return (
     <aside className="product-sidebar">
       <div className="sidebar-brand-wrap">
         <Brand compact tagline="Enterprise AI PM" />
       </div>
-      <nav>
-        {visibleNav.map((item) => {
-          const Icon = sidebarIconMap[item.icon] || FiMessageCircle;
-          return (
-            <a className={active === item.label ? "active" : ""} href={`#${item.path}`} key={item.label} onClick={onNavigate}>
-              <Icon className="sidebar-nav-icon" aria-hidden="true" />
-              <span>{item.label}</span>
-            </a>
-          );
-        })}
+      <nav className="sidebar-nav" aria-label="Workspace navigation">
+        {groupedNav.map((group) => (
+          <div className="sidebar-nav-section" key={group.label}>
+            <span className="sidebar-nav-section-label">{group.label}</span>
+            <div className="sidebar-nav-section-list">
+              {group.items.map((item) => {
+                const Icon = sidebarIconMap[item.icon] || FiMessageCircle;
+                return (
+                  <a className={active === item.label ? "active" : ""} href={`#${item.path}`} key={item.label} onClick={onNavigate}>
+                    <Icon className="sidebar-nav-icon" aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
       {normalizedRole === "company_member" ? null : (
-        <a className="sidebar-new-project" href={normalizedRole === "company_owner" ? "#/owner/projects" : "#/projects"} onClick={onNavigate}>+ <span>New Project</span></a>
+        <a className="sidebar-new-project" href={normalizedRole === "company_owner" ? "#/owner/projects" : "#/projects"} onClick={onNavigate}>
+          <span aria-hidden="true">+</span>
+          <span>New Project</span>
+        </a>
       )}
     </aside>
   );
+}
+
+function groupSidebarNavItems(items) {
+  const groups = [
+    { label: "Workspace", keys: new Set(["Dashboard"]) },
+    { label: "Management", keys: new Set(["Employees", "Projects", "Tasks", "My Tasks", "Upload Center", "Reports"]) },
+    { label: "AI", keys: new Set(["AI Chat", "Agent Runs"]) },
+    { label: "Account", keys: new Set(["Profile", "Notifications"]) }
+  ];
+
+  const grouped = groups.map((group) => ({
+    label: group.label,
+    items: items.filter((item) => group.keys.has(item.label))
+  }));
+  const knownLabels = new Set(groups.flatMap((group) => Array.from(group.keys)));
+  const otherItems = items.filter((item) => !knownLabels.has(item.label));
+
+  if (otherItems.length) {
+    grouped.splice(1, 0, { label: "Tools", items: otherItems });
+  }
+
+  return grouped.filter((group) => group.items.length);
 }
 
 function getRoleNavItems(role, isAdmin, roleId) {
@@ -196,6 +229,19 @@ export function PageHeader({ title, eyebrow, actions }) {
     </div>
   );
 }
+
+export function PageShell({ actions, children, className = "", subtitle, title }) {
+  return (
+    <div className={`app-page-layout ${className}`.trim()}>
+      {title ? <PageHeader title={title} eyebrow={subtitle} actions={actions} /> : null}
+      <div className="app-page-content">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export const AppPageLayout = PageShell;
 
 export function QuickAction({ href = "#/", label, caption }) {
   return (

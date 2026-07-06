@@ -8,6 +8,7 @@ import "./styles/design-system.css";
 import "./styles/responsive-overrides.css";
 import "./styles/platform-colors.css";
 import App from "./App.jsx";
+import "./styles/sidebar.css";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "missing-google-client-id";
 

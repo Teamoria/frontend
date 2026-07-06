@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import AppShell from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import {
   FiCalendar,
   FiEdit2,
@@ -283,12 +283,11 @@ export default function TasksPage() {
 
   return (
     <AppShell active={isMember ? "My Tasks" : "Tasks"} user={user?.name || "Teamoria User"} role={formatLabel(normalizedRole || "Company User")}>
-      <div className="tasks-workspace">
-        <div className="tasks-page-head">
-          <div>
-            <h1>Project Tasks</h1>
-            <p>Live task board connected to the {isAdmin ? "admin" : "company"} tasks API.</p>
-          </div>
+      <AppPageLayout
+        className="tasks-workspace"
+        title="Project Tasks"
+        subtitle={`Live task board connected to the ${isAdmin ? "admin" : "company"} tasks API.`}
+        actions={(
           <div className="tasks-head-actions">
             <div className="tasks-view-toggle" aria-label="Task view">
               <button className={viewMode === "board" ? "active" : ""} type="button" onClick={() => setViewMode("board")} aria-pressed={viewMode === "board"}><FiGrid aria-hidden="true" />Board</button>
@@ -300,7 +299,8 @@ export default function TasksPage() {
               </button>
             )}
           </div>
-        </div>
+        )}
+      >
 
         {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
 
@@ -381,7 +381,7 @@ export default function TasksPage() {
             </div>
           </section>
         )}
-      </div>
+      </AppPageLayout>
 
       {isModalOpen ? (
         <CreateTaskModal

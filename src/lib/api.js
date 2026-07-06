@@ -788,6 +788,10 @@ export function registerCompany(body) {
   return apiRequest("/company/register", { method: "POST", auth: true, body });
 }
 
+export function getCompanyDashboard() {
+  return apiRequest("/company/dashboard", { auth: true });
+}
+
 export function listStaff({ page, archived, roles, statuses } = {}) {
   return apiRequest("/company/staff", {
     auth: true,

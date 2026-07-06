@@ -26,9 +26,10 @@ import {
   WorkspaceActivityFeed
 } from "../components/dashboard/DashboardComponents.jsx";
 import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashboardInsights.js";
-import { AppSidebar } from "../components/app/AppShell.jsx";
+import { AppPageLayout, AppSidebar } from "../components/app/AppShell.jsx";
 import AppHeader from "../components/app/AppHeader.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { getCompanyDashboard, getPayloadData } from "../lib/api.js";
 import { normalizeRole } from "../lib/authRoles.js";
 import { getDemoRole, getHashSearchParams, isDemoMode } from "../lib/demoMode.js";
 
@@ -54,9 +55,9 @@ const ownerMetrics = [
 ];
 
 const ownerTeams = [
-  ["ENG", "Engineering", "Company workspace", "142 pts", "Elite", "primary", 3],
-  ["OPS", "Operations", "Company workspace", "118 pts", "Stable", "green", 2],
-  ["FIN", "Finance", "Company workspace", "94 pts", "Caution", "amber", 1]
+  ["ENG", "Engineering", "Company workspace", "142 pts", "Elite", "primary", 3, 92],
+  ["OPS", "Operations", "Company workspace", "118 pts", "Stable", "green", 2, 74],
+  ["FIN", "Finance", "Company workspace", "94 pts", "Caution", "amber", 1, 48]
 ];
 
 const overdueTasks = [
@@ -103,7 +104,37 @@ export default function DashboardPage() {
 function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   const isPreview = !authUser;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [dashboard, setDashboard] = useState(null);
+  const [dashboardStatus, setDashboardStatus] = useState({ loading: false, error: "" });
   const companyName = authUser?.company?.name || "Your Company";
+  const liveMetrics = getOwnerMetricsFromDashboard(dashboard);
+  const liveTeams = getOwnerTeamsFromDashboard(dashboard);
+  const liveRisks = getOwnerRisksFromDashboard(dashboard);
+  const projectProgress = getProjectProgressFromDashboard(dashboard);
+  const activityOverview = getActivityOverviewFromDashboard(dashboard);
+  const liveStatusSummary = getStatusSummaryFromDashboard(dashboard);
+
+  useEffect(() => {
+    if (isPreview || isDemoMode()) return;
+
+    let isMounted = true;
+    setDashboardStatus({ loading: true, error: "" });
+
+    getCompanyDashboard()
+      .then((payload) => {
+        if (!isMounted) return;
+        setDashboard(getPayloadData(payload));
+        setDashboardStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setDashboardStatus({ loading: false, error: error.message || "Unable to load dashboard data." });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isPreview]);
 
   return (
     <main className="owner-dashboard">
@@ -111,26 +142,25 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
       <section className="owner-content">
         <AppHeader classNamePrefix="owner" profile={profile} onMobileNavToggle={() => setMobileNavOpen((value) => !value)} />
 
-        <div className="owner-page">
-          <section className="owner-hero-row">
-            <div>
-              <h2>{companyName} Overview</h2>
-              <p>
-                Company workspace overview for members, projects, tasks, uploads, and AI activity.
-                Some sections use mock data until their backend APIs are ready.
-              </p>
-            </div>
+        <AppPageLayout
+          className="owner-page"
+          title={`${companyName} Overview`}
+          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${dashboard ? " Live metrics are synced from the company dashboard API." : " Some sections use mock data until their backend APIs are ready."}`}
+          actions={(
             <div className="owner-period">
               <FiCalendar aria-hidden="true" />
               <span>{profile.label} View</span>
             </div>
-          </section>
+          )}
+        >
 
           {isPreview ? <RoleSwitcher activeRole={roleId} variant="owner" onRoleChange={onRoleChange} /> : null}
+          {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">Loading dashboard from API...</p> : null}
+          {!isPreview && dashboardStatus.error ? <p className="dashboard-api-state dashboard-api-state--error">{dashboardStatus.error}</p> : null}
 
           <section className="owner-metrics-grid">
-            {ownerMetrics.map((metric) => (
-              <DashboardMetricCard classNamePrefix="owner" key={metric.label} {...metric} />
+            {liveMetrics.map((metric, index) => (
+              <DashboardMetricCard classNamePrefix="owner" key={metric.label} index={index} {...metric} />
             ))}
           </section>
 
@@ -153,7 +183,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {ownerTeams.map(([code, name, office, velocity, health, tone, avatars]) => (
+                        {liveTeams.map(([code, name, office, velocity, health, tone, avatars, progress]) => (
                           <tr key={name}>
                             <td>
                               <div className={`owner-team-code tone-${tone}`}>{code}</div>
@@ -162,7 +192,12 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                                 <span>{office}</span>
                               </div>
                             </td>
-                            <td>{velocity}</td>
+                            <td>
+                              <strong className="owner-team-value">{velocity}</strong>
+                              <div className="owner-team-progress" aria-label={`${name} progress ${progress}%`}>
+                                <i style={{ "--progress-value": `${progress}%`, width: `${progress}%` }} />
+                              </div>
+                            </td>
                             <td>
                               <span className={`owner-health tone-${tone}`}>
                                 {health === "Elite" ? <FiCheckCircle /> : health === "Stable" ? <FiTrendingUp /> : <FiAlertTriangle />}
@@ -184,21 +219,21 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
 
               <section className="owner-risk-grid">
                 <RiskCard
-                  action="Audit Spend"
-                  badge="High Priority"
+                  action={liveRisks[0].action}
+                  badge={liveRisks[0].badge}
                   classNamePrefix="owner"
                   icon={<FiAlertTriangle />}
-                  text="Legacy Cloud Migration project in EMEA region has exceeded allocated monthly spend by 18%."
-                  title="Project Spend Risk"
+                  text={liveRisks[0].text}
+                  title={liveRisks[0].title}
                   tone="error"
                 />
                 <RiskCard
-                  action="Reallocate"
-                  badge="In Progress"
+                  action={liveRisks[1].action}
+                  badge={liveRisks[1].badge}
                   classNamePrefix="owner"
                   icon={<FiBriefcase />}
-                  text="Full-stack engineering capacity is at 104% across 4 projects. Estimated 2 week delay if not mitigated."
-                  title="Team Capacity Bottleneck"
+                  text={liveRisks[1].text}
+                  title={liveRisks[1].title}
                   tone="secondary"
                 />
               </section>
@@ -209,9 +244,17 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                 <div className="owner-ai-head">
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
-                    <h3>AI Company Hub</h3>
-                    <p>Mock strategic suggestions</p>
+                  <h3>AI Company Hub</h3>
+                    <p>{dashboard ? "Live workspace signals with AI recommendations" : "Strategic suggestions"}</p>
                   </div>
+                </div>
+                <div className="owner-ai-status-strip" aria-label="Dashboard status summary">
+                  {liveStatusSummary.map((item) => (
+                    <span className={`tone-${item.tone}`} key={item.label}>
+                      <b>{item.value}</b>
+                      {item.label}
+                    </span>
+                  ))}
                 </div>
                 <div className="owner-ai-suggestions">
                   {aiInsights.filter((insight) => insight.scope === "company").map((insight) => (
@@ -226,12 +269,12 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                 </article>
               </section>
               <section className="owner-dashboard-charts">
-                <ProjectProgressChart classNamePrefix="owner" data={dashboardCharts.projectProgress} />
-                <ActivityOverviewChart classNamePrefix="owner" data={dashboardCharts.activityOverview} />
+                <ProjectProgressChart classNamePrefix="owner" data={projectProgress} />
+                <ActivityOverviewChart classNamePrefix="owner" data={activityOverview} />
               </section>
             </aside>
           </section>
-        </div>
+        </AppPageLayout>
         {mobileNavOpen ? (
           <div className="mobile-nav-overlay is-open" role="presentation" onClick={() => setMobileNavOpen(false)}>
             <div className="mobile-nav-panel" role="dialog" aria-label="Navigation menu" onClick={(event) => event.stopPropagation()}>
@@ -639,6 +682,198 @@ function AiHelper({ classNamePrefix }) {
       ))}
     </nav>
   );
+}
+
+function getOwnerMetricsFromDashboard(dashboard) {
+  if (!dashboard?.totals) return ownerMetrics;
+
+  const totals = dashboard.totals;
+  const projectStatuses = dashboard.project_statuses || {};
+  const taskStatuses = dashboard.task_statuses || {};
+  const completedProjects = Number(projectStatuses.completed || 0);
+  const totalProjects = Number(totals.projects || 0);
+  const doneTasks = Number(taskStatuses.done || 0);
+  const totalTasks = Number(totals.tasks || 0);
+  const activeProjects = Number(projectStatuses.active || 0);
+  const health = totalProjects ? Math.round((completedProjects / totalProjects) * 100) : 0;
+  const taskCompletion = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+  return [
+    {
+      label: "Company Projects",
+      value: formatNumber(totals.projects),
+      detail: `${activeProjects} active`,
+      icon: FiBriefcase,
+      tone: "primary",
+      progress: clampPercent(totalProjects ? (activeProjects / totalProjects) * 100 : 0)
+    },
+    {
+      label: "Project Health",
+      value: `${health}%`,
+      detail: `${completedProjects} completed`,
+      icon: FiShield,
+      tone: "secondary",
+      progress: health
+    },
+    {
+      label: "Company Workforce",
+      value: formatNumber(totals.users),
+      detail: "Company users",
+      icon: FiUsers,
+      tone: "neutral",
+      progress: clampPercent(Number(totals.users || 0) * 8)
+    },
+    {
+      label: "Task Completion",
+      value: `${taskCompletion}%`,
+      detail: `${formatNumber(totals.overdue_tasks)} overdue`,
+      icon: FiZap,
+      tone: Number(totals.overdue_tasks || 0) ? "alert" : "ai",
+      progress: taskCompletion
+    }
+  ];
+}
+
+function getOwnerTeamsFromDashboard(dashboard) {
+  const projects = normalizeCollection(dashboard?.recent_projects);
+  if (!projects.length) return ownerTeams;
+
+  return projects.slice(0, 5).map((project, index) => {
+    const progress = Number(project.progress ?? 0);
+    const status = String(project.status || "active");
+    const tone = getProjectTone(status, progress);
+    return [
+      getProjectCode(project.name, index),
+      project.name || "Untitled Project",
+      project.company?.name || "Company workspace",
+      `${progress || 0}%`,
+      formatProjectHealth(status, progress),
+      tone,
+      Math.min(4, Math.max(1, Number(project.users?.length || 1))),
+      clampPercent(progress)
+    ];
+  });
+}
+
+function getOwnerRisksFromDashboard(dashboard) {
+  const upcomingTasks = normalizeCollection(dashboard?.upcoming_tasks);
+  const overdueCount = Number(dashboard?.totals?.overdue_tasks || 0);
+  const firstTask = upcomingTasks[0];
+  const secondTask = upcomingTasks[1];
+
+  return [
+    {
+      action: "Open Tasks",
+      badge: overdueCount ? `${overdueCount} Overdue` : "Upcoming",
+      title: overdueCount ? "Overdue Task Risk" : "Upcoming Task Focus",
+      text: firstTask
+        ? `${firstTask.title} is due ${formatDate(firstTask.due_date)} in ${firstTask.project?.name || "company workspace"}.`
+        : "No upcoming tasks returned by the dashboard API."
+    },
+    {
+      action: "Review Projects",
+      badge: secondTask ? formatTaskStatus(secondTask.status) : "Live API",
+      title: secondTask ? "Next Delivery Item" : "Project Coverage",
+      text: secondTask
+        ? `${secondTask.title} is currently ${formatTaskStatus(secondTask.status).toLowerCase()} and assigned to ${formatAssigneeList(secondTask.assignees)}.`
+        : "Recent projects and status charts are synced from the company dashboard endpoint."
+    }
+  ];
+}
+
+function getProjectProgressFromDashboard(dashboard) {
+  const projects = normalizeCollection(dashboard?.recent_projects);
+  if (!projects.length) return dashboardCharts.projectProgress;
+
+  return projects.slice(0, 5).map((project) => ({
+    label: project.name || "Project",
+    value: clampPercent(Number(project.progress ?? (project.status === "completed" ? 100 : 0)))
+  }));
+}
+
+function getActivityOverviewFromDashboard(dashboard) {
+  const statuses = dashboard?.task_statuses;
+  if (!statuses) return dashboardCharts.activityOverview;
+
+  const rows = [
+    ["Todo", statuses.todo],
+    ["Progress", statuses.in_progress],
+    ["Blocked", statuses.blocked],
+    ["Done", statuses.done]
+  ];
+  const maxValue = Math.max(...rows.map(([, value]) => Number(value || 0)), 1);
+
+  return rows.map(([label, value]) => ({
+    label,
+    value: Math.round((Number(value || 0) / maxValue) * 100)
+  }));
+}
+
+function getStatusSummaryFromDashboard(dashboard) {
+  const statuses = dashboard?.task_statuses || {};
+
+  return [
+    { label: "Todo", value: formatNumber(statuses.todo), tone: "neutral" },
+    { label: "In progress", value: formatNumber(statuses.in_progress), tone: "primary" },
+    { label: "Blocked", value: formatNumber(statuses.blocked), tone: "danger" },
+    { label: "Done", value: formatNumber(statuses.done), tone: "success" }
+  ];
+}
+
+function normalizeCollection(value) {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+}
+
+function getProjectCode(name, index) {
+  const letters = String(name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  return letters || `P${index + 1}`;
+}
+
+function getProjectTone(status, progress) {
+  if (status === "completed" || progress >= 80) return "primary";
+  if (status === "active" || progress >= 45) return "green";
+  return "amber";
+}
+
+function formatProjectHealth(status, progress) {
+  if (status === "completed" || progress >= 80) return "Elite";
+  if (status === "active" || progress >= 45) return "Stable";
+  return "Caution";
+}
+
+function formatTaskStatus(status) {
+  return String(status || "todo")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatAssigneeList(assignees) {
+  const list = normalizeCollection(assignees);
+  if (!list.length) return "the team";
+  return list.map((assignee) => assignee.name || assignee.email).filter(Boolean).slice(0, 2).join(", ") || "the team";
+}
+
+function formatDate(value) {
+  if (!value) return "soon";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function clampPercent(value) {
+  return Math.max(0, Math.min(100, Math.round(Number(value || 0))));
 }
 
 function getDashboardRole() {

@@ -9,7 +9,7 @@ import {
   FiTrash2,
   FiZap
 } from "react-icons/fi";
-import AppShell from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import {
   createAiConversation,
   deleteAiConversation,
@@ -182,14 +182,21 @@ export default function AiChatPage() {
 
   return (
     <AppShell active="AI Chat">
+      <AppPageLayout
+        className="ai-chat-page"
+        title="AI Chat"
+        subtitle="Ask Teamoria AI about projects, files, tasks, and risks."
+        actions={(
+          <button className="product-button" type="button" onClick={startConversation}>
+            <FiPlus aria-hidden="true" />
+            New Chat
+          </button>
+        )}
+      >
       <section className="ai-chat-command">
         <aside className="ai-chat-sidebar" aria-label="Conversations">
           <div className="ai-sidebar-head">
-            <h1>AI Chat</h1>
-            <button type="button" onClick={startConversation}>
-              <FiPlus aria-hidden="true" />
-              New Chat
-            </button>
+            <h2>Conversations</h2>
           </div>
 
           <div className="ai-conversation-list">
@@ -296,6 +303,7 @@ export default function AiChatPage() {
           </form>
         </main>
       </section>
+      </AppPageLayout>
     </AppShell>
   );
 }

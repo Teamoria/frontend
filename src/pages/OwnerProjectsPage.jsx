@@ -16,7 +16,7 @@ import {
 } from "react-icons/fi";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import AppShell from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import { EmptyState, LoadingState, MetricCard, StatusBadge } from "../components/app/UiPrimitives.jsx";
 import {
   addCompanyProjectMembers,
@@ -105,13 +105,11 @@ export default function OwnerProjectsPage() {
 
   return (
     <AppShell active="Projects" role="Company Owner" roleId="owner" user={user?.name || "Company Owner"}>
-      <div className="owner-projects-page">
-      <div className="owner-projects-sticky-head">
-        <div className="owner-projects-titlebar">
-          <div>
-            <h1>Projects Directory</h1>
-            <p>Manage company projects, members, progress, and delivery status.</p>
-          </div>
+      <AppPageLayout
+        className="owner-projects-page"
+        title="Projects Directory"
+        subtitle="Manage company projects, members, progress, and delivery status."
+        actions={(
           <div className="owner-projects-actions">
             <button className="owner-projects-refresh" type="button" onClick={loadProjects} disabled={isLoading}>
               <FiRefreshCw aria-hidden="true" />
@@ -122,8 +120,9 @@ export default function OwnerProjectsPage() {
               New Project
             </button>
           </div>
-        </div>
-
+        )}
+      >
+      <div className="owner-projects-sticky-head">
         <div className="owner-projects-filterbar">
           <label>
             <span>Filter by:</span>
@@ -263,7 +262,7 @@ export default function OwnerProjectsPage() {
           onSaved={handleProjectSaved}
         />
       ) : null}
-      </div>
+      </AppPageLayout>
     </AppShell>
   );
 }

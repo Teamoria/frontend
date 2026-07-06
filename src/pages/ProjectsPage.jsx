@@ -1,12 +1,13 @@
-import AppShell, { AvatarStack, Badge, PageHeader } from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout, AvatarStack, Badge } from "../components/app/AppShell.jsx";
 import { projects } from "../data/teamoriaData.js";
 
 export default function ProjectsPage() {
   return (
     <AppShell active="Projects">
-      <PageHeader
+      <AppPageLayout
+        className="projects-page"
         title="Projects Hub"
-        eyebrow="Company projects with progress, health, files, members, and AI activity."
+        subtitle="Company projects with progress, health, files, members, and AI activity."
         actions={(
           <>
             <button className="filter-button" type="button">Filters</button>
@@ -14,7 +15,7 @@ export default function ProjectsPage() {
             <a className="product-button" href="#/workspace">New Project</a>
           </>
         )}
-      />
+      >
 
       <section className="projects-grid-modern">
         {projects.map((project) => (
@@ -49,6 +50,7 @@ export default function ProjectsPage() {
         ))}
       </section>
       <p className="project-count">Showing 4 of 4 workspaces</p>
+      </AppPageLayout>
     </AppShell>
   );
 }

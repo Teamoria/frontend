@@ -57,7 +57,7 @@ const visibilityOptions = [
   { value: "selected", label: "Selected users" }
 ];
 
-export default function UploadCenterWorkspace({ view = "all", filesHref = "#/owner/uploads/files", uploadHref = "#/owner/uploads" }) {
+export default function UploadCenterWorkspace({ view = "all", filesHref = "#/owner/uploads/files", uploadHref = "#/owner/uploads", showHeader = true }) {
   const { isAdmin, normalizedRole, user } = useAuth();
   const showUpload = view !== "files";
   const showFiles = view !== "upload";
@@ -375,11 +375,13 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         </button>
       </div>
 
-      <header className="owner-upload-header">
-        <h1>{view === "files" ? "Uploaded Files" : "Upload Center"}</h1>
-        <p>{view === "files" ? "Review uploaded files, AI processing results, sharing, downloads, and deletion controls." : "Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls."}</p>
-        {view === "files" ? null : <code className="owner-upload-api-url">API: {getConfiguredUploadApiBaseUrl()}/uploads</code>}
-      </header>
+      {showHeader ? (
+        <header className="owner-upload-header">
+          <h1>{view === "files" ? "Uploaded Files" : "Upload Center"}</h1>
+          <p>{view === "files" ? "Review uploaded files, AI processing results, sharing, downloads, and deletion controls." : "Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls."}</p>
+          {view === "files" ? null : <code className="owner-upload-api-url">API: {getConfiguredUploadApiBaseUrl()}/uploads</code>}
+        </header>
+      ) : null}
 
       {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
 

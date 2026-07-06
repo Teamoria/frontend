@@ -21,7 +21,7 @@ import {
   FiUserX,
   FiX
 } from "react-icons/fi";
-import AppShell, { PageHeader, Panel } from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout, Panel } from "../components/app/AppShell.jsx";
 import {
   createStaffMember,
   deleteStaffMember,
@@ -309,17 +309,17 @@ export default function EmployeesPage() {
 
   return (
     <AppShell active="Employees" user={user?.name || "Company Owner"} role="Company Owner" roleId="owner">
-      <div className="employees-page">
-      <PageHeader
+      <AppPageLayout
+        className="employees-page"
         title="Team Directory"
-        eyebrow={isDemo ? "Demo staff directory for frontend edits without backend." : "Manage company managers and members through the Staff API."}
+        subtitle={isDemo ? "Demo staff directory for frontend edits without backend." : "Manage company managers and members through the Staff API."}
         actions={(
           <button className="product-button" type="button" onClick={openCreateModal}>
             <FiUserPlus aria-hidden="true" />
             Add Employee
           </button>
         )}
-      />
+      >
 
       <section className="employees-summary-grid" aria-label="Employee overview">
         <SummaryCard label="Total Staff" value={summary.total} note={isDemo ? "Demo data" : filters.archived ? "Archived view" : "Live API"} />
@@ -530,7 +530,7 @@ export default function EmployeesPage() {
           showArchive={!filters.archived}
         />
       ) : null}
-      </div>
+      </AppPageLayout>
     </AppShell>
   );
 }

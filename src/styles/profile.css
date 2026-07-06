@@ -1257,3 +1257,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Shared app page layout adoption */
+.app-page-layout.profile-page {
+  background: #f4f7fb !important;
+  display: grid !important;
+  gap: var(--page-section-gap) !important;
+  margin: 0 auto !important;
+  max-width: var(--page-max-width) !important;
+  padding: var(--page-padding-y) var(--page-padding-x) calc(var(--page-padding-y) + 26px) !important;
+  width: 100% !important;
+}
+
+.app-page-layout.profile-page .app-page-content {
+  display: grid;
+  gap: var(--page-section-gap);
+}
+
+.app-page-layout.profile-page .profile-command-page {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .app-page-layout.profile-page {
+    padding: var(--page-padding-y) var(--page-padding-x) calc(var(--page-padding-y) + 18px) !important;
+  }
+}

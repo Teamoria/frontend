@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiCheckCircle, FiFileText, FiLock, FiMail, FiSave, FiShield, FiUser } from "react-icons/fi";
-import AppShell from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import { resetPassword, updateProfile } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/profile.css";
@@ -10,7 +10,13 @@ export default function ProfilePage() {
 
   return (
     <AppShell active="Profile" user={user?.name || "Admin User"} role={user?.role || "User"}>
-      <ProfileContent />
+      <AppPageLayout
+        className="profile-page"
+        title="Profile"
+        subtitle="Manage your account details, password, and permission source."
+      >
+        <ProfileContent />
+      </AppPageLayout>
     </AppShell>
   );
 }

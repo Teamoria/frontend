@@ -1,4 +1,9 @@
 import {
+  useEffect,
+  useMemo,
+  useState
+} from "react";
+import {
   FiArrowRight,
   FiBarChart2,
   FiCalendar,
@@ -11,23 +16,81 @@ import {
 } from "react-icons/fi";
 import { aiInsightLevels } from "../../data/dashboardInsights.js";
 
-export function DashboardMetricCard({ classNamePrefix, icon: Icon, label, value, detail, tone = "primary", progress }) {
+export function DashboardMetricCard({ classNamePrefix, icon: Icon, index = 0, label, value, detail, tone = "primary", progress }) {
   const baseClass = `${classNamePrefix}-metric-card`;
   const glassClass = classNamePrefix === "exec" ? "exec-glass-card" : "";
 
   return (
-    <article className={`${glassClass} ${baseClass} tone-${tone}`}>
+    <article className={`${glassClass} ${baseClass} tone-${tone}`} style={{ "--card-index": index }}>
       <div className={`${classNamePrefix}-metric-head`}>
         <span>{Icon ? <Icon aria-hidden="true" /> : null}</span>
         {detail ? <em>{detail}</em> : null}
       </div>
       <p>{label}</p>
-      <strong>{value}</strong>
+      <strong><AnimatedMetricValue value={value} /></strong>
       {typeof progress === "number" ? (
-        <div className={`${classNamePrefix}-progress`}><i style={{ width: `${progress}%` }} /></div>
+        <div className={`${classNamePrefix}-progress`}><i style={{ "--progress-value": `${progress}%`, width: `${progress}%` }} /></div>
       ) : null}
     </article>
   );
+}
+
+function AnimatedMetricValue({ value }) {
+  const parsedValue = useMemo(() => parseMetricValue(value), [value]);
+  const [displayValue, setDisplayValue] = useState(parsedValue ? 0 : value);
+
+  useEffect(() => {
+    if (!parsedValue) {
+      setDisplayValue(value);
+      return undefined;
+    }
+
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReducedMotion) {
+      setDisplayValue(parsedValue.number);
+      return undefined;
+    }
+
+    let frameId;
+    const start = performance.now();
+    const duration = 850;
+
+    function tick(now) {
+      const elapsed = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - elapsed, 3);
+      setDisplayValue(parsedValue.number * eased);
+
+      if (elapsed < 1) {
+        frameId = requestAnimationFrame(tick);
+      }
+    }
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [parsedValue, value]);
+
+  if (!parsedValue) return value;
+
+  return `${parsedValue.prefix}${formatAnimatedNumber(displayValue, parsedValue.decimals)}${parsedValue.suffix}`;
+}
+
+function parseMetricValue(value) {
+  const match = String(value ?? "").match(/^([^0-9.-]*)(-?\d+(?:\.\d+)?)(.*)$/);
+  if (!match) return null;
+
+  return {
+    prefix: match[1] || "",
+    number: Number(match[2]),
+    decimals: match[2].includes(".") ? Math.min(1, match[2].split(".")[1].length) : 0,
+    suffix: match[3] || ""
+  };
+}
+
+function formatAnimatedNumber(value, decimals) {
+  return Number(value || 0).toLocaleString(undefined, {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals
+  });
 }
 
 export function AIInsightCard({ insight, classNamePrefix = "dashboard" }) {
@@ -93,7 +156,7 @@ export function ProjectProgressChart({ data, classNamePrefix = "dashboard" }) {
         {data.map((item) => (
           <div key={item.label}>
             <span>{item.label}</span>
-            <div><i style={{ width: `${item.value}%` }} /></div>
+            <div><i style={{ "--progress-value": `${item.value}%`, width: `${item.value}%` }} /></div>
             <b>{item.value}%</b>
           </div>
         ))}

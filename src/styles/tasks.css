@@ -1390,3 +1390,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Shared app page layout adoption */
+.app-page-layout.tasks-workspace {
+  background: #f4f7fb !important;
+  display: grid !important;
+  gap: var(--page-section-gap) !important;
+  margin: 0 auto !important;
+  max-width: var(--page-max-width) !important;
+  min-height: calc(100vh - var(--topbar-height)) !important;
+  padding: var(--page-padding-y) var(--page-padding-x) calc(var(--page-padding-y) + 26px) !important;
+  width: 100% !important;
+}
+
+.app-page-layout.tasks-workspace .app-page-content {
+  display: grid;
+  gap: var(--page-section-gap);
+}
+
+.app-page-layout.tasks-workspace .tasks-filter-bar {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .app-page-layout.tasks-workspace {
+    padding: var(--page-padding-y) var(--page-padding-x) calc(var(--page-padding-y) + 18px) !important;
+  }
+}
