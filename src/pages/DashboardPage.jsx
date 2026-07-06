@@ -26,7 +26,7 @@ import {
   WorkspaceActivityFeed
 } from "../components/dashboard/DashboardComponents.jsx";
 import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashboardInsights.js";
-import { AppPageLayout, AppSidebar } from "../components/app/AppShell.jsx";
+import AppShell, { AppPageLayout, AppSidebar } from "../components/app/AppShell.jsx";
 import AppHeader from "../components/app/AppHeader.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { getCompanyDashboard, getPayloadData } from "../lib/api.js";
@@ -470,80 +470,87 @@ function TrendBars() {
 }
 
 function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange }) {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const firstName = (authUser?.name || authUser?.email || "there").split(/\s|@/).filter(Boolean)[0];
+  const shellUser = authUser?.name || authUser?.email || profile.label;
+  const taskItems = [
+    ["Finalize Q3 roadmap review", "Due by 2:00 PM", "High", 82],
+    ["Sync with Design System team", "Due by 4:30 PM", "Teamoria Alpha", 58],
+    ["Review sprint velocity data", "No deadline", "Operational", 34]
+  ];
+  const meetingItems = [
+    ["10:00", "AM", "Stakeholder Monthly", "Main Conference Room"],
+    ["01:30", "PM", "Design Review", "Virtual Link"]
+  ];
+  const recentFiles = [
+    ["Q3_Roadmap_Draft.pdf", "Modified 2h ago", "doc"],
+    ["Budget_Allocation_Final.xlsx", "Modified Yesterday", "sheet"],
+    ["Team_Velocity_Q2.report", "Modified 3d ago", "report"]
+  ];
+  const kpis = [
+    { label: "Tasks Today", value: "4", detail: "3 focused priorities", icon: FiClock, progress: 72, tone: "primary" },
+    { label: "Completed Tasks", value: "9", detail: "+2 vs yesterday", icon: FiCheckCircle, progress: 68, tone: "success" },
+    { label: "Productivity Score", value: "88", detail: "+12% this week", icon: FiTrendingUp, progress: 88, tone: "score" },
+    { label: "Upcoming Meetings", value: "2", detail: "Next at 10:00 AM", icon: FiCalendar, progress: 45, tone: "meeting" }
+  ];
 
   return (
-    <main className="employee-dashboard">
-      <AppSidebar active="Dashboard" roleId={roleId} />
-      <section className="employee-shell">
-        <AppHeader classNamePrefix="employee" profile={profile} onMobileNavToggle={() => setMobileNavOpen((value) => !value)} />
-
-        <div className="employee-page">
-          <section className="employee-hero">
-            <h2>Welcome back, {firstName}.</h2>
-            <p>You have 4 primary tasks to tackle today. Your productivity score is up 12% this week.</p>
+    <AppShell active="Dashboard" user={shellUser} role={profile.label} roleId={roleId}>
+      <AppPageLayout className="employee-page">
+        <div className="employee-dashboard-content">
+          <section className="employee-hero-card">
+            <div>
+              <span className="employee-eyebrow">Employee workspace</span>
+              <h2>Welcome back, {firstName}.</h2>
+              <p>You have 4 primary tasks to tackle today. Your productivity score is up 12% this week.</p>
+            </div>
+            <div className="employee-hero-status" aria-label="Today's employee status">
+              <span><FiCheckCircle aria-hidden="true" /> On track</span>
+              <strong>88%</strong>
+              <small>Productivity score</small>
+            </div>
           </section>
 
           {isPreview ? <RoleSwitcher activeRole={roleId} variant="employee" onRoleChange={onRoleChange} /> : null}
 
-          <section className="employee-bento-grid">
+          <section className="employee-kpi-grid" aria-label="Employee dashboard KPIs">
+            {kpis.map((item, index) => {
+              const Icon = item.icon;
+              return (
+                <article className={`employee-kpi-card tone-${item.tone}`} style={{ "--card-index": index }} key={item.label}>
+                  <div className="employee-kpi-head">
+                    <span><Icon aria-hidden="true" /></span>
+                    <em>{item.detail}</em>
+                  </div>
+                  <p>{item.label}</p>
+                  <strong>{item.value}</strong>
+                  <div className="employee-kpi-progress" aria-label={`${item.label} ${item.progress}%`}>
+                    <i style={{ width: `${item.progress}%` }} />
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="employee-bento-grid employee-analytics-grid">
             <article className="employee-panel employee-task-panel">
               <div className="employee-panel-head">
-                <h3>My Tasks for Today</h3>
+                <h3><FiBriefcase aria-hidden="true" />My Tasks for Today</h3>
                 <span>4 Remaining</span>
               </div>
               <div className="employee-task-list">
-                {[
-                  ["Finalize Q3 roadmap review", "Due by 2:00 PM - Priority High"],
-                  ["Sync with Design System team", "Due by 4:30 PM - Teamoria Alpha"],
-                  ["Review sprint velocity data", "No deadline - Operational"]
-                ].map(([title, meta]) => (
+                {taskItems.map(([title, due, status, progress]) => (
                   <label className="employee-task-item" key={title}>
                     <input type="checkbox" />
                     <span>
                       <b>{title}</b>
-                      <small>{meta}</small>
+                      <small>{due}</small>
+                      <i aria-hidden="true"><span style={{ width: `${progress}%` }} /></i>
                     </span>
+                    <em>{status}</em>
                   </label>
                 ))}
               </div>
               <a className="employee-text-link" href="#/tasks">View all tasks <FiArrowRight aria-hidden="true" /></a>
-            </article>
-
-            <article className="employee-score-card">
-              <div>
-                <h3>Productivity Score</h3>
-                <p>Based on deep work sessions</p>
-              </div>
-              <div className="employee-score-row">
-                <strong>88<span>/100</span></strong>
-                <div>
-                  <b><FiTrendingUp aria-hidden="true" />+12%</b>
-                  <small>Top 5% of team</small>
-                </div>
-              </div>
-            </article>
-
-            <article className="employee-panel employee-upcoming-panel">
-              <div className="employee-panel-head">
-                <h3>Upcoming</h3>
-                <FiCalendar aria-hidden="true" />
-              </div>
-              <div className="employee-meeting-list">
-                {[
-                  ["10:00", "AM", "Stakeholder Monthly", "Main Conference Room"],
-                  ["01:30", "PM", "Design Review", "Virtual Link"]
-                ].map(([time, meridiem, title, place]) => (
-                  <article key={title}>
-                    <time><span>{time}</span><b>{meridiem}</b></time>
-                    <div>
-                      <b>{title}</b>
-                      <small>{place}</small>
-                    </div>
-                  </article>
-                ))}
-              </div>
             </article>
 
             <article className="employee-ai-card">
@@ -561,30 +568,70 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                 />
               </div>
               <label className="employee-ai-input">
-                <input placeholder="Ask anything... 'Summarize project delta feedback'" />
+                <input placeholder="Ask Teamoria AI about your tasks or files" />
                 <button type="button"><FiArrowRight aria-hidden="true" /></button>
               </label>
             </article>
 
-            <article className="employee-panel employee-files-panel">
-              <h3>Recent Files</h3>
-              <div className="employee-file-list">
+            <aside className="employee-side-column">
+              <article className="employee-panel employee-upcoming-panel">
+                <div className="employee-panel-head">
+                  <h3><FiCalendar aria-hidden="true" />Upcoming</h3>
+                  <span>Today</span>
+                </div>
+                <div className="employee-meeting-list">
+                  {meetingItems.map(([time, meridiem, title, place]) => (
+                    <article key={title}>
+                      <time><span>{time}</span><b>{meridiem}</b></time>
+                      <div>
+                        <b>{title}</b>
+                        <small>{place}</small>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </article>
+
+              <article className="employee-panel employee-files-panel">
+                <div className="employee-panel-head">
+                  <h3><FiBookOpen aria-hidden="true" />Recent Files</h3>
+                </div>
+                <div className="employee-file-list">
+                  {recentFiles.map(([name, meta, type]) => (
+                    <article className={`file-${type}`} key={name}>
+                      <span><FiBookOpen aria-hidden="true" /></span>
+                      <div>
+                        <b>{name}</b>
+                        <small>{meta}</small>
+                      </div>
+                      <button type="button" aria-label={`More actions for ${name}`}>...</button>
+                    </article>
+                  ))}
+                </div>
+                <a className="employee-secondary-link" href="#/uploads">Open Upload Center</a>
+              </article>
+            </aside>
+
+            <article className="employee-panel employee-insights-panel">
+              <div className="employee-panel-head">
+                <h3><FiTrendingUp aria-hidden="true" />Productivity Insights</h3>
+                <span>Weekly</span>
+              </div>
+              <div className="employee-insight-grid">
                 {[
-                  ["Q3_Roadmap_Draft.pdf", "Modified 2h ago", "doc"],
-                  ["Budget_Allocation_Final.xlsx", "Modified Yesterday", "sheet"],
-                  ["Team_Velocity_Q2.report", "Modified 3d ago", "report"]
-                ].map(([name, meta, type]) => (
-                  <article className={`file-${type}`} key={name}>
-                    <span><FiBookOpen aria-hidden="true" /></span>
+                  ["Deep work", "6.4h", 74],
+                  ["Task focus", "88%", 88],
+                  ["Review load", "3 items", 42]
+                ].map(([label, value, progress]) => (
+                  <div className="employee-insight-row" key={label}>
                     <div>
-                      <b>{name}</b>
-                      <small>{meta}</small>
+                      <span>{label}</span>
+                      <strong>{value}</strong>
                     </div>
-                    <button type="button">...</button>
-                  </article>
+                    <i aria-hidden="true"><span style={{ width: `${progress}%` }} /></i>
+                  </div>
                 ))}
               </div>
-              <a className="employee-secondary-link" href="#/uploads">Open Upload Center</a>
             </article>
 
             <article className="employee-panel employee-schedule-panel">
@@ -629,15 +676,8 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
 
         <AiHelper classNamePrefix="employee" />
         <a className="employee-fab" href="#/tasks" aria-label="Create task"><FiPlus aria-hidden="true" /></a>
-        {mobileNavOpen ? (
-          <div className="mobile-nav-overlay is-open" role="presentation" onClick={() => setMobileNavOpen(false)}>
-            <div className="mobile-nav-panel" role="dialog" aria-label="Navigation menu" onClick={(event) => event.stopPropagation()}>
-              <AppSidebar active="Dashboard" roleId={roleId} onNavigate={() => setMobileNavOpen(false)} />
-            </div>
-          </div>
-        ) : null}
-      </section>
-    </main>
+      </AppPageLayout>
+    </AppShell>
   );
 }
 
