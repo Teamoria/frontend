@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  FiDownload,
+  FiChevronDown,
+  FiChevronRight,
   FiCheck,
+  FiClipboard,
+  FiCpu,
+  FiDownload,
+  FiEdit3,
   FiEye,
   FiFileText,
   FiFilter,
   FiLock,
   FiMic,
   FiMonitor,
+  FiPlus,
   FiRefreshCw,
+  FiSearch,
   FiShare2,
   FiTrash2,
+  FiUserPlus,
   FiUploadCloud,
   FiVideo,
   FiX
@@ -336,6 +344,26 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     }
   }
 
+  async function refreshAiResults() {
+    const uploadId = aiResultsModal?.upload?.id || aiResultsModal?.asset?.id;
+    if (!uploadId) return;
+
+    setAiResultsModal((current) => current ? { ...current, isLoading: true, error: "" } : current);
+    try {
+      const payload = await getUpload(uploadId);
+      const upload = getPayloadData(payload)?.upload || getPayloadData(payload);
+      setAiResultsModal((current) => current ? {
+        ...current,
+        asset: normalizeAsset(upload || current.asset),
+        isLoading: false,
+        upload: upload || current.upload,
+        error: ""
+      } : current);
+    } catch (error) {
+      setAiResultsModal((current) => current ? { ...current, isLoading: false, error: error.message } : current);
+    }
+  }
+
   return (
     <section className="owner-upload-page">
       <div className="owner-upload-toprow">
@@ -561,6 +589,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
           defaultProjectId={getDefaultTaskProjectId(aiResultsModal, projects)}
           role={normalizedRole}
           onClose={() => setAiResultsModal(null)}
+          onRefresh={refreshAiResults}
           onStatus={(nextStatus) => setStatus(nextStatus)}
         />
       ) : null}
@@ -638,16 +667,32 @@ function PreviewModal({ state, onClose }) {
   );
 }
 
-function AiResultsModal({ defaultProjectId = "", onClose, onStatus, people, projects, role, state }) {
+function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, people, projects, role, state }) {
   const upload = state.upload || {};
   const summary = normalizeSummary(upload);
   const decisions = Array.isArray(upload.decisions) ? upload.decisions : [];
   const extractedTasks = normalizeExtractedTasks(upload, { defaultProjectId });
+  const [activeTab, setActiveTab] = useState("summary");
+  const [transcriptSearch, setTranscriptSearch] = useState("");
+  const [copiedTranscript, setCopiedTranscript] = useState(false);
+  const [expandedChunks, setExpandedChunks] = useState(() => new Set(["0"]));
+  const [editingTaskIds, setEditingTaskIds] = useState(() => new Set());
   const [taskDrafts, setTaskDrafts] = useState(() => extractedTasks);
   const [savingTaskId, setSavingTaskId] = useState("");
   const chunks = Array.isArray(upload.chunks) ? upload.chunks : [];
   const processingStatus = upload.processing_status || upload.processingStatus || upload.status || "queued";
   const isReady = isProcessingReady(processingStatus);
+  const fileName = state.asset?.name || upload.original_name || upload.file_name || "Uploaded file";
+  const transcript = summary.transcript || upload.transcript || "";
+  const progressValue = getProcessingProgress(upload, state.asset);
+  const transcriptMatches = getMatchCount(transcript, transcriptSearch);
+  const tabs = [
+    { id: "summary", label: "Summary" },
+    { id: "transcript", label: "Transcript" },
+    { id: "decisions", label: "Decisions" },
+    { id: "tasks", label: "Tasks" },
+    { id: "knowledge", label: "Knowledge" }
+  ];
   const extractedTaskSignature = extractedTasks.map((task) => `${task.localId}:${task.title}:${task.description}:${task.project_id}`).join("|");
 
   useEffect(() => {
@@ -664,6 +709,36 @@ function AiResultsModal({ defaultProjectId = "", onClose, onStatus, people, proj
 
   function rejectTaskDraft(id) {
     setTaskDrafts((current) => current.map((task) => task.localId === id ? { ...task, rejected: true } : task));
+  }
+
+  function toggleTaskEdit(id) {
+    setEditingTaskIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleChunk(index) {
+    setExpandedChunks((current) => {
+      const next = new Set(current);
+      const key = String(index);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  async function copyTranscript() {
+    if (!transcript) return;
+    try {
+      await navigator.clipboard?.writeText(transcript);
+      setCopiedTranscript(true);
+      window.setTimeout(() => setCopiedTranscript(false), 1600);
+    } catch {
+      onStatus?.({ type: "error", message: "Could not copy transcript in this browser." });
+    }
   }
 
   async function approveTaskDraft(task) {
@@ -700,105 +775,229 @@ function AiResultsModal({ defaultProjectId = "", onClose, onStatus, people, proj
     <div className="owner-upload-modal-layer" role="presentation">
       <button className="owner-upload-modal-backdrop" type="button" aria-label="Close AI results modal" onClick={onClose} />
       <section className="owner-upload-permissions-modal owner-upload-ai-modal" role="dialog" aria-modal="true" aria-labelledby="upload-ai-results-title">
-        <header>
-          <div>
-            <h2 id="upload-ai-results-title">AI results</h2>
-            <p>{state.asset?.name || upload.original_name || "Uploaded file"}</p>
+        <header className="owner-upload-ai-header">
+          <div className="owner-upload-ai-titleblock">
+            <h2 id="upload-ai-results-title">AI Results</h2>
+            <p>{fileName}</p>
           </div>
-          <button type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+          <div className="owner-upload-ai-header-actions">
+            <span className={`owner-upload-ai-status is-${String(processingStatus).toLowerCase()}`}>{formatLabel(processingStatus)}</span>
+            <button type="button" aria-label="Refresh AI results" onClick={onRefresh} disabled={state.isLoading}>
+              <FiRefreshCw aria-hidden="true" />
+              <span>Refresh</span>
+            </button>
+            <button type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+          </div>
         </header>
 
-        {state.isLoading ? <p>Loading AI results...</p> : null}
-        {state.error ? <p className="auth-alert auth-alert--error">{state.error}</p> : null}
+        {state.error ? <p className="auth-alert auth-alert--error owner-upload-ai-alert">{state.error}</p> : null}
 
-        {!state.isLoading && !state.error ? (
-          <div className="owner-upload-ai-results">
-            <section>
-              <h3>Processing</h3>
-              <p><strong>Upload status:</strong> {formatLabel(upload.status || "uploaded")}</p>
-              <p><strong>Processing status:</strong> {formatLabel(processingStatus)}</p>
-              {upload.processing_error ? <p className="auth-alert auth-alert--error">{upload.processing_error}</p> : null}
-              {!isReady ? <p className="owner-upload-processing-note">File is still processing. Please refresh or check again later.</p> : null}
-            </section>
-            <section>
-              <h3>Summary</h3>
-              <p dir="auto">{summary.summary || "No summary available yet."}</p>
-            </section>
-            <section>
-              <h3>Transcript</h3>
-              <pre dir="auto">{summary.transcript || upload.transcript || "No transcript available yet."}</pre>
-            </section>
-            <section>
-              <h3>Decisions</h3>
-              {decisions.length ? (
-                <ul>{decisions.map((item) => <li dir="auto" key={item.id}>{item.decision_text}</li>)}</ul>
-              ) : <p>No decisions extracted.</p>}
-            </section>
-            <section className="owner-upload-task-review">
-              <h3>Extracted Tasks</h3>
-              {!taskDrafts.length ? <p>No tasks extracted.</p> : null}
-              {taskDrafts.map((task) => (
-                <article className={`owner-upload-task-draft ${task.rejected ? "is-rejected" : ""} ${task.created ? "is-created" : ""}`} key={task.localId}>
-                  <div className="owner-upload-task-draft-head">
-                    <span>{task.created ? "Created" : task.rejected ? "Rejected" : "Needs review"}</span>
-                    <div>
-                      <button type="button" disabled={task.created || task.rejected || savingTaskId === task.localId} onClick={() => approveTaskDraft(task)}>
-                        {savingTaskId === task.localId ? "Saving..." : <><FiCheck aria-hidden="true" />Create</>}
-                      </button>
-                      <button type="button" disabled={task.created || task.rejected} onClick={() => rejectTaskDraft(task.localId)}>
-                        <FiTrash2 aria-hidden="true" />Reject
+        {state.isLoading || (!state.error && !isReady) ? (
+          <ProcessingState
+            category={state.asset?.category || inferCategory(fileName)}
+            error={upload.processing_error}
+            isLoading={state.isLoading}
+            onRefresh={onRefresh}
+            progress={progressValue}
+            status={processingStatus}
+          />
+        ) : null}
+
+        {!state.isLoading && !state.error && isReady ? (
+          <>
+            <nav className="owner-upload-ai-tabs" aria-label="AI result sections">
+              {tabs.map((tab) => (
+                <button
+                  className={activeTab === tab.id ? "is-active" : ""}
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+            <div className="owner-upload-ai-results" key={activeTab}>
+              {activeTab === "summary" ? (
+                summary.summary ? (
+                  <article className="owner-upload-ai-summary-card" dir="auto">
+                    {splitParagraphs(summary.summary).map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)}
+                  </article>
+                ) : <EmptyAiState title="No AI analysis yet" detail="Once the document has enough usable content, the summary will appear here." />
+              ) : null}
+
+              {activeTab === "transcript" ? (
+                transcript ? (
+                  <div className="owner-upload-ai-transcript">
+                    <div className="owner-upload-ai-toolbar">
+                      <label>
+                        <FiSearch aria-hidden="true" />
+                        <input value={transcriptSearch} onChange={(event) => setTranscriptSearch(event.target.value)} placeholder="Search transcript" />
+                      </label>
+                      <span>{transcriptSearch ? `${transcriptMatches} matches` : `${transcript.length.toLocaleString()} chars`}</span>
+                      <button type="button" onClick={copyTranscript}>
+                        <FiClipboard aria-hidden="true" />
+                        {copiedTranscript ? "Copied" : "Copy"}
                       </button>
                     </div>
+                    <pre dir="auto">{transcript}</pre>
                   </div>
-                  <label>
-                    <span>Task title</span>
-                    <input value={task.title} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "title", event.target.value)} />
-                  </label>
-                  <label>
-                    <span>Description</span>
-                    <textarea value={task.description} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "description", event.target.value)} />
-                  </label>
-                  <div className="owner-upload-task-grid">
-                    <label>
-                      <span>Project</span>
-                      <select value={task.project_id} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "project_id", event.target.value)}>
-                        <option value="">Choose project</option>
-                        {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Assignee</span>
-                      <select value={task.assignee_id} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "assignee_id", event.target.value)}>
-                        <option value="">Unassigned</option>
-                        {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
-                      </select>
-                    </label>
-                    <label>
-                      <span>Deadline</span>
-                      <input type="date" value={task.due_date} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "due_date", event.target.value)} />
-                    </label>
-                    <label>
-                      <span>Priority</span>
-                      <select value={task.priority} disabled={task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "priority", event.target.value)}>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="emergency">Emergency</option>
-                      </select>
-                    </label>
+                ) : <EmptyAiState title="Transcript is empty" detail="Audio, video, or text extraction results will be readable here after processing." />
+              ) : null}
+
+              {activeTab === "decisions" ? (
+                decisions.length ? (
+                  <div className="owner-upload-ai-card-grid">
+                    {decisions.map((item, index) => (
+                      <article className="owner-upload-ai-decision-card" dir="auto" key={item.id || `decision-${index}`}>
+                        <span><FiCheck aria-hidden="true" /></span>
+                        <div>
+                          <h3>{getDecisionTitle(item, index)}</h3>
+                          <p>{getDecisionDescription(item)}</p>
+                          <small>Confidence: {formatConfidence(item.confidence || item.score)}</small>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-                </article>
-              ))}
-            </section>
-            <section>
-              <h3>Knowledge chunks</h3>
-              {chunks.length ? (
-                <ul>{chunks.map((item) => <li dir="auto" key={item.id}>{item.content}</li>)}</ul>
-              ) : <p>No chunks available.</p>}
-            </section>
-          </div>
+                ) : <EmptyAiState title="No decisions found" detail="Decisions extracted from meetings, plans, and notes will be listed here." />
+              ) : null}
+
+              {activeTab === "tasks" ? (
+                taskDrafts.length ? (
+                  <div className="owner-upload-task-review">
+                    {taskDrafts.map((task) => {
+                      const isEditing = editingTaskIds.has(task.localId) || (!task.created && !task.rejected);
+                      return (
+                        <article className={`owner-upload-task-draft ${task.rejected ? "is-rejected" : ""} ${task.created ? "is-created" : ""}`} key={task.localId}>
+                          <div className="owner-upload-task-draft-head">
+                            <label className="owner-upload-task-check">
+                              <input checked={task.created} readOnly type="checkbox" />
+                              <span>{task.created ? "Created" : task.rejected ? "Deleted" : "Needs approval"}</span>
+                            </label>
+                            <div>
+                              <button type="button" disabled={task.created || task.rejected} onClick={() => updateTaskDraft(task.localId, "approved", true)}>
+                                <FiCheck aria-hidden="true" />Approve
+                              </button>
+                              <button type="button" disabled={task.created || task.rejected} onClick={() => toggleTaskEdit(task.localId)}>
+                                <FiEdit3 aria-hidden="true" />Edit
+                              </button>
+                              <button type="button" disabled={task.created || task.rejected} onClick={() => rejectTaskDraft(task.localId)}>
+                                <FiTrash2 aria-hidden="true" />Delete
+                              </button>
+                              <button type="button" disabled={task.created || task.rejected || savingTaskId === task.localId} onClick={() => approveTaskDraft(task)}>
+                                {savingTaskId === task.localId ? "Saving..." : <><FiPlus aria-hidden="true" />Create Task</>}
+                              </button>
+                            </div>
+                          </div>
+                          <label>
+                            <span>Title</span>
+                            <input value={task.title} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "title", event.target.value)} />
+                          </label>
+                          <label>
+                            <span>Description</span>
+                            <textarea value={task.description} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "description", event.target.value)} />
+                          </label>
+                          <div className="owner-upload-task-grid">
+                            <label>
+                              <span>Priority</span>
+                              <select value={task.priority} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "priority", event.target.value)}>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="emergency">Emergency</option>
+                              </select>
+                            </label>
+                            <label>
+                              <span>Due date</span>
+                              <input type="date" value={task.due_date} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "due_date", event.target.value)} />
+                            </label>
+                            <label>
+                              <span>Assignee</span>
+                              <select value={task.assignee_id} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "assignee_id", event.target.value)}>
+                                <option value="">Unassigned</option>
+                                {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+                              </select>
+                            </label>
+                            <label>
+                              <span>Project</span>
+                              <select value={task.project_id} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "project_id", event.target.value)}>
+                                <option value="">Choose project</option>
+                                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                              </select>
+                            </label>
+                          </div>
+                          <button className="owner-upload-assign-member" type="button" disabled={task.created || task.rejected} onClick={() => toggleTaskEdit(task.localId)}>
+                            <FiUserPlus aria-hidden="true" />Assign Member
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : <EmptyAiState title="No tasks extracted" detail="Action items detected in the document will become editable task cards here." />
+              ) : null}
+
+              {activeTab === "knowledge" ? (
+                chunks.length ? (
+                  <div className="owner-upload-ai-knowledge">
+                    {chunks.map((item, index) => {
+                      const isExpanded = expandedChunks.has(String(index));
+                      return (
+                        <article className="owner-upload-ai-chunk" key={item.id || `chunk-${index}`}>
+                          <button type="button" onClick={() => toggleChunk(index)} aria-expanded={isExpanded}>
+                            {isExpanded ? <FiChevronDown aria-hidden="true" /> : <FiChevronRight aria-hidden="true" />}
+                            <span>Chunk {index + 1}</span>
+                            <small>{getChunkSource(item, fileName)}{getChunkPage(item) ? ` - Page ${getChunkPage(item)}` : ""}</small>
+                          </button>
+                          {isExpanded ? <p dir="auto">{item.content || item.text || item.chunk || ""}</p> : null}
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : <EmptyAiState title="No knowledge chunks" detail="Indexed source passages will appear here with document and page context." />
+              ) : null}
+            </div>
+          </>
         ) : null}
       </section>
+    </div>
+  );
+}
+
+function ProcessingState({ category, error, isLoading, onRefresh, progress, status }) {
+  const contentLabel = getProcessingContentLabel(category);
+
+  return (
+    <div className="owner-upload-ai-processing" role="status">
+      <div className="owner-upload-ai-orbit" aria-hidden="true">
+        <FiCpu />
+      </div>
+      <h3>{isLoading ? "Loading AI results..." : "Processing..."}</h3>
+      <p>{isLoading ? `Fetching the latest ${contentLabel} analysis.` : `Analyzing ${contentLabel}...`}</p>
+      {Number.isFinite(progress) ? (
+        <div className="owner-upload-ai-progress">
+          <span><strong style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></span>
+          <small>{Math.round(progress)}% estimated progress</small>
+        </div>
+      ) : <small>Status: {formatLabel(status)}</small>}
+      {error ? <p className="auth-alert auth-alert--error">{error}</p> : null}
+      <button type="button" onClick={onRefresh} disabled={isLoading}>
+        <FiRefreshCw aria-hidden="true" />
+        Refresh
+      </button>
+    </div>
+  );
+}
+
+function EmptyAiState({ detail, title }) {
+  return (
+    <div className="owner-upload-ai-empty">
+      <div aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <h3>{title}</h3>
+      <p>{detail}</p>
     </div>
   );
 }
@@ -979,6 +1178,64 @@ function normalizeExtractedTasks(upload, { defaultProjectId = "" } = {}) {
       rejected: false
     };
   });
+}
+
+function splitParagraphs(value) {
+  return String(value || "")
+    .split(/\n{2,}|\r\n{2,}/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getMatchCount(text, query) {
+  const value = String(text || "");
+  const needle = String(query || "").trim();
+  if (!needle) return 0;
+  return value.toLowerCase().split(needle.toLowerCase()).length - 1;
+}
+
+function getDecisionTitle(item, index) {
+  return item.title || item.decision_title || item.name || `Decision ${index + 1}`;
+}
+
+function getDecisionDescription(item) {
+  return item.description || item.decision_text || item.text || item.summary || "Decision details were extracted from the document.";
+}
+
+function formatConfidence(value) {
+  if (value === undefined || value === null || value === "") return "Not provided";
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) return formatLabel(value);
+  return numeric <= 1 ? `${Math.round(numeric * 100)}%` : `${Math.round(numeric)}%`;
+}
+
+function getProcessingProgress(upload, asset) {
+  const candidates = [
+    upload.processing_progress,
+    upload.progress,
+    upload.percent_complete,
+    upload.result?.progress,
+    asset?.processing_progress,
+    asset?.progress
+  ];
+  const value = candidates.map(Number).find((item) => Number.isFinite(item));
+  return value === undefined ? null : value;
+}
+
+function getProcessingContentLabel(category) {
+  const value = String(category || "").toLowerCase();
+  if (value === "video") return "video";
+  if (value === "audio") return "audio";
+  if (value === "image") return "image";
+  return "file";
+}
+
+function getChunkSource(item, fallback) {
+  return item.source_document || item.source || item.document_name || item.file_name || fallback || "Source document";
+}
+
+function getChunkPage(item) {
+  return item.page_number || item.page || item.metadata?.page || item.meta?.page || "";
 }
 
 function getDefaultTaskProjectId(modalState, projects) {
