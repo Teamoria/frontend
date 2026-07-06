@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FiArrowRight,
   FiGrid,
+  FiMenu,
   FiPlayCircle,
   FiUsers,
+  FiX,
   FiZap
 } from "react-icons/fi";
 import logoImage from "../assets/teamoria-logo.png";
@@ -148,7 +150,19 @@ const localize = (value, lang) => (typeof value === "string" ? value : value[lan
 
 export default function LandingPage() {
   const [lang, setLang] = useState("en");
+  const [navOpen, setNavOpen] = useState(false);
+  const navMenuRef = useRef(null);
   const t = copy[lang];
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (navMenuRef.current && !navMenuRef.current.contains(event.target)) {
+        setNavOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
@@ -176,12 +190,14 @@ export default function LandingPage() {
             </span>
             <span className="home-logo-text">Teamoria</span>
           </a>
+
           <div className="home-links">
             <a href="#/" onClick={goHome}>{t.home}</a>
             <a href="#features">{t.features}</a>
             <a href="#workflow">{t.how}</a>
             <a href="#pricing">{t.pricing}</a>
           </div>
+
           <div className="home-actions">
             <div className="home-lang-toggle" aria-label="Language">
               <button className={lang === "ar" ? "active" : ""} type="button" onClick={() => setLang("ar")}>AR</button>
@@ -189,6 +205,77 @@ export default function LandingPage() {
             </div>
             <a className="home-login" href="#/signin">{t.login}</a>
             <a className="home-start" href="#/signup">{t.start}</a>
+
+            <div className="home-menu-wrap" ref={navMenuRef}>
+              <button
+                className="home-menu-toggle"
+                type="button"
+                aria-label="Menu"
+                aria-expanded={navOpen}
+                onClick={() => setNavOpen((v) => !v)}
+              >
+                {navOpen ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
+              </button>
+
+              {navOpen && (
+                <div className="home-menu-dropdown" role="menu">
+                  <a
+                    href="#/"
+                    role="menuitem"
+                    onClick={(e) => {
+                      goHome(e);
+                      setNavOpen(false);
+                    }}
+                  >
+                    {t.home}
+                  </a>
+
+                  <a href="#features" role="menuitem" onClick={() => setNavOpen(false)}>
+                    {t.features}
+                  </a>
+
+                  <a href="#workflow" role="menuitem" onClick={() => setNavOpen(false)}>
+                    {t.how}
+                  </a>
+
+                  <a href="#pricing" role="menuitem" onClick={() => setNavOpen(false)}>
+                    {t.pricing}
+                  </a>
+
+                  <hr className="home-menu-divider" />
+
+                  <a href="#/signin" role="menuitem" onClick={() => setNavOpen(false)}>
+                    {t.login}
+                  </a>
+
+                  <a href="#/signup" role="menuitem" onClick={() => setNavOpen(false)}>
+                    {t.start}
+                  </a>
+
+                  <div className="home-menu-lang">
+                    <button
+                      className={lang === "ar" ? "active" : ""}
+                      onClick={() => {
+                        setLang("ar");
+                        setNavOpen(false);
+                      }}
+                    >
+                      Arabic
+                    </button>
+
+                    <button
+                      className={lang === "en" ? "active" : ""}
+                      onClick={() => {
+                        setLang("en");
+                        setNavOpen(false);
+                      }}
+                    >
+                      English
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </nav>
       </header>
