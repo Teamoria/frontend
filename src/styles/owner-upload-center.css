@@ -884,6 +884,7 @@
 .owner-upload-ai-results li {
   color: #334155;
   line-height: 1.55;
+  unicode-bidi: plaintext;
 }
 
 .owner-upload-ai-results pre {
@@ -895,6 +896,7 @@
   color: #334155;
   font: inherit;
   line-height: 1.55;
+  unicode-bidi: plaintext;
 }
 
 .owner-upload-preview-modal {

@@ -277,11 +277,19 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
     });
   }
 
-  const response = await fetch(url.toString(), {
-    method,
-    headers,
-    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
-  });
+  let response;
+  try {
+    response = await fetch(url.toString(), {
+      method,
+      headers,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
+    });
+  } catch (error) {
+    throw new ApiError(
+      `Unable to reach the upload AI service at ${url.origin}. Make sure the service is running on port 3001 and can connect to its database.`,
+      { status: 0, payload: { original_error: error.message } }
+    );
+  }
 
   const payload = await response.json().catch(() => null);
 

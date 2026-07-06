@@ -89,6 +89,40 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     if (showFiles) loadUploads();
   }, [filters.scope, filters.visibility, filters.project_id, filters.task_id, filters.per_page, filters.mine, showFiles]);
 
+  useEffect(() => {
+    const uploadId = aiResultsModal?.upload?.id || aiResultsModal?.asset?.id;
+    const processingStatus = aiResultsModal?.upload
+      ? aiResultsModal.upload.processing_status || aiResultsModal.upload.processingStatus || aiResultsModal.upload.status
+      : "";
+
+    if (!uploadId || aiResultsModal?.isLoading || aiResultsModal?.error || isProcessingReady(processingStatus)) {
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(async () => {
+      try {
+        const payload = await getUpload(uploadId);
+        const upload = getPayloadData(payload)?.upload || getPayloadData(payload);
+        setAiResultsModal((current) => {
+          if (!current || (current.upload?.id || current.asset?.id) !== uploadId) return current;
+          return {
+            ...current,
+            asset: normalizeAsset(upload || current.asset),
+            upload: upload || current.upload,
+            error: ""
+          };
+        });
+      } catch (error) {
+        setAiResultsModal((current) => {
+          if (!current || (current.upload?.id || current.asset?.id) !== uploadId) return current;
+          return { ...current, error: error.message };
+        });
+      }
+    }, 3000);
+
+    return () => window.clearTimeout(timerId);
+  }, [aiResultsModal]);
+
   function updateForm(field, value) {
     setForm((current) => {
       const next = { ...current, [field]: value };
@@ -211,7 +245,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       });
       if (showFiles) await loadUploads();
     } catch (error) {
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: getUploadSubmitErrorMessage(error, form) });
     } finally {
       setIsUploading(false);
     }
@@ -524,6 +558,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
           state={aiResultsModal}
           people={shareUsers}
           projects={projects}
+          defaultProjectId={getDefaultTaskProjectId(aiResultsModal, projects)}
           role={normalizedRole}
           onClose={() => setAiResultsModal(null)}
           onStatus={(nextStatus) => setStatus(nextStatus)}
@@ -603,16 +638,25 @@ function PreviewModal({ state, onClose }) {
   );
 }
 
-function AiResultsModal({ onClose, onStatus, people, projects, role, state }) {
+function AiResultsModal({ defaultProjectId = "", onClose, onStatus, people, projects, role, state }) {
   const upload = state.upload || {};
   const summary = normalizeSummary(upload);
   const decisions = Array.isArray(upload.decisions) ? upload.decisions : [];
-  const extractedTasks = normalizeExtractedTasks(upload);
+  const extractedTasks = normalizeExtractedTasks(upload, { defaultProjectId });
   const [taskDrafts, setTaskDrafts] = useState(() => extractedTasks);
   const [savingTaskId, setSavingTaskId] = useState("");
   const chunks = Array.isArray(upload.chunks) ? upload.chunks : [];
   const processingStatus = upload.processing_status || upload.processingStatus || upload.status || "queued";
-  const isReady = ["processed", "completed", "done", "success"].includes(String(processingStatus).toLowerCase());
+  const isReady = isProcessingReady(processingStatus);
+  const extractedTaskSignature = extractedTasks.map((task) => `${task.localId}:${task.title}:${task.description}:${task.project_id}`).join("|");
+
+  useEffect(() => {
+    setTaskDrafts((current) => {
+      const hasUserChanges = current.some((task) => task.created || task.rejected);
+      if (hasUserChanges) return current;
+      return extractedTasks;
+    });
+  }, [upload.id, extractedTaskSignature]);
 
   function updateTaskDraft(id, field, value) {
     setTaskDrafts((current) => current.map((task) => task.localId === id ? { ...task, [field]: value } : task));
@@ -678,16 +722,16 @@ function AiResultsModal({ onClose, onStatus, people, projects, role, state }) {
             </section>
             <section>
               <h3>Summary</h3>
-              <p>{summary.summary || "No summary available yet."}</p>
+              <p dir="auto">{summary.summary || "No summary available yet."}</p>
             </section>
             <section>
               <h3>Transcript</h3>
-              <pre>{summary.transcript || upload.transcript || "No transcript available yet."}</pre>
+              <pre dir="auto">{summary.transcript || upload.transcript || "No transcript available yet."}</pre>
             </section>
             <section>
               <h3>Decisions</h3>
               {decisions.length ? (
-                <ul>{decisions.map((item) => <li key={item.id}>{item.decision_text}</li>)}</ul>
+                <ul>{decisions.map((item) => <li dir="auto" key={item.id}>{item.decision_text}</li>)}</ul>
               ) : <p>No decisions extracted.</p>}
             </section>
             <section className="owner-upload-task-review">
@@ -749,7 +793,7 @@ function AiResultsModal({ onClose, onStatus, people, projects, role, state }) {
             <section>
               <h3>Knowledge chunks</h3>
               {chunks.length ? (
-                <ul>{chunks.map((item) => <li key={item.id}>{item.content}</li>)}</ul>
+                <ul>{chunks.map((item) => <li dir="auto" key={item.id}>{item.content}</li>)}</ul>
               ) : <p>No chunks available.</p>}
             </section>
           </div>
@@ -910,7 +954,7 @@ function normalizeSummary(upload) {
   };
 }
 
-function normalizeExtractedTasks(upload) {
+function normalizeExtractedTasks(upload, { defaultProjectId = "" } = {}) {
   const candidates = [
     upload.tasks,
     upload.action_items,
@@ -929,12 +973,25 @@ function normalizeExtractedTasks(upload) {
       description: item.description || item.details || item.notes || item.task_description || "",
       due_date: normalizeDateInput(item.due_date || item.deadline || item.date),
       priority: normalizePriority(item.priority),
-      project_id: String(item.project_id || item.project?.id || ""),
+      project_id: String(item.project_id || item.project?.id || defaultProjectId || ""),
       assignee_id: String(item.assignee_id || item.user_id || item.owner_id || ""),
       created: false,
       rejected: false
     };
   });
+}
+
+function getDefaultTaskProjectId(modalState, projects) {
+  const upload = modalState?.upload || {};
+  const asset = modalState?.asset || {};
+  return String(
+    upload.project_id ||
+    upload.project?.id ||
+    asset.project_id ||
+    asset.project?.id ||
+    projects[0]?.id ||
+    ""
+  );
 }
 
 function normalizeDateInput(value) {
@@ -981,6 +1038,25 @@ function getInitials(value) {
 
 function cleanObject(value) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== undefined && item !== null && item !== ""));
+}
+
+function isProcessingReady(statusValue) {
+  return ["processed", "completed", "done", "success", "failed", "skipped"].includes(String(statusValue || "").toLowerCase());
+}
+
+function getUploadSubmitErrorMessage(error, form) {
+  const message = error?.message || "Upload failed. Please try again.";
+  const status = Number(error?.status || 0);
+
+  if (form.scope === "project" && status >= 500) {
+    return `Upload failed because the selected project could not be saved by the AI service. Check that project_id exists in the AI database: ${form.project_id}`;
+  }
+
+  if (form.scope === "task" && status >= 500) {
+    return `Upload failed because the selected task could not be saved by the AI service. Check that task_id exists in the AI database: ${form.task_id}`;
+  }
+
+  return message;
 }
 
 function triggerDownload(url, filename) {
