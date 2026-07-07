@@ -310,8 +310,8 @@ export default function TasksPage() {
     <AppShell active={isMember ? "My Tasks" : "Tasks"} user={user?.name || "Teamoria User"} role={formatLabel(normalizedRole || "Company User")}>
       <AppPageLayout
         className="tasks-workspace"
-        title="Project Tasks"
-        subtitle={`Live task board connected to the ${isAdmin ? "admin" : "company"} tasks API.`}
+        title={isMember ? "My Tasks" : "Project Tasks"}
+        subtitle={isMember ? "Update your assigned task status and add progress notes." : `Live task board connected to the ${isAdmin ? "admin" : "company"} tasks API.`}
         actions={(
           <div className="tasks-head-actions">
             <div className="tasks-view-toggle" aria-label="Task view">
@@ -331,6 +331,7 @@ export default function TasksPage() {
 
         <TaskFilters
           filters={filters}
+          isMember={isMember}
           onChange={(field, value) => setFilters((current) => ({ ...current, [field]: value }))}
           onRefresh={loadTasks}
           people={people}
@@ -446,6 +447,7 @@ export default function TasksPage() {
           onSaveTask={saveTaskChanges}
           onStatusChange={(nextStatus) => changeTaskStatus(selectedTask, nextStatus)}
           onUpdateDraft={(field, value) => setDetailDraft((current) => ({ ...current, [field]: value }))}
+          canManageTask={!isMember}
           people={people}
           projects={projects}
           role={normalizedRole}
@@ -457,17 +459,19 @@ export default function TasksPage() {
   );
 }
 
-function TaskFilters({ filters, onChange, onRefresh, people, projects, total }) {
+function TaskFilters({ filters, isMember, onChange, onRefresh, people, projects, total }) {
   return (
     <div className="tasks-filter-bar tasks-filter-bar--form">
-      <label>
-        <span>Project</span>
-          <select value={filters.project_id} onChange={(event) => onChange("project_id", event.target.value)}>
-            <option value="">All projects</option>
-            {projects.length === 0 ? <option value="" disabled>No UUID projects loaded</option> : null}
-            {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-          </select>
-      </label>
+      {!isMember ? (
+        <label>
+          <span>Project</span>
+            <select value={filters.project_id} onChange={(event) => onChange("project_id", event.target.value)}>
+              <option value="">All projects</option>
+              {projects.length === 0 ? <option value="" disabled>No UUID projects loaded</option> : null}
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+        </label>
+      ) : null}
       <label>
         <span>Status</span>
         <select value={filters.status} onChange={(event) => onChange("status", event.target.value)}>
@@ -482,13 +486,15 @@ function TaskFilters({ filters, onChange, onRefresh, people, projects, total }) 
           {priorityOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
         </select>
       </label>
-      <label>
-        <span>Assignee</span>
-        <select value={filters.assignee_id} onChange={(event) => onChange("assignee_id", event.target.value)}>
-          <option value="">Any assignee</option>
-          {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
-        </select>
-      </label>
+      {!isMember ? (
+        <label>
+          <span>Assignee</span>
+          <select value={filters.assignee_id} onChange={(event) => onChange("assignee_id", event.target.value)}>
+            <option value="">Any assignee</option>
+            {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+          </select>
+        </label>
+      ) : null}
       <label>
         <span>Due from</span>
         <input type="date" value={filters.due_from} onChange={(event) => onChange("due_from", event.target.value)} />
@@ -505,10 +511,12 @@ function TaskFilters({ filters, onChange, onRefresh, people, projects, total }) 
           <option value="50">50</option>
         </select>
       </label>
-      <label className="tasks-check-filter">
-        <input checked={filters.archived} type="checkbox" onChange={(event) => onChange("archived", event.target.checked)} />
-        <span>Archived</span>
-      </label>
+      {!isMember ? (
+        <label className="tasks-check-filter">
+          <input checked={filters.archived} type="checkbox" onChange={(event) => onChange("archived", event.target.checked)} />
+          <span>Archived</span>
+        </label>
+      ) : null}
       <button type="button" onClick={onRefresh}><FiRefreshCw aria-hidden="true" />Refresh</button>
       <span>{total} tasks in total</span>
     </div>
@@ -596,6 +604,7 @@ function CreateTaskModal({ draft, isSaving, onClose, onSubmit, onToggleArray, on
 }
 
 function TaskDetailsModal({
+  canManageTask,
   detailDraft,
   isSaving,
   onArchive,
@@ -627,6 +636,12 @@ function TaskDetailsModal({
     setEditDraft(createTaskEditDraft(task));
   }, [task.id]);
 
+  useEffect(() => {
+    if (!canManageTask) {
+      setIsEditing(false);
+    }
+  }, [canManageTask]);
+
   function updateEditDraft(field, value) {
     setEditDraft((current) => {
       if (field === "project_id") {
@@ -655,11 +670,11 @@ function TaskDetailsModal({
       <section className="task-modal task-details-modal" role="dialog" aria-modal="true" aria-labelledby="task-details-title">
         <div className="modal-head">
           <div>
-            <span className="page-kicker">{isEditing ? "Edit task" : formatLabel(task.status)}</span>
-            <h2 id="task-details-title">{isEditing ? "Update Task" : task.title}</h2>
+            <span className="page-kicker">{isEditing && canManageTask ? "Edit task" : formatLabel(task.status)}</span>
+            <h2 id="task-details-title">{isEditing && canManageTask ? "Update Task" : task.title}</h2>
           </div>
           <div className="task-modal-head-actions">
-            {!isEditing ? (
+            {canManageTask && !isEditing ? (
               <button className="task-icon-button" type="button" onClick={() => setIsEditing(true)} aria-label="Edit task">
                 <FiEdit2 aria-hidden="true" />
               </button>
@@ -668,7 +683,7 @@ function TaskDetailsModal({
           </div>
         </div>
 
-        {isEditing ? (
+        {canManageTask && isEditing ? (
           <form className="task-edit-form" onSubmit={submitEdit}>
             <label>
               <span>Project</span>
@@ -767,29 +782,33 @@ function TaskDetailsModal({
               </div>
             </section>
 
-            <TaskLinkedSection
-              actionLabel="Add assignee"
-              emptyText="No assignees yet."
-              items={task.assignees}
-              onAdd={() => onRunAction(() => addTaskAssignees(task.id, { user_ids: [detailDraft.assignee_id], assignee_ids: [detailDraft.assignee_id] }, { role }), "Assignee added.")}
-              onRemove={(item) => onRemoveAssignee(item.id)}
-              selectLabel="Assignee"
-              selectValue={detailDraft.assignee_id}
-              setSelectValue={(value) => onUpdateDraft("assignee_id", value)}
-              options={availablePeople}
-            />
+            {canManageTask ? (
+              <>
+                <TaskLinkedSection
+                  actionLabel="Add assignee"
+                  emptyText="No assignees yet."
+                  items={task.assignees}
+                  onAdd={() => onRunAction(() => addTaskAssignees(task.id, { user_ids: [detailDraft.assignee_id], assignee_ids: [detailDraft.assignee_id] }, { role }), "Assignee added.")}
+                  onRemove={(item) => onRemoveAssignee(item.id)}
+                  selectLabel="Assignee"
+                  selectValue={detailDraft.assignee_id}
+                  setSelectValue={(value) => onUpdateDraft("assignee_id", value)}
+                  options={availablePeople}
+                />
 
-            <TaskLinkedSection
-              actionLabel="Add dependency"
-              emptyText="No dependencies yet."
-              items={task.dependencies}
-              onAdd={() => onRunAction(() => addTaskDependencies(task.id, { dependency_ids: [detailDraft.dependency_id] }, { role }), "Dependency added.")}
-              onRemove={(item) => onRemoveDependency(item.id)}
-              selectLabel="Dependency"
-              selectValue={detailDraft.dependency_id}
-              setSelectValue={(value) => onUpdateDraft("dependency_id", value)}
-              options={availableDependencies}
-            />
+                <TaskLinkedSection
+                  actionLabel="Add dependency"
+                  emptyText="No dependencies yet."
+                  items={task.dependencies}
+                  onAdd={() => onRunAction(() => addTaskDependencies(task.id, { dependency_ids: [detailDraft.dependency_id] }, { role }), "Dependency added.")}
+                  onRemove={(item) => onRemoveDependency(item.id)}
+                  selectLabel="Dependency"
+                  selectValue={detailDraft.dependency_id}
+                  setSelectValue={(value) => onUpdateDraft("dependency_id", value)}
+                  options={availableDependencies}
+                />
+              </>
+            ) : null}
 
             <section className="task-details-section">
               <h3>Notes</h3>
@@ -808,7 +827,7 @@ function TaskDetailsModal({
                 {task.notes.length ? task.notes.map((note) => (
                   <article key={note.id || note.text}>
                     <span>{note.text}</span>
-                    {note.id ? <button type="button" onClick={() => onRemoveNote(note.id)}><FiTrash2 aria-hidden="true" /></button> : null}
+                    {canManageTask && note.id ? <button type="button" onClick={() => onRemoveNote(note.id)}><FiTrash2 aria-hidden="true" /></button> : null}
                   </article>
                 )) : <p>No notes yet.</p>}
               </div>
@@ -816,7 +835,9 @@ function TaskDetailsModal({
 
             <div className="modal-actions">
               <button className="filter-button" type="button" onClick={onClose}>Close</button>
-              <button className="tasks-danger-button" type="button" onClick={onArchive}><FiTrash2 aria-hidden="true" />Archive</button>
+              {canManageTask ? (
+                <button className="tasks-danger-button" type="button" onClick={onArchive}><FiTrash2 aria-hidden="true" />Archive</button>
+              ) : null}
             </div>
           </>
         )}
