@@ -286,7 +286,7 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
     });
   } catch (error) {
     throw new ApiError(
-      `Unable to reach the upload AI service at ${url.origin}. Make sure the service is running on port 3001 and can connect to its database.`,
+      `Unable to reach the Teamoria API at ${url.origin}. Check that the API is online, CORS allows this frontend domain, and VITE_API_BASE_URL is configured correctly.`,
       { status: 0, payload: { original_error: error.message } }
     );
   }
@@ -422,11 +422,19 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
     });
   }
 
-  const response = await fetch(url.toString(), {
-    method,
-    headers,
-    body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
-  });
+  let response;
+  try {
+    response = await fetch(url.toString(), {
+      method,
+      headers,
+      body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
+    });
+  } catch (error) {
+    throw new ApiError(
+      `Unable to reach the Teamoria upload API at ${url.origin}. Check that the upload service is online, CORS allows this frontend domain, and VITE_UPLOAD_API_BASE_URL is configured correctly.`,
+      { status: 0, payload: { original_error: error.message } }
+    );
+  }
 
   const payload = await response.json().catch(() => null);
 
