@@ -564,7 +564,7 @@
 }
 
 .super-admin-profile-trigger span,
-.super-admin-profile-menu header > span {
+.super-admin-profile-menu header>span {
   align-items: center;
   background: var(--sa-primary-soft);
   border-radius: 50%;
@@ -1845,6 +1845,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .super-admin-modal-layer,
   .super-admin-add-user-modal {
     animation: none;
@@ -2045,6 +2046,7 @@
 }
 
 @media (max-width: 560px) {
+
   .super-admin-actions button:nth-child(2),
   .super-admin-actions button:nth-child(3),
   .super-admin-search {
@@ -2209,7 +2211,7 @@
   gap: 14px !important;
 }
 
-.super-admin-notification-anchor > button {
+.super-admin-notification-anchor>button {
   align-items: center !important;
   background: #ffffff !important;
   border: 1px solid #dfe4ef !important;
@@ -2222,17 +2224,17 @@
   width: 44px !important;
 }
 
-.super-admin-notification-anchor > button:hover {
+.super-admin-notification-anchor>button:hover {
   background: #f7f9ff !important;
 }
 
-.super-admin-notification-anchor > button svg {
+.super-admin-notification-anchor>button svg {
   height: 19px !important;
   stroke-width: 2 !important;
   width: 19px !important;
 }
 
-.super-admin-notification-anchor > button i {
+.super-admin-notification-anchor>button i {
   display: none !important;
 }
 
@@ -2276,7 +2278,7 @@
   background: transparent !important;
 }
 
-.super-admin-profile-trigger > span {
+.super-admin-profile-trigger>span {
   background:
     radial-gradient(circle at 50% 30%, #ffd2b3 0 20%, transparent 21%),
     radial-gradient(circle at 50% 98%, #11172d 0 34%, transparent 35%),
@@ -2319,7 +2321,7 @@
   font-weight: 600 !important;
 }
 
-.super-admin-profile-trigger > svg {
+.super-admin-profile-trigger>svg {
   background: #ffffff !important;
   border: 1px solid #e1e6f0 !important;
   border-radius: 50% !important;
@@ -2343,6 +2345,7 @@
 }
 
 @media (max-width: 560px) {
+
   .super-admin-search,
   .super-admin-profile-trigger strong {
     display: none !important;
