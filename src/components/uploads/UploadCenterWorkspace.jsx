@@ -806,11 +806,11 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
           </div>
           <div className="owner-upload-ai-header-actions">
             <span className={`owner-upload-ai-status is-${String(processingStatus).toLowerCase()}`}>{formatLabel(processingStatus)}</span>
-            <button type="button" aria-label="Refresh AI results" onClick={onRefresh} disabled={state.isLoading}>
+            <button className="owner-upload-ai-refresh-button" type="button" aria-label="Refresh AI results" onClick={onRefresh} disabled={state.isLoading}>
               <FiRefreshCw aria-hidden="true" />
               <span>Refresh</span>
             </button>
-            <button type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+            <button className="owner-upload-ai-close-button" type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
           </div>
         </header>
 
