@@ -965,6 +965,23 @@ export function updateTask(id, body, { role } = {}) {
   return apiRequest(`${getTasksBasePath(role)}/${id}`, { method: "PUT", auth: true, body: normalizeTaskBody(body, { partial: true }) });
 }
 
+export async function updateTaskStatus(id, status, { role } = {}) {
+  const cleanRole = normalizeRole(role);
+  const body = { status };
+
+  if (cleanRole === "company_member") {
+    try {
+      return await apiRequest(`/company/tasks/${id}/status`, { method: "PATCH", auth: true, body });
+    } catch (error) {
+      if (error.status !== 404) {
+        throw error;
+      }
+    }
+  }
+
+  return apiRequest(`${getTasksBasePath(role)}/${id}`, { method: "PUT", auth: true, body: normalizeTaskBody(body, { partial: true }) });
+}
+
 export function deleteTask(id, { role } = {}) {
   return apiRequest(`${getTasksBasePath(role)}/${id}`, { method: "DELETE", auth: true });
 }

@@ -29,7 +29,8 @@ import {
   listUsers,
   removeTaskAssignee,
   removeTaskDependency,
-  updateTask
+  updateTask,
+  updateTaskStatus
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/tasks.css";
@@ -210,12 +211,12 @@ export default function TasksPage() {
     setSelectedTask((current) => current?.id === task.id ? { ...current, status: nextStatus } : current);
 
     try {
-      await updateTask(task.id, { status: nextStatus }, { role: normalizedRole });
+      await updateTaskStatus(task.id, nextStatus, { role: normalizedRole });
       setStatus({ type: "success", message: "Task status updated." });
     } catch (error) {
       setTasks(previousTasks);
       setSelectedTask((current) => current?.id === task.id ? task : current);
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: getTaskActionErrorMessage(error, "status") });
     }
   }
 
@@ -1018,4 +1019,14 @@ function normalizeDateInput(value) {
 
 function isUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+}
+
+function getTaskActionErrorMessage(error, action) {
+  const message = error?.message || "";
+  if (error?.status === 403 && /manage this task/i.test(message)) {
+    return action === "status"
+      ? "The API is blocking employee status updates. Add/enable a member task-status endpoint, for example PATCH /company/tasks/{id}/status."
+      : "The API is blocking this employee task action.";
+  }
+  return message || "Unable to update task.";
 }
