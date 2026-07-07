@@ -476,9 +476,9 @@
 .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
 .auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .auth-form {
   border-radius: 18px !important;
-  max-height: calc(100vh - 28px) !important;
+  max-height: none !important;
   max-width: 430px !important;
-  overflow-y: auto !important;
+  overflow: visible !important;
   padding: clamp(18px, 2.8vh, 28px) !important;
   width: min(100%, 430px) !important;
 }
@@ -706,11 +706,10 @@
 
   .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
   .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
-    max-height: calc(100vh - 48px) !important;
+    max-height: none !important;
     max-width: 420px !important;
-    overflow-y: auto !important;
+    overflow: visible !important;
     padding: 30px 34px !important;
-    scrollbar-width: thin;
     width: min(100%, 420px) !important;
   }
 
@@ -785,5 +784,347 @@
 
   .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-switch {
     margin-top: 10px !important;
+  }
+}
+
+/* Final register layout lock: no clipped card, no internal scroll, compact field rhythm. */
+.auth-shell.sign-up-shell {
+  align-items: stretch !important;
+  min-height: 100vh !important;
+}
+
+.auth-shell.sign-up-shell .auth-panel {
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
+  max-height: none !important;
+  max-width: 440px !important;
+  overflow: visible !important;
+  padding: 28px 32px !important;
+  width: min(100%, 440px) !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header {
+  display: grid !important;
+  gap: 8px !important;
+  margin: 0 0 20px !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header h1 {
+  font-size: clamp(32px, 3vw, 36px) !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header p {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .form-stack {
+  display: grid !important;
+  gap: 0 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .label {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  margin: 12px 0 6px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .label:first-child {
+  margin-top: 0 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field {
+  border-radius: 10px !important;
+  min-height: 48px !important;
+  padding: 0 14px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field input,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field select {
+  font-size: 14px !important;
+  min-height: 46px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field-icon {
+  font-size: 18px !important;
+  width: 20px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice {
+  gap: 12px !important;
+  margin: 12px 0 0 !important;
+  min-height: 0 !important;
+  padding: 14px 16px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice svg {
+  font-size: 20px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice b {
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice small {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .form-stack + .primary-button,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .primary-button {
+  margin-top: 16px !important;
+  min-height: 50px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .divider {
+  margin: 12px 0 10px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .google-button {
+  min-height: 48px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-switch {
+  margin-top: 12px !important;
+}
+
+@media (max-width: 1100px) {
+  .auth-shell.sign-up-shell {
+    display: flex !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+  }
+
+  .auth-shell.sign-up-shell .auth-visual {
+    display: none !important;
+  }
+
+  .auth-shell.sign-up-shell .auth-panel {
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    padding: 20px 16px 32px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
+    max-height: none !important;
+    max-width: 520px !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+}
+
+/* Shared auth split-screen lock: consistent visual panel, right-side scrolling only. */
+@media (min-width: 1101px) {
+  .auth-shell.sign-in-shell,
+  .auth-shell.sign-up-shell,
+  .auth-shell.reset-access-shell {
+    align-items: stretch !important;
+    display: grid !important;
+    grid-template-columns: minmax(520px, 58%) minmax(380px, 42%) !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-visual,
+  .auth-shell.sign-up-shell .auth-visual,
+  .auth-shell.reset-access-shell .auth-visual {
+    align-items: center !important;
+    align-self: start !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+    padding: clamp(32px, 4vw, 64px) !important;
+    position: sticky !important;
+    top: 0 !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-visual > .brand,
+  .auth-shell.sign-up-shell .auth-visual > .brand,
+  .auth-shell.reset-access-shell .auth-visual > .brand {
+    left: clamp(32px, 4vw, 64px) !important;
+    position: absolute !important;
+    top: clamp(28px, 4vw, 56px) !important;
+    z-index: 5 !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-copy,
+  .auth-shell.sign-up-shell .auth-copy,
+  .auth-shell.reset-access-shell .auth-copy {
+    bottom: clamp(36px, 5vw, 72px) !important;
+    left: 50% !important;
+    margin: 0 !important;
+    max-width: 620px !important;
+    position: absolute !important;
+    text-align: center !important;
+    transform: translateX(-50%) !important;
+    width: min(82%, 620px) !important;
+    z-index: 4 !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-copy h1,
+  .auth-shell.sign-up-shell .auth-copy h1,
+  .auth-shell.reset-access-shell .auth-copy h1 {
+    color: #ffffff !important;
+    font-size: clamp(44px, 4vw, 52px) !important;
+    font-weight: 900 !important;
+    letter-spacing: 0 !important;
+    line-height: 1.05 !important;
+    margin: 0 0 16px !important;
+    max-width: 620px !important;
+    text-shadow: 0 14px 38px rgba(0, 0, 0, 0.34) !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-copy p,
+  .auth-shell.sign-up-shell .auth-copy p,
+  .auth-shell.reset-access-shell .auth-copy p {
+    color: rgba(255, 255, 255, 0.78) !important;
+    font-size: 17px !important;
+    font-weight: 650 !important;
+    line-height: 1.55 !important;
+    margin: 0 auto !important;
+    max-width: 560px !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-legacy-visual,
+  .auth-shell.sign-up-shell .auth-legacy-visual,
+  .auth-shell.reset-access-shell .auth-legacy-visual {
+    border-radius: 28px !important;
+    margin: 0 !important;
+    max-height: 42vh !important;
+    padding: 22px !important;
+    position: relative !important;
+    transform: translateY(-44px) rotate(-1.4deg) !important;
+    width: min(60%, 640px) !important;
+    z-index: 3 !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-legacy-visual img,
+  .auth-shell.sign-up-shell .auth-legacy-visual img,
+  .auth-shell.reset-access-shell .auth-legacy-visual img {
+    aspect-ratio: 16 / 8.6 !important;
+    border-radius: 22px !important;
+    height: auto !important;
+    max-height: 34vh !important;
+    object-fit: cover !important;
+    width: 100% !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-panel,
+  .auth-shell.sign-up-shell .auth-panel,
+  .auth-shell.reset-access-shell .auth-panel {
+    align-items: center !important;
+    display: flex !important;
+    height: 100vh !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 24px clamp(28px, 4vw, 56px) !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
+    max-height: none !important;
+    max-width: 430px !important;
+    overflow: visible !important;
+    padding: 24px 30px !important;
+    width: min(100%, 430px) !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header {
+    margin-bottom: 16px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .form-stack {
+    gap: 0 !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .label {
+    margin: 10px 0 5px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .label:first-child {
+    margin-top: 0 !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field {
+    min-height: 46px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field input,
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field select {
+    min-height: 44px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice {
+    margin-top: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .form-stack + .primary-button,
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .primary-button {
+    margin-top: 14px !important;
+    min-height: 50px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .divider {
+    margin: 10px 0 8px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .google-button {
+    min-height: 46px !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-switch {
+    margin-top: 10px !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .auth-shell.sign-in-shell,
+  .auth-shell.sign-up-shell,
+  .auth-shell.reset-access-shell {
+    display: flex !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-visual,
+  .auth-shell.sign-up-shell .auth-visual,
+  .auth-shell.reset-access-shell .auth-visual {
+    display: none !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-panel,
+  .auth-shell.sign-up-shell .auth-panel,
+  .auth-shell.reset-access-shell .auth-panel {
+    align-items: stretch !important;
+    height: auto !important;
+    justify-content: flex-start !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    padding: 20px 16px 32px !important;
+    width: 100% !important;
   }
 }

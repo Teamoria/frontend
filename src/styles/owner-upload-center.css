@@ -871,7 +871,7 @@
 }
 
 .owner-upload-ai-header {
-  align-items: center;
+  align-items: flex-start;
   background: rgba(255, 255, 255, 0.96);
   border-bottom: 1px solid #edf1f7;
   display: flex;
@@ -909,9 +909,10 @@
   align-items: center;
   display: flex;
   flex: 0 0 auto;
+  flex-shrink: 0;
   gap: 12px;
   justify-content: flex-end;
-  min-width: 0;
+  min-width: max-content;
 }
 
 .owner-upload-ai-processing button,
@@ -943,14 +944,18 @@
   gap: 8px;
   height: 40px;
   justify-content: center;
+  line-height: 1;
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+  white-space: nowrap;
 }
 
 .owner-upload-ai-refresh-button {
-  padding: 0 14px;
+  min-width: max-content;
+  padding: 0 16px;
 }
 
 .owner-upload-ai-close-button {
+  min-width: 40px;
   padding: 0;
   width: 40px;
 }
@@ -972,14 +977,19 @@
 }
 
 .owner-upload-ai-status {
+  align-items: center;
   background: #f1f5f9;
   border-radius: 999px;
   color: #475569;
+  display: inline-flex;
   flex: 0 0 auto;
   font-size: 12px;
   font-weight: 900;
-  min-height: 32px;
-  padding: 8px 11px;
+  height: 36px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 14px;
+  white-space: nowrap;
 }
 
 .owner-upload-ai-status.is-completed,
@@ -1759,7 +1769,7 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .owner-upload-ai-modal {
     max-height: 92vh;
     max-width: calc(100vw - 20px);
@@ -1776,6 +1786,7 @@
   .owner-upload-ai-header-actions {
     flex-wrap: wrap;
     justify-content: flex-start;
+    min-width: 0;
     width: 100%;
   }
 
@@ -1788,7 +1799,7 @@
   }
 
   .owner-upload-ai-refresh-button {
-    flex: 1;
+    flex: 0 0 auto;
   }
 
   .owner-upload-ai-titleblock h2 {
