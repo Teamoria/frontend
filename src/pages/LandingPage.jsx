@@ -1,22 +1,31 @@
 import { useEffect, useRef, useState } from "react";
 import {
   FiArrowRight,
+  FiGithub,
+  FiGlobe,
   FiGrid,
+  FiLinkedin,
   FiMenu,
+  FiMoon,
   FiPlayCircle,
+  FiTwitter,
   FiUsers,
+  FiYoutube,
   FiX,
   FiZap
 } from "react-icons/fi";
 import logoImage from "../assets/teamoria-logo.png";
 import aiImage from "../assets/ai.jpg";
+import featureMeetingSummariesImage from "../assets/feature-meeting-summaries.png";
+import featureProjectManagementImage from "../assets/feature-project-management.png";
+import featureSmartAssistantImage from "../assets/feature-smart-assistant.png";
 import "../styles/landing.css";
 
 const landingImages = {
-  hero: "https://lh3.googleusercontent.com/aida-public/AB6AXuDLlct6wdloPz2cybi7ltzUaN5Kzoo0XM062E4rbPQChMnFHgAlY_GLfOI3MRpHR4eQEE7axK6byu5udWe2IJHFUIqiMPvnNXmJ2TAg27hpjAsKzsh5GGE0rZYh77bvR6vIM07dNs8MwxqGnhUfTVZKtkGygX8MV-R2_g5wVuoFvLgf8Wrq9SLu33B3sGFU-dCMoiVQnVY55b7g_5ZBW2thzfCJEnoaXUWaeLqin8fBunHJgoeuQuvYxtKgvPcWPYZtnutoCaYCpNo7",
-  assistant: "https://lh3.googleusercontent.com/aida-public/AB6AXuB0ZqsY_7zO1Qrdo7gGuBndhA-oVcwiYCuEPU8H2ruX4zX2JMVkInfChGcjfvJFxmPJA7RUk6HP2dCbkFV3iCE_rP_nNQlSwSnOjh5bjZKdFbQsmPtkHBt9_6RRedNYvqM6R9nbw_LJLfxfe2vwyQsFr0nscvSVhlwUzaiRJO_NkVG0guKd8zPRygYsfVY9xKnX5S6SkkAGMORMeQ5WowoaCFftd_GHWVtfwhH0VHIva30w1mjXaRt1XpxL3xagdxG36IqqIOmM01g1",
-  kanban: "https://lh3.googleusercontent.com/aida-public/AB6AXuCueVIYYsrvacofCChZ42yRhD-UyQXKwOx8vAoWR7Dcn2qba5sGixI_k_XWOREFp4dmXYtXpFgAr4n1AYslqrAUt7HL0PTpLdKX5x7t25ionOafaU9wTIKe-Jv7TXDVKhY_cmMhHg44Qul-u7Q2RzyF0YrJCi3tLdpurMuB8EMv872qdDyno-a4teLujTYSgGEkfbsva-_CaKEqLlbBvF41BpRR9CPSjA0EP5tqrfdoB6XgeFblBRSK5O8TXp5BfeW_ELVnFM1mE6vE",
-  meetings: "https://lh3.googleusercontent.com/aida-public/AB6AXuCueVIYYsrvacofCChZ42yRhD-UyQXKwOx8vAoWR7Dcn2qba5sGixI_k_XWOREFp4dmXYtXpFgAr4n1AYslqrAUt7HL0PTpLdKX5x7t25ionOafaU9wTIKe-Jv7TXDVKhY_cmMhHg44Qul-u7Q2RzyF0YrJCi3tLdpurMuB8EMv872qdDyno-a4teLujTYSgGEkfbsva-_CaKEqLlbBvF41BpRR9CPSjA0EP5tqrfdoB6XgeFblBRSK5O8TXp5BfeW_ELVnFM1mE6vE",
+  hero: aiImage,
+  assistant: featureSmartAssistantImage,
+  kanban: featureProjectManagementImage,
+  meetings: featureMeetingSummariesImage,
   workflow: "https://lh3.googleusercontent.com/aida-public/AB6AXuBe3ALd40yLMQMKDT5nH-wbMcQ9S8oqJJu9HLuAsTVJmIbyWecrcAjGcnD2WPxE637n0ch8ag50UhoVTRnb9y0VaKMMQx7Tn6vBl3g9F63XOyOZWWb_lDG09kb3dxqUXlGEVIjZ1GMo9h3rZDkvmt8ct4P_vLsMKESiXVDdM-IJ6K5_cihP2UBn3P5O3pDqBKEHsDwxuLqxcNeOMFqndC4Bwz_S1kLfH82jMA_f2uC0ZCdGWwSgMAwukiKLXKRQJPEWn_FxsX8PgJCv"
 };
 
@@ -88,6 +97,32 @@ const footerCopy = {
   }
 };
 
+const footerColumns = [
+  {
+    title: "Product",
+    items: ["Features", "AI Assistant", "Project Management", "Meeting Intelligence", "Pricing"]
+  },
+  {
+    title: "Resources",
+    items: ["Documentation", "API", "Help Center", "Blog", "Changelog"]
+  },
+  {
+    title: "Company",
+    items: ["About", "Careers", "Contact", "Partners"]
+  },
+  {
+    title: "Legal",
+    items: ["Privacy Policy", "Terms", "Cookies", "Security", "GDPR"]
+  }
+];
+
+const socialLinks = [
+  { label: "LinkedIn", icon: FiLinkedin },
+  { label: "GitHub", icon: FiGithub },
+  { label: "X", icon: FiTwitter },
+  { label: "YouTube", icon: FiYoutube }
+];
+
 const logos = ["TECHCORP", "GLOBAL-X", "NEXUS AI", "STRATOS", "V-SHIFT"];
 
 const features = [
@@ -154,6 +189,16 @@ export default function LandingPage() {
   const [navOpen, setNavOpen] = useState(false);
   const navMenuRef = useRef(null);
   const t = copy[lang];
+
+  useEffect(() => {
+    document.documentElement.classList.add("public-landing-scroll");
+    document.body.classList.add("public-landing-scroll");
+
+    return () => {
+      document.documentElement.classList.remove("public-landing-scroll");
+      document.body.classList.remove("public-landing-scroll");
+    };
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -281,8 +326,8 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <section className="home-hero" id="home">
-        <div className="home-hero-inner">
+      <section className="home-hero landing-hero" id="home">
+        <div className="home-hero-inner hero-content">
           <span className="home-pill"><FiZap aria-hidden="true" />{t.badge}</span>
           <h1>
             {t.headlineA} <span>{t.headlineB}</span> {t.headlineC}
@@ -292,17 +337,14 @@ export default function LandingPage() {
             <a className="home-primary-cta" href="#/signup">{t.startNow}<FiArrowRight aria-hidden="true" /></a>
             <a className="home-secondary-cta" href="#/dashboard?role=admin"><FiPlayCircle aria-hidden="true" />{t.demo}</a>
           </div>
+        </div>
 
-          <div className="home-product-preview">
-            <div className="home-preview-glow" />
-            <div className="home-preview-frame">
-              <img
-                className="home-platform-image"
-                src={landingImages.hero}
-                alt="Teamoria AI Command Center"
-              />
-            </div>
-          </div>
+        <div className="home-product-preview hero-image">
+          <img
+            className="home-platform-image"
+            src={landingImages.hero}
+            alt="Teamoria AI Command Center"
+          />
         </div>
       </section>
 
@@ -355,36 +397,49 @@ export default function LandingPage() {
 
       <section className="home-cta" id="pricing">
         <div>
-          <h2>{t.ctaTitle}</h2>
-          <p>{t.ctaText}</p>
+          <h2>Ready to transform your workspace?</h2>
+          <p>Start managing projects, meetings and AI knowledge in one platform.</p>
           <div>
-            <a className="home-primary-cta" href="#/signup">{t.trial}</a>
-            <a className="home-secondary-cta" href="mailto:sales@teamoria.ai">{t.sales}</a>
+            <a className="home-primary-cta" href="#/signup">Start Free</a>
+            <a className="home-secondary-cta" href="mailto:sales@teamoria.ai">Book a Demo</a>
           </div>
         </div>
       </section>
 
       <footer className="home-footer">
         <div className="home-footer-grid">
-          <div>
+          <div className="home-footer-brand">
             <a className="home-logo" href="#/" onClick={goHome}>
               <span className="home-logo-mark" aria-hidden="true">
                 <img src={logoImage} alt="" />
               </span>
               <span className="home-logo-text">Teamoria</span>
             </a>
-            <p>{footerCopy[lang].description}</p>
+            <p>AI work orchestration for teams that run projects, meetings, files, and decisions in one trusted workspace.</p>
+            <div className="home-footer-socials" aria-label="Social links">
+              {socialLinks.map(({ icon: Icon, label }) => (
+                <a href="#/" aria-label={label} key={label}>
+                  <Icon aria-hidden="true" />
+                </a>
+              ))}
+            </div>
           </div>
-          <FooterColumn title={footerCopy[lang].product} items={["Features", "Security", "Integrations", "Roadmap"]} />
-          <FooterColumn title={footerCopy[lang].resources} items={["Blog", "Help Center", "User Guide", "Community"]} />
-          <FooterColumn title={footerCopy[lang].legal} items={["Privacy Policy", "Terms of Service", "SLA Agreement"]} />
+          {footerColumns.map((column) => (
+            <FooterColumn key={column.title} title={column.title} items={column.items} />
+          ))}
         </div>
         <div className="home-footer-bottom">
-          <p>{footerCopy[lang].copyright}</p>
-          <div>
-            <a href="#/">Twitter</a>
-            <a href="#/">LinkedIn</a>
-            <a href="#/">GitHub</a>
+          <p>© 2026 Teamoria AI</p>
+          <p>Made for modern AI workspaces.</p>
+          <div className="home-footer-controls">
+            <button type="button">
+              <FiGlobe aria-hidden="true" />
+              {lang === "ar" ? "Arabic" : "English"}
+            </button>
+            <button type="button" aria-label="Dark mode placeholder">
+              <FiMoon aria-hidden="true" />
+              Dark
+            </button>
           </div>
         </div>
       </footer>
