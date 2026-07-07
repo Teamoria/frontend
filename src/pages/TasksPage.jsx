@@ -1046,7 +1046,7 @@ function getTaskActionErrorMessage(error, action) {
   const message = error?.message || "";
   if (error?.status === 403 && /manage this task/i.test(message)) {
     return action === "status"
-      ? "The API is blocking employee status updates. Add/enable a member task-status endpoint, for example PATCH /company/tasks/{id}/status."
+      ? "The API is blocking employee status updates. Allow assigned company members to update only the status field through PUT /company/tasks/{id}."
       : "The API is blocking this employee task action.";
   }
   return message || "Unable to update task.";
