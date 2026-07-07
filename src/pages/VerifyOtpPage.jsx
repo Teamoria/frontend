@@ -3,7 +3,7 @@ import AuthLayout from "../components/AuthLayout.jsx";
 import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiMail } from "react-icons/fi";
 import { PrimaryButton } from "../components/FormControls.jsx";
-import { loginWithEmail, sendOtp, verifyOtp } from "../lib/api.js";
+import { getCurrentUser, loginWithEmail, registerCompany, sendOtp, verifyOtp } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { getPostLoginPath } from "../lib/authRoles.js";
 import "../styles/reset-access.css";
@@ -104,10 +104,21 @@ export default function VerifyOtpPage() {
       setStatus({ type: "success", message: "Email verified. Redirecting..." });
 
       if (pendingSignup.password) {
-        const { user } = await loginWithEmail({
+        const { user: loginUser } = await loginWithEmail({
           email: pendingSignup.email,
-          password: pendingSignup.password
+          password: pendingSignup.password,
+          fetchProfile: false
         });
+
+        if (pendingSignup.companyName) {
+          await registerCompany({
+            name: pendingSignup.companyName,
+            status: "active"
+          });
+        }
+
+        const profilePayload = await getCurrentUser();
+        const user = profilePayload?.data?.user || profilePayload?.data || profilePayload?.user || loginUser;
         login(user);
         sessionStorage.removeItem(PENDING_SIGNUP_KEY);
         window.setTimeout(() => {

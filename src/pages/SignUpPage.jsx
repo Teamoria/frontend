@@ -14,12 +14,13 @@ export default function SignUpPage() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", companyName: "", password: "" });
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
   const fullNameError = getRequiredError(form.fullName, "Full name is required", submitted);
   const emailError = getEmailError(form.email, touched.email, submitted);
+  const companyNameError = getRequiredError(form.companyName, "Company name is required", submitted);
   const passwordError = getPasswordError(form.password, touched.password, submitted);
 
   function updateField(field, value) {
@@ -38,10 +39,11 @@ export default function SignUpPage() {
     const nextErrors = [
       getRequiredError(form.fullName, "Full name is required", true),
       getEmailError(form.email, true, true),
+      getRequiredError(form.companyName, "Company name is required", true),
       getPasswordError(form.password, true, true)
     ];
     if (nextErrors.some(Boolean)) {
-      setTouched({ fullName: true, email: true, password: true });
+      setTouched({ fullName: true, email: true, companyName: true, password: true });
       return;
     }
 
@@ -49,12 +51,14 @@ export default function SignUpPage() {
 
     const name = form.fullName;
     const email = form.email;
+    const companyName = form.companyName;
     const password = form.password;
 
     try {
       const payload = await registerWithEmail({ name, email, password });
       sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
         email,
+        companyName,
         password
       }));
       window.location.hash = "/verify-otp";
@@ -118,6 +122,20 @@ export default function SignUpPage() {
             value={form.email}
             onBlur={() => setTouched((current) => ({ ...current, email: true }))}
             onChange={(event) => updateField("email", event.target.value)}
+          />
+
+          <span className="label">Company Name</span>
+          <TextInput
+            autoComplete="organization"
+            error={companyNameError}
+            icon={<FiBriefcase />}
+            name="companyName"
+            placeholder="Enter your company name"
+            required
+            disabled={isSubmitting}
+            value={form.companyName}
+            onBlur={() => setTouched((current) => ({ ...current, companyName: true }))}
+            onChange={(event) => updateField("companyName", event.target.value)}
           />
 
           <div className="sign-up-owner-notice" aria-label="Account role">

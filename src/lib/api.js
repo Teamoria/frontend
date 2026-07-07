@@ -338,7 +338,7 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
   return payload;
 }
 
-export async function loginWithEmail({ email, password }) {
+export async function loginWithEmail({ email, password, fetchProfile = true }) {
   const payload = await apiRequest("/auth/login", {
     method: "POST",
     body: { email, password }
@@ -348,6 +348,11 @@ export async function loginWithEmail({ email, password }) {
   setAccessToken(token);
   const userFromLogin = getProfileFromPayload(payload);
   setStoredUser(userFromLogin);
+
+  if (!fetchProfile) {
+    return { token, user: userFromLogin, payload };
+  }
+
   try {
     const profilePayload = await getCurrentUser();
     const user = getProfileFromPayload(profilePayload);
