@@ -20,6 +20,7 @@ import {
   createTask,
   deleteTask,
   deleteTaskNote,
+  getTask,
   getPayloadData,
   listAdminProjects,
   listCompanyProjects,
@@ -206,12 +207,14 @@ export default function TasksPage() {
     if (task.status === nextStatus) return;
     const previousTasks = tasks;
     setTasks((current) => current.map((item) => item.id === task.id ? { ...item, status: nextStatus } : item));
+    setSelectedTask((current) => current?.id === task.id ? { ...current, status: nextStatus } : current);
 
     try {
       await updateTask(task.id, { status: nextStatus }, { role: normalizedRole });
       setStatus({ type: "success", message: "Task status updated." });
     } catch (error) {
       setTasks(previousTasks);
+      setSelectedTask((current) => current?.id === task.id ? task : current);
       setStatus({ type: "error", message: error.message });
     }
   }
@@ -273,17 +276,32 @@ export default function TasksPage() {
 
   async function runDetailAction(action, message) {
     if (!selectedTask) return;
+    const taskId = selectedTask.id;
     setIsSaving(true);
 
     try {
       await action();
       setStatus({ type: "success", message });
       setDetailDraft({ assignee_id: "", dependency_id: "", note: "" });
+      await refreshSelectedTask(taskId);
       await loadTasks();
     } catch (error) {
       setStatus({ type: "error", message: error.message });
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function refreshSelectedTask(taskId) {
+    try {
+      const payload = await getTask(taskId, { role: normalizedRole });
+      const data = getPayloadData(payload);
+      const refreshedTask = data?.task || data;
+      if (refreshedTask?.id || refreshedTask?.uuid) {
+        setSelectedTask(normalizeTask(refreshedTask));
+      }
+    } catch {
+      setSelectedTask((current) => current?.id === taskId ? current : current);
     }
   }
 
@@ -330,7 +348,18 @@ export default function TasksPage() {
                     <span>{column.tasks.length}</span>
                   </div>
                 </div>
-                <div className="tasks-kanban-list">
+                <div
+                  className="tasks-kanban-list"
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    const taskId = event.dataTransfer.getData("text/plain");
+                    const draggedTask = tasks.find((item) => item.id === taskId);
+                    if (draggedTask) {
+                      changeTaskStatus(draggedTask, column.id);
+                    }
+                  }}
+                >
                   {isLoading ? <p className="tasks-empty-state">Loading tasks...</p> : null}
                   {!isLoading && column.tasks.length === 0 ? <p className="tasks-empty-state">No tasks.</p> : null}
                   {column.tasks.map((task) => (
@@ -414,6 +443,7 @@ export default function TasksPage() {
           onRemoveNote={(noteId) => runDetailAction(() => deleteTaskNote(selectedTask.id, noteId, { role: normalizedRole }), "Note deleted.")}
           onRunAction={runDetailAction}
           onSaveTask={saveTaskChanges}
+          onStatusChange={(nextStatus) => changeTaskStatus(selectedTask, nextStatus)}
           onUpdateDraft={(field, value) => setDetailDraft((current) => ({ ...current, [field]: value }))}
           people={people}
           projects={projects}
@@ -574,6 +604,7 @@ function TaskDetailsModal({
   onRemoveNote,
   onRunAction,
   onSaveTask,
+  onStatusChange,
   onUpdateDraft,
   people,
   projects,
@@ -716,6 +747,25 @@ function TaskDetailsModal({
               </article>
             </div>
 
+            <section className="task-details-section">
+              <h3>Status</h3>
+              <div className="task-status-actions">
+                <select
+                  aria-label="Task status"
+                  disabled={isSaving}
+                  value={task.status}
+                  onChange={(event) => onStatusChange(event.target.value)}
+                >
+                  {statusColumns.map((column) => <option key={column.id} value={column.id}>{column.title}</option>)}
+                </select>
+                {task.status !== "done" ? (
+                  <button className="product-button" disabled={isSaving} type="button" onClick={() => onStatusChange("done")}>
+                    Mark done
+                  </button>
+                ) : null}
+              </div>
+            </section>
+
             <TaskLinkedSection
               actionLabel="Add assignee"
               emptyText="No assignees yet."
@@ -811,11 +861,16 @@ function SelectionGrid({ emptyText, items, label, onToggle, selectedIds }) {
   );
 }
 
-function TaskCard({ onOpen, task }) {
+function TaskCard({ onOpen, onStatusChange, task }) {
   return (
     <article
       className={`tasks-card tasks-card--title-only ${task.status === "in_progress" ? "tasks-card--active" : ""} ${task.status === "done" ? "tasks-card--done" : ""}`}
+      draggable
       onClick={onOpen}
+      onDragStart={(event) => {
+        event.dataTransfer.setData("text/plain", task.id);
+        event.dataTransfer.effectAllowed = "move";
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
@@ -827,6 +882,20 @@ function TaskCard({ onOpen, task }) {
       aria-label={`Open task ${task.title}`}
     >
       <h3>{task.title}</h3>
+      <label
+        className="tasks-card-status-control"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
+        <span>Status</span>
+        <select
+          aria-label={`Change status for ${task.title}`}
+          value={task.status}
+          onChange={(event) => onStatusChange(event.target.value)}
+        >
+          {statusColumns.map((column) => <option key={column.id} value={column.id}>{column.title}</option>)}
+        </select>
+      </label>
     </article>
   );
 }

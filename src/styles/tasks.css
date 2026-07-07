@@ -1334,6 +1334,58 @@
   width: 100% !important;
 }
 
+.tasks-card-status-control {
+  display: grid !important;
+  gap: 5px !important;
+  margin-top: 10px !important;
+  width: 100% !important;
+}
+
+.tasks-card-status-control span {
+  color: #697386 !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.tasks-card-status-control select,
+.task-status-actions select {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  color: #171b34 !important;
+  font: inherit !important;
+  font-size: 12px !important;
+  min-height: 32px !important;
+  padding: 0 8px !important;
+  width: 100% !important;
+}
+
+.tasks-kanban-list .tasks-card > .tasks-card-status-control {
+  display: grid !important;
+}
+
+.tasks-workspace .tasks-card--title-only {
+  align-items: stretch !important;
+  display: grid !important;
+}
+
+.tasks-workspace .tasks-card[draggable="true"] {
+  cursor: grab !important;
+}
+
+.tasks-workspace .tasks-card[draggable="true"]:active {
+  cursor: grabbing !important;
+}
+
+.task-status-actions {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .tasks-tag-row {
   display: grid !important;
   gap: 5px !important;

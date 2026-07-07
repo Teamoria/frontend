@@ -481,21 +481,24 @@
   }
 }
 
-/* Desktop viewport lock: keep signup usable at 100% zoom without page drift below the fold. */
+/* Desktop register split: let both grid columns grow with the form. */
 @media (min-width: 1101px) {
   .auth-shell.sign-up-shell {
-    height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
+    align-items: stretch;
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
   .auth-shell.sign-up-shell .auth-visual,
   .auth-shell.sign-up-shell .auth-panel {
-    height: 100dvh;
-    min-height: 0;
+    height: auto;
+    min-height: 100%;
   }
 
   .auth-shell.sign-up-shell .auth-visual {
+    align-self: stretch;
     padding: clamp(24px, 3.2vw, 48px);
   }
 
@@ -526,7 +529,7 @@
   }
 
   .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
-    max-height: calc(100dvh - 56px);
+    max-height: none;
   }
 
   .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header h1 {

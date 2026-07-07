@@ -385,3 +385,321 @@
     flex-wrap: wrap !important;
   }
 }
+
+/* Compact auth viewport: keep login, register, reset, and verification pages within laptop-height screens. */
+.auth-shell.sign-in-shell,
+.auth-shell.sign-up-shell,
+.auth-shell.reset-access-shell {
+  align-items: stretch !important;
+  display: grid !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.auth-shell.sign-in-shell .auth-visual,
+.auth-shell.sign-up-shell .auth-visual,
+.auth-shell.reset-access-shell .auth-visual {
+  align-content: center !important;
+  display: grid !important;
+  gap: clamp(18px, 3vh, 30px) !important;
+  grid-template-rows: auto auto minmax(0, auto) !important;
+  min-height: 100vh !important;
+  overflow: hidden !important;
+  padding: clamp(24px, 4vh, 42px) clamp(28px, 4vw, 48px) !important;
+}
+
+.auth-shell.sign-in-shell .auth-copy,
+.auth-shell.sign-up-shell .auth-copy,
+.auth-shell.reset-access-shell .auth-copy {
+  bottom: auto !important;
+  left: auto !important;
+  margin: 0 !important;
+  max-width: 520px !important;
+  position: relative !important;
+  text-align: left !important;
+  transform: none !important;
+}
+
+.auth-shell.sign-in-shell .auth-copy h1,
+.auth-shell.sign-up-shell .auth-copy h1,
+.auth-shell.reset-access-shell .auth-copy h1 {
+  font-size: clamp(30px, 3vw, 38px) !important;
+  line-height: 1.1 !important;
+  margin: 0 0 14px !important;
+}
+
+.auth-shell.sign-in-shell .auth-copy p,
+.auth-shell.sign-up-shell .auth-copy p,
+.auth-shell.reset-access-shell .auth-copy p {
+  font-size: clamp(15px, 1.5vw, 18px) !important;
+  line-height: 1.5 !important;
+  max-width: 500px !important;
+}
+
+.auth-shell.sign-in-shell .auth-legacy-visual,
+.auth-shell.sign-up-shell .auth-legacy-visual,
+.auth-shell.reset-access-shell .auth-legacy-visual {
+  align-self: center !important;
+  border-radius: 22px !important;
+  box-shadow: 0 18px 44px rgba(7, 21, 47, 0.18) !important;
+  justify-self: center !important;
+  max-height: 320px !important;
+  padding: 14px !important;
+  transform: none !important;
+  width: min(82%, 500px) !important;
+}
+
+.auth-shell.sign-in-shell .auth-legacy-visual img,
+.auth-shell.sign-up-shell .auth-legacy-visual img,
+.auth-shell.reset-access-shell .auth-legacy-visual img {
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 16px !important;
+  height: min(260px, 30vh) !important;
+  max-height: 260px !important;
+  object-fit: contain !important;
+  width: 100% !important;
+}
+
+.auth-shell.sign-in-shell .auth-panel,
+.auth-shell.sign-up-shell .auth-panel,
+.auth-shell.reset-access-shell .auth-panel {
+  align-items: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  overflow-y: visible !important;
+  padding: clamp(14px, 2.5vh, 28px) clamp(18px, 4vw, 56px) !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .auth-form,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .auth-form {
+  border-radius: 18px !important;
+  max-height: calc(100vh - 28px) !important;
+  max-width: 430px !important;
+  overflow-y: auto !important;
+  padding: clamp(18px, 2.8vh, 28px) !important;
+  width: min(100%, 430px) !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
+  max-width: 430px !important;
+  padding: clamp(16px, 2.4vh, 24px) !important;
+  width: min(100%, 430px) !important;
+}
+
+.sign-in-header,
+.sign-up-header,
+.reset-access-header {
+  gap: 5px !important;
+  margin-bottom: 14px !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .sign-in-header h1,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header h1,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-access-header h1 {
+  font-size: clamp(24px, 2.6vw, 30px) !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .sign-in-header p,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header p,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-access-header p {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .form-stack,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .form-stack,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .form-stack {
+  gap: 6px !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .label,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .label,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .label {
+  font-size: 11px !important;
+  margin-top: 5px !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .field,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .field {
+  border-radius: 10px !important;
+  min-height: 46px !important;
+  padding: 0 12px !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .field input,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field input,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .field select,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .field input {
+  font-size: 14px !important;
+  min-height: 44px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice {
+  margin-top: 6px !important;
+  padding: 10px 12px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice small {
+  line-height: 1.35 !important;
+}
+
+.auth-shell .auth-form .primary-button,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .primary-button,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .otp-form .primary-button,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-password-form .primary-button {
+  margin-top: 14px !important;
+  min-height: 46px !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .form-row {
+  margin-top: 12px !important;
+}
+
+.auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .divider,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .divider {
+  margin: 14px 0 10px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .google-button,
+.auth-shell .auth-form .google-button {
+  min-height: 44px !important;
+}
+
+.auth-switch,
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-switch {
+  margin-top: 12px !important;
+}
+
+.sign-in-footer,
+.sign-up-footer,
+.reset-access-footer {
+  margin-top: 14px !important;
+}
+
+.otp-email-card {
+  margin-bottom: 12px !important;
+  min-height: 44px !important;
+  padding: 10px 12px !important;
+}
+
+.otp-code-grid input {
+  border-radius: 10px !important;
+  font-size: 19px !important;
+  min-height: 44px !important;
+}
+
+.otp-action-stack {
+  gap: 8px !important;
+  margin-top: 14px !important;
+}
+
+@media (max-height: 760px) and (min-width: 1101px) {
+  .auth-shell.sign-in-shell .auth-visual,
+  .auth-shell.sign-up-shell .auth-visual,
+  .auth-shell.reset-access-shell .auth-visual {
+    gap: 14px !important;
+    padding-block: 20px !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-copy h1,
+  .auth-shell.sign-up-shell .auth-copy h1,
+  .auth-shell.reset-access-shell .auth-copy h1 {
+    font-size: 30px !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-copy p,
+  .auth-shell.sign-up-shell .auth-copy p,
+  .auth-shell.reset-access-shell .auth-copy p {
+    font-size: 15px !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-legacy-visual,
+  .auth-shell.sign-up-shell .auth-legacy-visual,
+  .auth-shell.reset-access-shell .auth-legacy-visual {
+    max-height: 260px !important;
+    width: min(76%, 440px) !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-legacy-visual img,
+  .auth-shell.sign-up-shell .auth-legacy-visual img,
+  .auth-shell.reset-access-shell .auth-legacy-visual img {
+    height: min(210px, 28vh) !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .auth-shell.sign-in-shell,
+  .auth-shell.sign-up-shell,
+  .auth-shell.reset-access-shell {
+    display: flex !important;
+    min-height: 100vh !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-visual,
+  .auth-shell.sign-up-shell .auth-visual,
+  .auth-shell.reset-access-shell .auth-visual {
+    display: none !important;
+  }
+
+  .auth-shell.sign-in-shell .auth-panel,
+  .auth-shell.sign-up-shell .auth-panel,
+  .auth-shell.reset-access-shell .auth-panel {
+    min-height: 100vh !important;
+    padding: 20px 16px !important;
+    width: 100% !important;
+  }
+
+  .sign-in-mobile-brand,
+  .sign-up-mobile-brand,
+  .reset-access-mobile-brand {
+    margin-bottom: 16px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-shell.sign-in-shell.auth-shell--analytics .auth-panel .auth-form,
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
+  .auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .auth-form {
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding: 20px 16px !important;
+  }
+}
+
+/* Register split-screen height guard: the blue marketing column must stretch with taller forms. */
+@media (min-width: 1101px) {
+  .auth-shell.sign-up-shell {
+    align-items: stretch !important;
+    display: grid !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
+  .auth-shell.sign-up-shell .auth-visual {
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    justify-content: center !important;
+    min-height: 100% !important;
+  }
+
+  .auth-shell.sign-up-shell .auth-panel {
+    align-self: stretch !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: visible !important;
+  }
+
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form,
+  .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+}
