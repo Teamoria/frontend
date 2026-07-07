@@ -532,3 +532,146 @@
   background: #0b349f !important;
   border-color: #0b349f !important;
 }
+
+/* Focused reset and verification cards, aligned with the Login/Register auth rhythm. */
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-access-form {
+  max-width: 460px !important;
+  min-height: auto !important;
+  padding: clamp(24px, 4vw, 34px) !important;
+  width: min(100%, 460px) !important;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-access-header {
+  align-items: center !important;
+  display: grid !important;
+  gap: 8px !important;
+  justify-items: center !important;
+  margin: 0 0 24px !important;
+  text-align: center !important;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-access-header h1 {
+  margin: 0 !important;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-access-header p {
+  margin: 0 !important;
+  max-width: 340px !important;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-success-card {
+  margin: 0 0 18px;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-success-card h2 {
+  font-size: 18px !important;
+  margin: 0 0 4px !important;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-success-card p {
+  font-size: 13px !important;
+}
+
+.otp-email-card {
+  align-items: center;
+  background: #f8fbff;
+  border: 1px solid #dce6f5;
+  border-radius: 12px;
+  color: #14182f;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 0 0 18px;
+  min-height: 50px;
+  padding: 12px 14px;
+}
+
+.otp-email-card svg {
+  color: #0f3fbf;
+  font-size: 18px;
+}
+
+.otp-email-card span {
+  font-size: 14px;
+  font-weight: 750;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.otp-code-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.otp-code-grid input {
+  aspect-ratio: 1;
+  background: #ffffff;
+  border: 1px solid #d8deeb;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  color: #020617;
+  font-size: 22px;
+  font-weight: 900;
+  min-height: 50px;
+  outline: 0;
+  text-align: center;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+  width: 100%;
+}
+
+.otp-code-grid input:focus {
+  border-color: #0f3fbf;
+  box-shadow: 0 0 0 4px rgba(15, 63, 191, 0.12), 0 14px 30px rgba(15, 63, 191, 0.08);
+}
+
+.otp-action-stack {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  margin-top: 20px;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .otp-resend-button,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .back-link {
+  background: transparent;
+  border: 0;
+  color: #0f3fbf !important;
+  cursor: pointer;
+  font-size: 14px !important;
+  font-weight: 900;
+  line-height: 1.4;
+  margin: 0 !important;
+  padding: 0;
+  text-decoration: none;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .otp-resend-button:hover,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .back-link:hover {
+  text-decoration: underline;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .otp-resend-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  text-decoration: none;
+}
+
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .otp-form .primary-button,
+.auth-shell.reset-access-shell.auth-shell--analytics .auth-panel .reset-password-form .primary-button {
+  margin-top: 22px !important;
+}
+
+@media (max-width: 520px) {
+  .otp-code-grid {
+    gap: 6px;
+  }
+
+  .otp-code-grid input {
+    border-radius: 10px;
+    font-size: 19px;
+    min-height: 44px;
+  }
+}

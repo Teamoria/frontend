@@ -34,8 +34,8 @@
 }
 
 .auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-form {
-  max-width: 500px !important;
-  width: min(100%, 500px) !important;
+  max-width: 460px !important;
+  width: min(100%, 460px) !important;
 }
 
 .sign-in-header,
@@ -272,6 +272,40 @@
 }
 
 .auth-switch {
+  margin-top: 20px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-form {
+  max-width: 460px !important;
+  padding: clamp(24px, 4vw, 34px) !important;
+  width: min(100%, 460px) !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header {
+  margin-bottom: 24px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-header p {
+  max-width: 340px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .sign-up-owner-notice {
+  margin: 10px 0 0 !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .primary-button {
+  margin-top: 22px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .divider {
+  margin: 22px 0 16px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .google-button {
+  min-height: 50px !important;
+}
+
+.auth-shell.sign-up-shell.auth-shell--analytics .auth-panel .auth-switch {
   margin-top: 20px !important;
 }
 

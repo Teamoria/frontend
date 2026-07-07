@@ -746,18 +746,18 @@ export function listCompanies({ page, archived } = {}) {
 
 export function createCompany(body) {
   if (isDemoMode()) {
-    return Promise.resolve({ success: true, data: { company: { id: `demo-company-${Date.now()}`, ...body } } });
+    return Promise.resolve({ success: true, data: { company: { id: `demo-company-${Date.now()}`, ...normalizeCompanyBody(body) } } });
   }
 
-  return apiRequest("/admin/companies", { method: "POST", auth: true, body });
+  return apiRequest("/admin/companies", { method: "POST", auth: true, body: normalizeCompanyBody(body) });
 }
 
 export function updateCompany(id, body) {
   if (isDemoMode()) {
-    return Promise.resolve({ success: true, data: { company: { id, ...body } } });
+    return Promise.resolve({ success: true, data: { company: { id, ...normalizeCompanyBody(body, { partial: true }) } } });
   }
 
-  return apiRequest(`/admin/companies/${id}`, { method: "PUT", auth: true, body });
+  return apiRequest(`/admin/companies/${id}`, { method: "PUT", auth: true, body: normalizeCompanyBody(body, { partial: true }) });
 }
 
 export function deleteCompany(id) {
@@ -785,7 +785,7 @@ export function forceDeleteCompany(id) {
 }
 
 export function registerCompany(body) {
-  return apiRequest("/company/register", { method: "POST", auth: true, body });
+  return apiRequest("/company/register", { method: "POST", auth: true, body: normalizeCompanyBody(body) });
 }
 
 export function getCompanyDashboard() {
@@ -1004,6 +1004,24 @@ function normalizeStaffBody(body, { partial = false } = {}) {
 
   if (!partial && cleanBody.password && !cleanBody.password_confirmation) {
     cleanBody.password_confirmation = cleanBody.password;
+  }
+
+  return cleanBody;
+}
+
+function normalizeCompanyBody(body, { partial = false } = {}) {
+  const allowedFields = ["name", "industry", "website", "address", "logo_path", "status"];
+  const cleanBody = {};
+
+  allowedFields.forEach((field) => {
+    const value = body?.[field];
+    if (value !== undefined && value !== "") {
+      cleanBody[field] = value;
+    }
+  });
+
+  if (!partial) {
+    cleanBody.status = cleanBody.status || "active";
   }
 
   return cleanBody;

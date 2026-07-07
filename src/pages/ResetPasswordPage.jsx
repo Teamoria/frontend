@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       await forgotPasswordSendOtp({ email: email.trim() });
       setStatus({
         type: "success",
-        message: "If this email exists, a reset link has been sent."
+        message: "If an account exists for this email, we sent a password reset link."
       });
     } catch (error) {
       setStatus({ type: "error", message: error.message });
@@ -60,14 +60,23 @@ export default function ResetPasswordPage() {
       <form className={`auth-form reset-password-form reset-access-form ${email ? "has-email" : ""}`} onSubmit={handleSendOtp} noValidate>
         <ResetMobileBrand />
         <header className="reset-access-header">
-          <h1>Reset Password</h1>
-          <p>Enter your work email and we will send you a secure reset link.</p>
+          <h1>Reset password</h1>
+          <p>Enter your work email and we&rsquo;ll send you a secure reset link.</p>
         </header>
-        {status.message && (
+        {status.type === "success" ? (
+          <div className="success-card reset-success-card" role="status" aria-live="polite">
+            <span aria-hidden="true" />
+            <div>
+              <h2>Check your email</h2>
+              <p>{status.message}</p>
+            </div>
+          </div>
+        ) : null}
+        {status.type === "error" && status.message ? (
           <p className={`auth-alert auth-alert--${status.type}`} role="alert" aria-live="polite">
             {status.message}
           </p>
-        )}
+        ) : null}
         <div className="form-stack">
           <span className="label">Work Email</span>
           <TextInput
@@ -77,7 +86,7 @@ export default function ResetPasswordPage() {
             inputMode="email"
             name="email"
             type="email"
-            placeholder="identity@enterprise.ai"
+            placeholder="name@company.com"
             required
             disabled={isSubmitting}
             value={email}
@@ -89,7 +98,6 @@ export default function ResetPasswordPage() {
           Send Reset Link
         </PrimaryButton>
         <p className="auth-switch">Remember your password? <a href="#/signin">Back to Login</a></p>
-        <ResetAccessFooter />
       </form>
     </AuthLayout>
   );
@@ -114,18 +122,5 @@ function ResetMobileBrand() {
       <span>Teamoria</span>
       <small>Enterprise AI PM</small>
     </div>
-  );
-}
-
-function ResetAccessFooter() {
-  return (
-    <footer className="reset-access-footer">
-      <span><i /> Grid Online</span>
-      <nav aria-label="Authentication links">
-        <a href="#/security">Security</a>
-        <a href="#/terms">Legal</a>
-        <a href="#/support">Support</a>
-      </nav>
-    </footer>
   );
 }

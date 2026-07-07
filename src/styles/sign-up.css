@@ -256,6 +256,46 @@
   padding-right: 34px;
 }
 
+.sign-up-owner-notice {
+  align-items: center;
+  background: #f8fbff;
+  border: 1px solid #dce6f5;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  color: #14182f;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  margin: 10px 0 2px;
+  min-height: 58px;
+  padding: 12px 14px;
+}
+
+.sign-up-owner-notice svg {
+  color: #0f3fbf;
+  font-size: 20px;
+}
+
+.sign-up-owner-notice span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sign-up-owner-notice b {
+  color: #020617;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.sign-up-owner-notice small {
+  color: #5b6475;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
 .sign-up-password-field {
   padding-right: 12px !important;
 }

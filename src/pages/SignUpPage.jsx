@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
 import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
-import { FiAward, FiEye, FiEyeOff, FiLock, FiMail, FiUser } from "react-icons/fi";
+import { FiBriefcase, FiEye, FiEyeOff, FiLock, FiMail, FiUser } from "react-icons/fi";
 import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { registerWithEmail } from "../lib/api.js";
@@ -10,24 +10,16 @@ import { PENDING_SIGNUP_KEY } from "./VerifyOtpPage.jsx";
 import "../styles/sign-up.css";
 import "../styles/auth-unified.css";
 
-const roleMap = {
-  owner: "admin",
-  manager: "project-manager",
-  employee: "employee",
-  admin: "admin"
-};
-
 export default function SignUpPage() {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ fullName: "", email: "", role: "", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
   const fullNameError = getRequiredError(form.fullName, "Full name is required", submitted);
   const emailError = getEmailError(form.email, touched.email, submitted);
-  const roleError = getRequiredError(form.role, "Please select your role", submitted);
   const passwordError = getPasswordError(form.password, touched.password, submitted);
 
   function updateField(field, value) {
@@ -46,11 +38,10 @@ export default function SignUpPage() {
     const nextErrors = [
       getRequiredError(form.fullName, "Full name is required", true),
       getEmailError(form.email, true, true),
-      getRequiredError(form.role, "Please select your role", true),
       getPasswordError(form.password, true, true)
     ];
     if (nextErrors.some(Boolean)) {
-      setTouched({ fullName: true, email: true, role: true, password: true });
+      setTouched({ fullName: true, email: true, password: true });
       return;
     }
 
@@ -59,15 +50,12 @@ export default function SignUpPage() {
     const name = form.fullName;
     const email = form.email;
     const password = form.password;
-    const selectedRole = form.role;
-    const dashboardRole = roleMap[selectedRole] || "project-manager";
 
     try {
       const payload = await registerWithEmail({ name, email, password });
       sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
         email,
-        password,
-        role: dashboardRole
+        password
       }));
       window.location.hash = "/verify-otp";
     } catch (error) {
@@ -92,17 +80,8 @@ export default function SignUpPage() {
         </div>
         <header className="sign-up-header">
           <h1>Create account</h1>
-          <p>Join the world's most advanced AI-driven workspace</p>
+          <p>Join Teamoria and create your workspace.</p>
         </header>
-
-        <GoogleAuthButton
-          disabled={isSubmitting}
-          onError={(message) => setStatus({ type: "error", message })}
-          onStart={() => setStatus({ type: "", message: "" })}
-        >
-          Sign up with Google
-        </GoogleAuthButton>
-        <div className="divider"><span>or sign up with</span></div>
 
         {status.message && (
           <p className={`auth-alert auth-alert--${status.type}`} role="alert" aria-live="polite">
@@ -141,27 +120,13 @@ export default function SignUpPage() {
             onChange={(event) => updateField("email", event.target.value)}
           />
 
-          <span className="label">Role</span>
-          <label className={`field sign-up-select-field ${roleError ? "field--invalid" : ""}`}>
-            <span className="field-icon" aria-hidden="true"><FiAward /></span>
-            <select
-              aria-describedby={roleError ? "signup-role-error" : undefined}
-              aria-invalid={roleError ? "true" : "false"}
-              aria-required="true"
-              name="role"
-              value={form.role}
-              disabled={isSubmitting}
-              onBlur={() => setTouched((current) => ({ ...current, role: true }))}
-              onChange={(event) => updateField("role", event.target.value)}
-            >
-              <option value="" disabled>Select your role</option>
-              <option value="owner">Company Owner</option>
-              <option value="manager">Team Manager</option>
-              <option value="employee">Employee</option>
-              <option value="admin">Company Admin</option>
-            </select>
-            {roleError ? <small className="field-error" id="signup-role-error">{roleError}</small> : null}
-          </label>
+          <div className="sign-up-owner-notice" aria-label="Account role">
+            <FiBriefcase aria-hidden="true" />
+            <span>
+              <b>Company Owner account</b>
+              <small>Your workspace will be created under your company owner access.</small>
+            </span>
+          </div>
 
           <span className="label">Password</span>
           <label className={`field input-wrapper sign-up-password-field ${passwordError ? "field--invalid" : ""}`}>
@@ -193,8 +158,17 @@ export default function SignUpPage() {
         </div>
 
         <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Creating Workspace...">Create Workspace</PrimaryButton>
+        <div className="divider"><span>or continue with</span></div>
+        <div className="social-row">
+          <GoogleAuthButton
+            disabled={isSubmitting}
+            onError={(message) => setStatus({ type: "error", message })}
+            onStart={() => setStatus({ type: "", message: "" })}
+          >
+            Sign up with Google
+          </GoogleAuthButton>
+        </div>
         <p className="auth-switch">Already have an account? <a href="#/signin">Log in</a></p>
-        <SignUpFooter />
       </form>
     </AuthLayout>
   );
@@ -223,17 +197,4 @@ function getPasswordError(value, isTouched, isSubmitted) {
 
 function SignUpWorkspaceVisual() {
   return <AuthLegacyVisual className="sign-up-visual-content" />;
-}
-
-function SignUpFooter() {
-  return (
-    <footer className="sign-up-footer">
-      <span><i /> Grid Online</span>
-      <nav aria-label="Authentication links">
-        <a href="#/security">Security</a>
-        <a href="#/terms">Legal</a>
-        <a href="#/support">Support</a>
-      </nav>
-    </footer>
-  );
 }
