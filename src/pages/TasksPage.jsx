@@ -104,6 +104,12 @@ export default function TasksPage() {
   })), [tasks]);
 
   async function loadReferenceData() {
+    if (isMember) {
+      setProjects([]);
+      setPeople([]);
+      return;
+    }
+
     try {
       const [projectsPayload, peoplePayload] = await Promise.all([
         isAdmin ? listAdminProjects() : listCompanyProjects(),

@@ -107,11 +107,11 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   const [dashboard, setDashboard] = useState(null);
   const [dashboardStatus, setDashboardStatus] = useState({ loading: false, error: "" });
   const companyName = authUser?.company?.name || "Your Company";
-  const liveMetrics = getOwnerMetricsFromDashboard(dashboard);
-  const liveTeams = getOwnerTeamsFromDashboard(dashboard);
-  const liveRisks = getOwnerRisksFromDashboard(dashboard);
-  const projectProgress = getProjectProgressFromDashboard(dashboard);
-  const activityOverview = getActivityOverviewFromDashboard(dashboard);
+  const liveMetrics = dashboard ? getOwnerMetricsFromDashboard(dashboard) : isPreview ? ownerMetrics : getEmptyOwnerMetrics();
+  const liveTeams = dashboard ? getOwnerTeamsFromDashboard(dashboard) : isPreview ? ownerTeams : [];
+  const liveRisks = dashboard ? getOwnerRisksFromDashboard(dashboard) : getOwnerRisksFromDashboard(null);
+  const projectProgress = dashboard ? getProjectProgressFromDashboard(dashboard) : isPreview ? dashboardCharts.projectProgress : [];
+  const activityOverview = dashboard ? getActivityOverviewFromDashboard(dashboard) : isPreview ? dashboardCharts.activityOverview : [];
   const liveStatusSummary = getStatusSummaryFromDashboard(dashboard);
 
   useEffect(() => {
@@ -145,7 +145,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
         <AppPageLayout
           className="owner-page"
           title={`${companyName} Overview`}
-          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${dashboard ? " Live metrics are synced from the company dashboard API." : " Some sections use mock data until their backend APIs are ready."}`}
+          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${dashboard ? " Live metrics are synced from the company dashboard API." : isPreview ? " Preview data is shown in demo mode." : " No company dashboard data has been returned yet."}`}
           actions={(
             <div className="owner-period">
               <FiCalendar aria-hidden="true" />
@@ -183,7 +183,12 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {liveTeams.map(([code, name, office, velocity, health, tone, avatars, progress]) => (
+                  {liveTeams.length === 0 ? (
+                    <tr>
+                      <td colSpan="4">No company projects returned yet.</td>
+                    </tr>
+                  ) : null}
+                  {liveTeams.map(([code, name, office, velocity, health, tone, avatars, progress]) => (
                           <tr key={name}>
                             <td>
                               <div className={`owner-team-code tone-${tone}`}>{code}</div>
@@ -245,7 +250,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
                   <h3>AI Company Hub</h3>
-                    <p>{dashboard ? "Live workspace signals with AI recommendations" : "Strategic suggestions"}</p>
+                    <p>{dashboard ? "Live workspace signals with AI recommendations" : isPreview ? "Strategic suggestions" : "Waiting for company dashboard data"}</p>
                   </div>
                 </div>
                 <div className="owner-ai-status-strip" aria-label="Dashboard status summary">
@@ -472,26 +477,56 @@ function TrendBars() {
 function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange }) {
   const firstName = (authUser?.name || authUser?.email || "there").split(/\s|@/).filter(Boolean)[0];
   const shellUser = authUser?.name || authUser?.email || profile.label;
-  const taskItems = [
+  const [dashboard, setDashboard] = useState(null);
+  const [dashboardStatus, setDashboardStatus] = useState({ loading: false, error: "" });
+  const previewTaskItems = [
     ["Finalize Q3 roadmap review", "Due by 2:00 PM", "High", 82],
     ["Sync with Design System team", "Due by 4:30 PM", "Teamoria Alpha", 58],
     ["Review sprint velocity data", "No deadline", "Operational", 34]
   ];
-  const meetingItems = [
+  const previewMeetingItems = [
     ["10:00", "AM", "Stakeholder Monthly", "Main Conference Room"],
     ["01:30", "PM", "Design Review", "Virtual Link"]
   ];
-  const recentFiles = [
+  const previewRecentFiles = [
     ["Q3_Roadmap_Draft.pdf", "Modified 2h ago", "doc"],
     ["Budget_Allocation_Final.xlsx", "Modified Yesterday", "sheet"],
     ["Team_Velocity_Q2.report", "Modified 3d ago", "report"]
   ];
-  const kpis = [
+  const previewKpis = [
     { label: "Tasks Today", value: "4", detail: "3 focused priorities", icon: FiClock, progress: 72, tone: "primary" },
     { label: "Completed Tasks", value: "9", detail: "+2 vs yesterday", icon: FiCheckCircle, progress: 68, tone: "success" },
     { label: "Productivity Score", value: "88", detail: "+12% this week", icon: FiTrendingUp, progress: 88, tone: "score" },
     { label: "Upcoming Meetings", value: "2", detail: "Next at 10:00 AM", icon: FiCalendar, progress: 45, tone: "meeting" }
   ];
+  const taskItems = isPreview ? previewTaskItems : getEmployeeTasksFromDashboard(dashboard);
+  const meetingItems = isPreview ? previewMeetingItems : [];
+  const recentFiles = isPreview ? previewRecentFiles : getEmployeeFilesFromDashboard(dashboard);
+  const kpis = isPreview ? previewKpis : getEmployeeKpisFromDashboard(dashboard);
+  const remainingTasks = taskItems.length;
+
+  useEffect(() => {
+    if (isPreview || isDemoMode()) return;
+
+    let isMounted = true;
+    setDashboardStatus({ loading: true, error: "" });
+
+    getCompanyDashboard()
+      .then((payload) => {
+        if (!isMounted) return;
+        setDashboard(getPayloadData(payload));
+        setDashboardStatus({ loading: false, error: "" });
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        setDashboard(null);
+        setDashboardStatus({ loading: false, error: error.message || "Unable to load dashboard data." });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isPreview]);
 
   return (
     <AppShell active="Dashboard" user={shellUser} role={profile.label} roleId={roleId}>
@@ -501,16 +536,18 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
             <div>
               <span className="employee-eyebrow">Employee workspace</span>
               <h2>Welcome back, {firstName}.</h2>
-              <p>You have 4 primary tasks to tackle today. Your productivity score is up 12% this week.</p>
+              <p>{isPreview ? "You have 4 primary tasks to tackle today. Your productivity score is up 12% this week." : dashboard ? `You have ${remainingTasks} task${remainingTasks === 1 ? "" : "s"} returned from your company workspace.` : "Your company workspace is ready. Live data will appear here when the API returns it."}</p>
             </div>
             <div className="employee-hero-status" aria-label="Today's employee status">
               <span><FiCheckCircle aria-hidden="true" /> On track</span>
-              <strong>88%</strong>
-              <small>Productivity score</small>
+              <strong>{isPreview ? "88%" : `${getEmployeeCompletionScore(dashboard)}%`}</strong>
+              <small>{isPreview ? "Productivity score" : "Task completion"}</small>
             </div>
           </section>
 
           {isPreview ? <RoleSwitcher activeRole={roleId} variant="employee" onRoleChange={onRoleChange} /> : null}
+          {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">Loading dashboard from API...</p> : null}
+          {!isPreview && dashboardStatus.error ? <p className="dashboard-api-state dashboard-api-state--error">{dashboardStatus.error}</p> : null}
 
           <section className="employee-kpi-grid" aria-label="Employee dashboard KPIs">
             {kpis.map((item, index) => {
@@ -535,9 +572,10 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
             <article className="employee-panel employee-task-panel">
               <div className="employee-panel-head">
                 <h3><FiBriefcase aria-hidden="true" />My Tasks for Today</h3>
-                <span>4 Remaining</span>
+                <span>{remainingTasks} Remaining</span>
               </div>
               <div className="employee-task-list">
+                {!dashboardStatus.loading && taskItems.length === 0 ? <p className="tasks-empty-state">No tasks returned for your company workspace.</p> : null}
                 {taskItems.map(([title, due, status, progress]) => (
                   <label className="employee-task-item" key={title}>
                     <input type="checkbox" />
@@ -558,14 +596,18 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                 <span><FiZap aria-hidden="true" /></span>
                 <div>
                   <h3>Teamoria AI</h3>
-                  <p>I can summarize your docs or analyze team velocity.</p>
+                  <p>{isPreview ? "I can summarize your docs or analyze team velocity." : "Ask about files and tasks once your company workspace has data."}</p>
                 </div>
               </div>
               <div className="employee-ai-message">
-                <AIInsightCard
-                  classNamePrefix="employee"
-                  insight={aiInsights.find((insight) => insight.id === "insight-employee-focus")}
-                />
+                {isPreview ? (
+                  <AIInsightCard
+                    classNamePrefix="employee"
+                    insight={aiInsights.find((insight) => insight.id === "insight-employee-focus")}
+                  />
+                ) : (
+                  <p className="tasks-empty-state">No personal AI recommendations returned yet.</p>
+                )}
               </div>
               <label className="employee-ai-input">
                 <input placeholder="Ask Teamoria AI about your tasks or files" />
@@ -580,6 +622,7 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                   <span>Today</span>
                 </div>
                 <div className="employee-meeting-list">
+                  {!isPreview && meetingItems.length === 0 ? <p className="tasks-empty-state">No meetings returned yet.</p> : null}
                   {meetingItems.map(([time, meridiem, title, place]) => (
                     <article key={title}>
                       <time><span>{time}</span><b>{meridiem}</b></time>
@@ -597,6 +640,7 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                   <h3><FiBookOpen aria-hidden="true" />Recent Files</h3>
                 </div>
                 <div className="employee-file-list">
+                  {!isPreview && recentFiles.length === 0 ? <p className="tasks-empty-state">No recent files returned for your company workspace.</p> : null}
                   {recentFiles.map(([name, meta, type]) => (
                     <article className={`file-${type}`} key={name}>
                       <span><FiBookOpen aria-hidden="true" /></span>
@@ -618,11 +662,15 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                 <span>Weekly</span>
               </div>
               <div className="employee-insight-grid">
-                {[
+                {(isPreview ? [
                   ["Deep work", "6.4h", 74],
                   ["Task focus", "88%", 88],
                   ["Review load", "3 items", 42]
-                ].map(([label, value, progress]) => (
+                ] : [
+                  ["Deep work", "-", 0],
+                  ["Task focus", `${getEmployeeCompletionScore(dashboard)}%`, getEmployeeCompletionScore(dashboard)],
+                  ["Review load", `${taskItems.length} items`, clampPercent(taskItems.length * 10)]
+                ]).map(([label, value, progress]) => (
                   <div className="employee-insight-row" key={label}>
                     <div>
                       <span>{label}</span>
@@ -638,7 +686,7 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
               <div className="employee-schedule-head">
                 <div>
                   <h3>Work Schedule</h3>
-                  <span>Friday, June 14</span>
+                  <span>{isPreview ? "Friday, June 14" : "No schedule returned"}</span>
                 </div>
                 <div>
                   <button className="active" type="button">Day</button>
@@ -648,10 +696,14 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
               </div>
               <div className="employee-timeline">
                 {[
+                  ...(isPreview ? [
                   ["8:00 AM", "Daily Standup", "Teamoria Squad", "primary"],
                   ["9:00 AM", "", "", ""],
                   ["10:00 AM", "Stakeholder Monthly", "", "secondary"],
                   ["11:00 AM", "Focus Block", "", "focus"]
+                  ] : [
+                    ["", "No schedule items returned for this workspace.", "", "focus"]
+                  ])
                 ].map(([time, title, subtitle, tone]) => (
                   <div className="employee-time-row" key={time}>
                     <span>{time}</span>
@@ -725,7 +777,7 @@ function AiHelper({ classNamePrefix }) {
 }
 
 function getOwnerMetricsFromDashboard(dashboard) {
-  if (!dashboard?.totals) return ownerMetrics;
+  if (!dashboard?.totals) return getEmptyOwnerMetrics();
 
   const totals = dashboard.totals;
   const projectStatuses = dashboard.project_statuses || {};
@@ -774,9 +826,79 @@ function getOwnerMetricsFromDashboard(dashboard) {
   ];
 }
 
+function getEmptyOwnerMetrics() {
+  return [
+    { label: "Company Projects", value: "0", detail: "No projects returned", icon: FiBriefcase, tone: "primary", progress: 0 },
+    { label: "Project Health", value: "0%", detail: "No completed projects", icon: FiShield, tone: "secondary", progress: 0 },
+    { label: "Company Workforce", value: "0", detail: "No users returned", icon: FiUsers, tone: "neutral", progress: 0 },
+    { label: "Task Completion", value: "0%", detail: "No tasks returned", icon: FiZap, tone: "ai", progress: 0 }
+  ];
+}
+
+function getEmployeeKpisFromDashboard(dashboard) {
+  const totals = dashboard?.totals || {};
+  const taskStatuses = dashboard?.task_statuses || {};
+  const totalTasks = Number(totals.tasks || 0);
+  const doneTasks = Number(taskStatuses.done || 0);
+  const upcomingTasks = normalizeCollection(dashboard?.upcoming_tasks);
+  const completion = getEmployeeCompletionScore(dashboard);
+
+  return [
+    { label: "Tasks Today", value: formatNumber(upcomingTasks.length), detail: "From company dashboard", icon: FiClock, progress: clampPercent(upcomingTasks.length * 12), tone: "primary" },
+    { label: "Completed Tasks", value: formatNumber(doneTasks), detail: "Done tasks", icon: FiCheckCircle, progress: completion, tone: "success" },
+    { label: "Task Completion", value: `${completion}%`, detail: `${formatNumber(totalTasks)} total tasks`, icon: FiTrendingUp, progress: completion, tone: "score" },
+    { label: "Upcoming Meetings", value: "0", detail: "No meetings API returned", icon: FiCalendar, progress: 0, tone: "meeting" }
+  ];
+}
+
+function getEmployeeTasksFromDashboard(dashboard) {
+  return normalizeCollection(dashboard?.upcoming_tasks).slice(0, 5).map((task) => {
+    const status = formatTaskStatus(task.status || task.priority || "todo");
+    return [
+      task.title || "Untitled task",
+      task.due_date ? `Due ${formatDate(task.due_date)}` : "No deadline",
+      status,
+      getTaskProgress(task)
+    ];
+  });
+}
+
+function getEmployeeFilesFromDashboard(dashboard) {
+  const files = normalizeCollection(dashboard?.recent_uploads || dashboard?.uploads || dashboard?.recent_files);
+
+  return files.slice(0, 5).map((file) => [
+    file.original_name || file.file_name || file.name || "Untitled file",
+    file.updated_at || file.created_at ? `Modified ${formatDate(file.updated_at || file.created_at)}` : "No modified date",
+    getFileTone(file)
+  ]);
+}
+
+function getEmployeeCompletionScore(dashboard) {
+  const statuses = dashboard?.task_statuses || {};
+  const total = Number(dashboard?.totals?.tasks || Object.values(statuses).reduce((sum, value) => sum + Number(value || 0), 0));
+  const done = Number(statuses.done || 0);
+  return total ? clampPercent((done / total) * 100) : 0;
+}
+
+function getTaskProgress(task) {
+  if (task.progress !== undefined) return clampPercent(task.progress);
+  if (task.status === "done") return 100;
+  if (task.status === "review") return 80;
+  if (task.status === "in_progress") return 55;
+  if (task.status === "blocked") return 20;
+  return 0;
+}
+
+function getFileTone(file) {
+  const type = String(file.file_type || file.category || file.original_name || file.file_name || "").toLowerCase();
+  if (type.includes("sheet") || type.includes("xls")) return "sheet";
+  if (type.includes("report")) return "report";
+  return "doc";
+}
+
 function getOwnerTeamsFromDashboard(dashboard) {
   const projects = normalizeCollection(dashboard?.recent_projects);
-  if (!projects.length) return ownerTeams;
+  if (!projects.length) return [];
 
   return projects.slice(0, 5).map((project, index) => {
     const progress = Number(project.progress ?? 0);
@@ -823,7 +945,7 @@ function getOwnerRisksFromDashboard(dashboard) {
 
 function getProjectProgressFromDashboard(dashboard) {
   const projects = normalizeCollection(dashboard?.recent_projects);
-  if (!projects.length) return dashboardCharts.projectProgress;
+  if (!projects.length) return [];
 
   return projects.slice(0, 5).map((project) => ({
     label: project.name || "Project",
@@ -833,7 +955,7 @@ function getProjectProgressFromDashboard(dashboard) {
 
 function getActivityOverviewFromDashboard(dashboard) {
   const statuses = dashboard?.task_statuses;
-  if (!statuses) return dashboardCharts.activityOverview;
+  if (!statuses) return [];
 
   const rows = [
     ["Todo", statuses.todo],
