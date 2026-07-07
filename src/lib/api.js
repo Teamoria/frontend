@@ -624,7 +624,6 @@ export function uploadFiles({
 
   formData.append("scope", scope);
   formData.append("visibility", visibility);
-  formData.append("access_level", "view");
 
   if (company_id) formData.append("company_id", company_id);
   if (project_id) formData.append("project_id", project_id);
@@ -858,27 +857,46 @@ export function markAllNotificationsRead() {
 }
 
 export function listAiConversations() {
-  return apiRequest("/ai/conversations", { auth: true });
+  return apiRequest("/chat/sessions", { auth: true });
 }
 
 export function createAiConversation(body = {}) {
-  return apiRequest("/ai/conversations", { method: "POST", auth: true, body });
+  return Promise.resolve({
+    success: true,
+    data: {
+      conversation: {
+        id: `local-${Date.now()}`,
+        title: body.title || "New chat",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    }
+  });
 }
 
 export function getAiConversationMessages(conversationId) {
-  return apiRequest(`/ai/conversations/${conversationId}/messages`, { auth: true });
+  return Promise.resolve({ success: true, data: { messages: [] } });
 }
 
-export function sendAiConversationMessage(conversationId, body) {
-  return apiRequest(`/ai/conversations/${conversationId}/messages`, { method: "POST", auth: true, body });
+export function sendAiConversationMessage(_conversationId, body = {}) {
+  return apiRequest("/chat", {
+    method: "POST",
+    auth: true,
+    body: {
+      project_id: body.project_id || undefined,
+      question: body.question || body.message || "",
+      top_k: body.top_k || 5,
+      context: body.context || []
+    }
+  });
 }
 
 export function deleteAiConversation(conversationId) {
-  return apiRequest(`/ai/conversations/${conversationId}`, { method: "DELETE", auth: true });
+  return Promise.resolve({ success: true, data: { id: conversationId } });
 }
 
 export function updateAiConversation(conversationId, body) {
-  return apiRequest(`/ai/conversations/${conversationId}`, { method: "PATCH", auth: true, body });
+  return Promise.resolve({ success: true, data: { id: conversationId, ...body } });
 }
 
 export function listAdminProjects({ page, archived } = {}) {

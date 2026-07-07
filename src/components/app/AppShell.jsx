@@ -61,7 +61,7 @@ const managerNavItems = [
 const memberNavItems = [
   { label: "Dashboard", path: "/dashboard", icon: "grid" },
   { label: "My Tasks", path: "/tasks", icon: "check" },
-  { label: "Upload Center", path: "/uploads", icon: "upload" },
+  { label: "Shared Files", path: "/uploads", icon: "upload" },
   { label: "AI Chat", path: "/ai-chat", icon: "spark" },
   { label: "Profile", path: "/profile", icon: "profile" }
 ];
@@ -169,7 +169,7 @@ export function AppSidebar({ active = "Dashboard", roleId = "project-manager", o
 function groupSidebarNavItems(items) {
   const groups = [
     { label: "Workspace", keys: new Set(["Dashboard"]) },
-    { label: "Management", keys: new Set(["Employees", "Projects", "Tasks", "My Tasks", "Upload Center", "Reports"]) },
+    { label: "Management", keys: new Set(["Employees", "Projects", "Tasks", "My Tasks", "Upload Center", "Shared Files", "Reports"]) },
     { label: "AI", keys: new Set(["AI Chat", "Agent Runs"]) },
     { label: "Account", keys: new Set(["Profile", "Notifications"]) }
   ];

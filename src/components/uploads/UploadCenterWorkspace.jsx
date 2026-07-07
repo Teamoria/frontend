@@ -59,7 +59,9 @@ const visibilityOptions = [
 
 export default function UploadCenterWorkspace({ view = "all", filesHref = "#/owner/uploads/files", uploadHref = "#/owner/uploads", showHeader = true }) {
   const { isAdmin, normalizedRole, user } = useAuth();
-  const showUpload = view !== "files";
+  const isMember = normalizedRole === "company_member";
+  const canManageUploads = !isMember;
+  const showUpload = canManageUploads && view !== "files";
   const showFiles = view !== "upload";
   const fileInputRef = useRef(null);
   const [projects, setProjects] = useState([]);
@@ -91,7 +93,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   useEffect(() => {
     loadProjects();
     loadShareUsers();
-  }, []);
+  }, [isMember]);
 
   useEffect(() => {
     if (showFiles) loadUploads();
@@ -146,6 +148,11 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   }
 
   async function loadProjects() {
+    if (isMember) {
+      setProjects([]);
+      return;
+    }
+
     try {
       const payload = isAdmin ? await listAdminProjects() : await listCompanyProjects();
       setProjects(extractRows(getPayloadData(payload), ["projects"]).map(normalizeProject).filter((project) => project.id));
@@ -155,6 +162,11 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   }
 
   async function loadShareUsers() {
+    if (isMember) {
+      setShareUsers([]);
+      return;
+    }
+
     try {
       const payload = isAdmin ? await listUsers({ page: 1 }) : await listStaff({ page: 1 });
       setShareUsers(extractRows(getPayloadData(payload), ["users", "staff"]).map(normalizeShareUser).filter((item) => item.id));
@@ -175,7 +187,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         task_id: filters.task_id,
         per_page: filters.per_page
       });
-      const payload = filters.mine ? await listMyUploads(cleanFilters) : await listUploads(cleanFilters);
+      const payload = isMember || filters.mine ? await listMyUploads(cleanFilters) : await listUploads(cleanFilters);
       setAssets(extractRows(getPayloadData(payload), ["files", "uploads", "assets"]).map(normalizeAsset));
     } catch (error) {
       setAssets([]);
@@ -367,8 +379,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   return (
     <section className="owner-upload-page">
       <div className="owner-upload-toprow">
-        {view === "upload" ? <a className="owner-upload-nav-link" href={filesHref}>View Uploaded Files</a> : null}
-        {view === "files" ? <a className="owner-upload-nav-link" href={uploadHref}>Upload New File</a> : null}
+        {canManageUploads && view === "upload" ? <a className="owner-upload-nav-link" href={filesHref}>View Uploaded Files</a> : null}
+        {canManageUploads && view === "files" ? <a className="owner-upload-nav-link" href={uploadHref}>Upload New File</a> : null}
         <button className="owner-upload-refresh" type="button" onClick={showFiles ? loadUploads : () => { loadProjects(); loadShareUsers(); }} disabled={showFiles ? isLoading : false}>
           <FiRefreshCw aria-hidden="true" />
           Refresh
@@ -378,12 +390,18 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       {showHeader ? (
         <header className="owner-upload-header">
           <h1>{view === "files" ? "Uploaded Files" : "Upload Center"}</h1>
-          <p>{view === "files" ? "Review uploaded files, AI processing results, sharing, downloads, and deletion controls." : "Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls."}</p>
+          <p>{isMember ? "View files shared with you or uploaded under your account." : view === "files" ? "Review uploaded files, AI processing results, sharing, downloads, and deletion controls." : "Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls."}</p>
           {view === "files" ? null : <code className="owner-upload-api-url">API: {getConfiguredUploadApiBaseUrl()}/uploads</code>}
         </header>
       ) : null}
 
       {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
+
+      {isMember ? (
+        <p className="auth-alert auth-alert--success" role="status">
+          Upload access is read-only for employees. You can view and download available files, but uploads, delete, and permission controls are managed by managers.
+        </p>
+      ) : null}
 
       {showUpload ? <form className="owner-upload-dropzone owner-upload-dropzone--focused" onSubmit={submitUpload}>
         <input hidden multiple ref={fileInputRef} type="file" onChange={(event) => addFiles(event.target.files)} />
@@ -472,7 +490,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         <div className="owner-upload-section-head">
           <h2>Backend Uploads</h2>
           <div className="owner-upload-actions">
-            <button type="button" onClick={() => setFilters({ scope: "", visibility: "", project_id: "", task_id: "", per_page: 15, mine: false })}>
+            <button type="button" onClick={() => setFilters({ scope: "", visibility: "", project_id: "", task_id: "", per_page: 15, mine: isMember })}>
               <FiFilter aria-hidden="true" />
               Clear
             </button>
@@ -498,13 +516,15 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
               {visibilityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
-          <label>
-            <span>Project</span>
-            <select value={filters.project_id} onChange={(event) => updateFilter("project_id", event.target.value)}>
-              <option value="">All projects</option>
-              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-            </select>
-          </label>
+          {!isMember ? (
+            <label>
+              <span>Project</span>
+              <select value={filters.project_id} onChange={(event) => updateFilter("project_id", event.target.value)}>
+                <option value="">All projects</option>
+                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              </select>
+            </label>
+          ) : null}
           <label>
             <span>Task ID</span>
             <input value={filters.task_id} onChange={(event) => updateFilter("task_id", event.target.value)} placeholder="Any task" />
@@ -518,10 +538,12 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
               <option value="50">50</option>
             </select>
           </label>
-          <label className="owner-upload-checkbox">
-            <input checked={filters.mine} type="checkbox" onChange={(event) => updateFilter("mine", event.target.checked)} />
-            <span>Mine only</span>
-          </label>
+          {!isMember ? (
+            <label className="owner-upload-checkbox">
+              <input checked={filters.mine} type="checkbox" onChange={(event) => updateFilter("mine", event.target.checked)} />
+              <span>Mine only</span>
+            </label>
+          ) : null}
         </div>
 
         <div className="owner-upload-table-wrap">
@@ -557,8 +579,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
                         <button type="button" title="Preview file" onClick={() => handlePreview(asset)}><FiEye aria-hidden="true" /></button>
                         <button type="button" title="Download file" onClick={() => handleDownload(asset)}><FiDownload aria-hidden="true" /></button>
                         <button type="button" title="View AI results" onClick={() => handleViewAiResults(asset)}><FiMonitor aria-hidden="true" /></button>
-                        <button type="button" title="Manage permissions" onClick={() => setPermissionsModal(asset)}><FiShare2 aria-hidden="true" /></button>
-                        <button className="owner-upload-danger" type="button" title="Delete file" onClick={() => handleDelete(asset)}><FiTrash2 aria-hidden="true" /></button>
+                        {canManageUploads ? <button type="button" title="Manage permissions" onClick={() => setPermissionsModal(asset)}><FiShare2 aria-hidden="true" /></button> : null}
+                        {canManageUploads ? <button className="owner-upload-danger" type="button" title="Delete file" onClick={() => handleDelete(asset)}><FiTrash2 aria-hidden="true" /></button> : null}
                       </div>
                     </td>
                   </tr>
@@ -569,7 +591,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         </div>
       </section> : null}
 
-      {permissionsModal ? (
+      {canManageUploads && permissionsModal ? (
         <PermissionsModal
           asset={permissionsModal}
           users={shareUsers}

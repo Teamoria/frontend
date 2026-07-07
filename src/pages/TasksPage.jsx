@@ -818,7 +818,7 @@ function TaskDetailsModal({
                   className="product-button"
                   disabled={isSaving || !detailDraft.note.trim()}
                   type="button"
-                  onClick={() => onRunAction(() => addTaskNote(task.id, { note: detailDraft.note, body: detailDraft.note, content: detailDraft.note }, { role }), "Note added.")}
+                  onClick={() => onRunAction(() => addTaskNote(task.id, { content: detailDraft.note }, { role }), "Note added.")}
                 >
                   Add note
                 </button>

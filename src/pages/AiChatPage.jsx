@@ -41,7 +41,9 @@ export default function AiChatPage() {
 
   useEffect(() => {
     if (activeConversationId) {
-      loadMessages(activeConversationId);
+      if (!String(activeConversationId).startsWith("local-")) {
+        loadMessages(activeConversationId);
+      }
     } else {
       setMessages([]);
     }
