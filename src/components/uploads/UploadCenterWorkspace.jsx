@@ -83,6 +83,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [uploadApiUnavailable, setUploadApiUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [permissionsModal, setPermissionsModal] = useState(null);
@@ -255,6 +256,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
       setStatus({ type: "success", message: "Files uploaded successfully." });
+      setUploadApiUnavailable(false);
       setAiResultsModal({
         asset: normalizeAsset(uploaded || fallbackUpload),
         isLoading: false,
@@ -263,7 +265,9 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       });
       if (showFiles) await loadUploads();
     } catch (error) {
-      setStatus({ type: "error", message: getUploadSubmitErrorMessage(error, form) });
+      const isUnavailable = isUploadSchemaError(error);
+      setUploadApiUnavailable(isUnavailable);
+      setStatus({ type: isUnavailable ? "warning" : "error", message: getUploadSubmitErrorMessage(error, form) });
     } finally {
       setIsUploading(false);
     }
@@ -394,6 +398,15 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       ) : null}
 
       {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
+      {uploadApiUnavailable ? (
+        <section className="owner-upload-api-unavailable" aria-label="Upload API unavailable">
+          <div>
+            <h2>Upload API is waiting for the backend database migration</h2>
+            <p>The Laravel upload endpoint is reachable, but its database table is missing processing columns. Existing ready APIs can still be used while upload is paused.</p>
+          </div>
+          <button type="button" onClick={() => setUploadApiUnavailable(false)}>Retry upload form</button>
+        </section>
+      ) : null}
 
       {isMember ? (
         <p className="auth-alert auth-alert--success" role="status">
@@ -401,7 +414,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         </p>
       ) : null}
 
-      {showUpload ? <form className="owner-upload-dropzone owner-upload-dropzone--focused" onSubmit={submitUpload}>
+      {showUpload && !uploadApiUnavailable ? <form className="owner-upload-dropzone owner-upload-dropzone--focused" onSubmit={submitUpload}>
         <input hidden multiple ref={fileInputRef} type="file" onChange={(event) => addFiles(event.target.files)} />
         <FiUploadCloud aria-hidden="true" />
         <h2>Upload files to backend storage</h2>
@@ -1327,6 +1340,10 @@ function getUploadSubmitErrorMessage(error, form) {
   const message = error?.message || "Upload failed. Please try again.";
   const status = Number(error?.status || 0);
 
+  if (isUploadSchemaError(error)) {
+    return "Upload API is not ready yet. The backend database is missing uploads.processing_status, so files cannot be saved until migrations are applied.";
+  }
+
   if (form.scope === "project" && status >= 500) {
     return `Upload failed because the selected project could not be saved by the AI service. Check that project_id exists in the AI database: ${form.project_id}`;
   }
@@ -1336,6 +1353,11 @@ function getUploadSubmitErrorMessage(error, form) {
   }
 
   return message;
+}
+
+function isUploadSchemaError(error) {
+  const message = `${error?.message || ""} ${JSON.stringify(error?.payload || {})}`;
+  return /uploads has no column named processing_status|uploads\.processing_status/i.test(message);
 }
 
 function triggerDownload(url, filename) {
