@@ -976,10 +976,11 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-height: 88vh;
+  max-height: calc(100vh - 48px);
   max-width: 92vw;
   overflow: hidden;
   padding: 0;
+  top: 50%;
   width: 960px;
 }
 
@@ -1149,40 +1150,38 @@
   align-items: center;
   background: #ffffff;
   border-bottom: 1px solid #edf1f7;
-  counter-reset: upload-ai-step;
   display: grid;
   flex: 0 0 auto;
-  gap: 0;
+  gap: 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   list-style: none;
   margin: 0;
-  padding: 14px 24px;
+  padding: 14px 24px 16px;
+  position: relative;
+}
+
+.owner-upload-ai-timeline::before {
+  background: #e2e8f0;
+  content: "";
+  height: 2px;
+  left: 48px;
+  position: absolute;
+  right: 48px;
+  top: 29px;
 }
 
 .owner-upload-ai-timeline li {
   align-items: center;
   color: #94a3b8;
-  display: flex;
+  display: grid;
   font-size: 12px;
   font-weight: 900;
-  gap: 8px;
+  gap: 7px;
+  justify-items: center;
   min-width: 0;
   position: relative;
-}
-
-.owner-upload-ai-timeline li:not(:last-child)::after {
-  background: #e2e8f0;
-  content: "";
-  height: 2px;
-  left: 38px;
-  position: absolute;
-  right: 8px;
-  top: 15px;
-  z-index: 0;
-}
-
-.owner-upload-ai-timeline li.is-done:not(:last-child)::after {
-  background: #0f3fbf;
+  text-align: center;
+  z-index: 1;
 }
 
 .owner-upload-ai-timeline span {
@@ -1210,6 +1209,15 @@
 .owner-upload-ai-timeline li.is-done,
 .owner-upload-ai-timeline li.is-active {
   color: #0f172a;
+}
+
+.owner-upload-ai-timeline b {
+  background: #ffffff;
+  border-radius: 999px;
+  line-height: 1.2;
+  padding: 0 6px;
+  position: relative;
+  z-index: 1;
 }
 
 .owner-upload-ai-timeline.is-failed li.is-active span {
@@ -2080,7 +2088,7 @@
 
 @media (max-width: 768px) {
   .owner-upload-ai-modal {
-    max-height: 92vh;
+    max-height: calc(100vh - 20px);
     max-width: calc(100vw - 20px);
     width: calc(100vw - 20px);
   }
@@ -2117,6 +2125,23 @@
 
   .owner-upload-ai-results {
     padding: 18px;
+  }
+
+  .owner-upload-ai-timeline {
+    gap: 8px;
+    padding: 12px 14px 14px;
+  }
+
+  .owner-upload-ai-timeline::before {
+    left: 30px;
+    right: 30px;
+    top: 27px;
+  }
+
+  .owner-upload-ai-timeline b {
+    font-size: 11px;
+    max-width: 70px;
+    white-space: normal;
   }
 
   .owner-upload-ai-toolbar {
