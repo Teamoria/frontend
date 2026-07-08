@@ -302,6 +302,7 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
     response = await fetch(url.toString(), {
       method,
       headers,
+      cache: "no-store",
       body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
     });
   } catch (error) {
@@ -448,6 +449,7 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
     response = await fetch(url.toString(), {
       method,
       headers,
+      cache: "no-store",
       body: body ? (isFormData ? body : JSON.stringify(body)) : undefined
     });
   } catch (error) {
@@ -601,7 +603,7 @@ async function apiBlobRequest(path, { auth = true, upload = false } = {}) {
     }
   }
 
-  const response = await fetch(url, { method: "GET", headers });
+  const response = await fetch(url, { method: "GET", headers, cache: "no-store" });
   const contentType = response.headers.get("content-type") || "";
 
   if (!response.ok) {

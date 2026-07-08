@@ -84,6 +84,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [uploadsRefreshedAt, setUploadsRefreshedAt] = useState("");
   const [uploadApiUnavailable, setUploadApiUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -190,7 +191,9 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         per_page: filters.per_page
       });
       const payload = isMember || filters.mine ? await listMyUploads(cleanFilters) : await listUploads(cleanFilters);
-      setAssets(extractRows(getPayloadData(payload), ["files", "uploads", "assets"]).map(normalizeAsset));
+      const nextAssets = extractRows(getPayloadData(payload), ["files", "uploads", "assets"]).map(normalizeAsset);
+      setAssets(nextAssets);
+      setUploadsRefreshedAt(new Date().toISOString());
     } catch (error) {
       setAssets([]);
       setStatus({ type: "error", message: error.message });
@@ -501,7 +504,10 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
 
       {showFiles ? <section className="owner-upload-assets">
         <div className="owner-upload-section-head">
-          <h2>Backend Uploads</h2>
+          <div>
+            <h2>Backend Uploads</h2>
+            {uploadsRefreshedAt ? <p>{assets.length} files returned by Laravel. Last refresh: {formatDate(uploadsRefreshedAt)}</p> : null}
+          </div>
           <div className="owner-upload-actions">
             <button type="button" onClick={() => setFilters({ scope: "", visibility: "", project_id: "", task_id: "", per_page: 15, mine: isMember })}>
               <FiFilter aria-hidden="true" />
