@@ -802,7 +802,7 @@
   box-sizing: border-box;
   display: grid;
   overflow: auto;
-  padding: 5vh 2vw;
+  padding: max(32px, 5vh) 2vw;
   place-items: center;
 }
 
@@ -1069,6 +1069,7 @@
   max-height: 90vh;
   max-height: 90dvh;
   max-width: 980px;
+  margin: 0;
   overflow: hidden;
   padding: 0;
   position: relative;
@@ -1079,36 +1080,53 @@
 }
 
 .owner-upload-permissions-modal.owner-upload-ai-modal {
+  left: auto;
+  margin: 0;
   max-height: 90vh;
   max-height: 90dvh;
   max-width: 980px;
   overflow: hidden !important;
+  padding: 0 !important;
+  position: relative;
+  top: auto;
+  transform: none;
   width: min(96vw, 980px);
 }
 
 .owner-upload-ai-header {
   align-items: flex-start;
-  background: rgba(255, 255, 255, 0.96);
+  background: #ffffff;
   border-bottom: 1px solid #edf1f7;
   display: grid;
   flex: 0 0 auto;
   gap: 16px 20px;
   grid-template-columns: minmax(0, 1fr) auto;
-  padding: 30px 30px 20px;
+  margin: 0;
+  overflow: hidden;
+  padding: 24px 30px 22px;
+  position: static;
+  transform: none;
 }
 
 .owner-upload-ai-titleblock {
   display: grid;
   gap: 8px;
+  margin: 0;
   min-width: 0;
+  overflow: hidden;
+  position: static;
+  transform: none;
 }
 
 .owner-upload-ai-titleblock h2 {
   color: #0f172a;
   font-size: 28px;
   letter-spacing: 0;
-  line-height: 1.1;
+  line-height: 1.2;
   margin: 0;
+  overflow: visible;
+  position: static;
+  transform: none;
 }
 
 .owner-upload-ai-titleblock p {
@@ -1117,8 +1135,11 @@
   line-height: 1.45;
   margin: 0;
   max-width: 100%;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  overflow-wrap: normal;
+  text-overflow: ellipsis;
   white-space: normal;
+  word-break: break-word;
 }
 
 .owner-upload-ai-meta {
@@ -2235,6 +2256,7 @@
 
   .owner-upload-ai-modal {
     max-height: 96dvh;
+    overflow: hidden;
     max-width: 96vw;
     width: 96vw;
   }
@@ -2242,6 +2264,8 @@
   .owner-upload-permissions-modal.owner-upload-ai-modal {
     max-height: 96dvh !important;
     max-width: 96vw !important;
+    overflow: hidden !important;
+    padding: 0 !important;
     width: 96vw !important;
   }
 
@@ -2249,7 +2273,7 @@
     align-items: flex-start;
     gap: 14px;
     grid-template-columns: minmax(0, 1fr);
-    padding: 18px;
+    padding: 24px 18px 18px;
   }
 
   .owner-upload-ai-header-actions {

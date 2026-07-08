@@ -978,7 +978,30 @@ export function deleteNotification(id) {
 }
 
 export function listAiConversations() {
+  return listChatSessions();
+}
+
+export function listChatSessions() {
   return apiRequest("/chat/sessions", { auth: true });
+}
+
+export function listChatSessionMessages(sessionId, cursor) {
+  return apiRequest(`/chat/sessions/${encodeURIComponent(sessionId)}/messages`, {
+    auth: true,
+    query: { cursor }
+  });
+}
+
+export function sendChatMessage({ session_id, project_id, message_content }) {
+  return apiRequest("/chat/messages", {
+    method: "POST",
+    auth: true,
+    body: {
+      session_id: session_id || undefined,
+      project_id: project_id || undefined,
+      message_content
+    }
+  });
 }
 
 export function createAiConversation(body = {}) {
@@ -996,19 +1019,14 @@ export function createAiConversation(body = {}) {
 }
 
 export function getAiConversationMessages(conversationId) {
-  return Promise.resolve({ success: true, data: { messages: [] } });
+  return listChatSessionMessages(conversationId);
 }
 
-export function sendAiConversationMessage(_conversationId, body = {}) {
-  return apiRequest("/chat", {
-    method: "POST",
-    auth: true,
-    body: {
-      project_id: body.project_id || undefined,
-      question: body.question || body.message || "",
-      top_k: body.top_k || 5,
-      context: body.context || []
-    }
+export function sendAiConversationMessage(conversationId, body = {}) {
+  return sendChatMessage({
+    session_id: conversationId,
+    project_id: body.project_id,
+    message_content: body.message_content || body.question || body.message || ""
   });
 }
 

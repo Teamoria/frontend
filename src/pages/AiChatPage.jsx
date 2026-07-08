@@ -6,17 +6,14 @@ import {
   FiPlus,
   FiRefreshCw,
   FiSend,
-  FiTrash2,
   FiZap
 } from "react-icons/fi";
 import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import {
-  createAiConversation,
-  deleteAiConversation,
-  getAiConversationMessages,
   getPayloadData,
-  listAiConversations,
-  sendAiConversationMessage
+  listChatSessionMessages,
+  listChatSessions,
+  sendChatMessage
 } from "../lib/api.js";
 import "../styles/ai-chat.css";
 
@@ -26,9 +23,11 @@ export default function AiChatPage() {
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [pendingAiSessionId, setPendingAiSessionId] = useState("");
   const [status, setStatus] = useState({ loadingConversations: true, loadingMessages: false, sending: false, error: "" });
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const pendingStartedAtRef = useRef(0);
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
@@ -41,13 +40,44 @@ export default function AiChatPage() {
 
   useEffect(() => {
     if (activeConversationId) {
-      if (!String(activeConversationId).startsWith("local-")) {
-        loadMessages(activeConversationId);
-      }
+      loadMessages(activeConversationId);
     } else {
       setMessages([]);
     }
   }, [activeConversationId]);
+
+  useEffect(() => {
+    if (!pendingAiSessionId) return undefined;
+
+    let cancelled = false;
+    const startedAt = pendingStartedAtRef.current || Date.now();
+
+    async function pollForAiReply() {
+      const nextMessages = await loadMessages(pendingAiSessionId, { silent: true });
+      if (cancelled || !nextMessages) return;
+
+      const hasFreshAiMessage = nextMessages.some((message) => {
+        if (message.role !== "assistant") return false;
+        const messageTime = new Date(message.created_at || Date.now()).getTime();
+        return Number.isNaN(messageTime) || messageTime >= startedAt - 5000;
+      });
+      const timedOut = Date.now() - startedAt > 120000;
+
+      if (hasFreshAiMessage || timedOut) {
+        setPendingAiSessionId("");
+        setStatusPatch({ sending: false });
+        loadConversations({ silent: true });
+      }
+    }
+
+    const intervalId = window.setInterval(pollForAiReply, 2500);
+    pollForAiReply();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [pendingAiSessionId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
@@ -57,11 +87,13 @@ export default function AiChatPage() {
     setStatus((current) => ({ ...current, ...patch }));
   }
 
-  async function loadConversations() {
-    setStatusPatch({ loadingConversations: true, error: "" });
+  async function loadConversations({ silent = false } = {}) {
+    if (!silent) {
+      setStatusPatch({ loadingConversations: true, error: "" });
+    }
 
     try {
-      const payload = await listAiConversations();
+      const payload = await listChatSessions();
       const nextConversations = extractConversations(getPayloadData(payload));
       setConversations(nextConversations);
       setActiveConversationId((current) => current || nextConversations[0]?.id || "");
@@ -73,50 +105,34 @@ export default function AiChatPage() {
     }
   }
 
-  async function loadMessages(conversationId) {
-    setStatusPatch({ loadingMessages: true, error: "" });
+  async function loadMessages(conversationId, { silent = false } = {}) {
+    if (!conversationId) return [];
+
+    if (!silent) {
+      setStatusPatch({ loadingMessages: true, error: "" });
+    }
 
     try {
-      const payload = await getAiConversationMessages(conversationId);
-      setMessages(extractMessages(getPayloadData(payload)));
+      const payload = await listChatSessionMessages(conversationId);
+      const nextMessages = extractMessages(getPayloadData(payload));
+      setMessages(nextMessages);
       setStatusPatch({ loadingMessages: false, error: "" });
+      return nextMessages;
     } catch (error) {
-      setMessages([]);
-      setStatusPatch({ loadingMessages: false, error: error.message || "Unable to load messages." });
+      if (!silent) {
+        setMessages([]);
+        setStatusPatch({ loadingMessages: false, error: error.message || "Unable to load messages." });
+      }
+      return null;
     }
   }
 
   async function startConversation() {
     setStatusPatch({ error: "" });
-
-    try {
-      const payload = await createAiConversation({ title: "New chat" });
-      const conversation = normalizeConversation(getPayloadData(payload)?.conversation || getPayloadData(payload));
-      if (!conversation.id) {
-        await loadConversations();
-        return;
-      }
-      setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)]);
-      setActiveConversationId(conversation.id);
-      setMessages([]);
-    } catch (error) {
-      setStatusPatch({ error: error.message || "Unable to create a new chat." });
-    }
-  }
-
-  async function removeConversation(conversationId) {
-    setStatusPatch({ error: "" });
-
-    try {
-      await deleteAiConversation(conversationId);
-      setConversations((current) => current.filter((conversation) => conversation.id !== conversationId));
-      if (activeConversationId === conversationId) {
-        const nextConversation = conversations.find((conversation) => conversation.id !== conversationId);
-        setActiveConversationId(nextConversation?.id || "");
-      }
-    } catch (error) {
-      setStatusPatch({ error: error.message || "Unable to delete this chat." });
-    }
+    setActiveConversationId("");
+    setMessages([]);
+    setDraft("");
+    resizeComposer("");
   }
 
   async function submitMessage(event) {
@@ -125,44 +141,43 @@ export default function AiChatPage() {
 
     if (!message || status.sending) return;
 
-    let conversationId = activeConversationId;
+    const conversationId = activeConversationId || undefined;
+    const tempMessageId = `user-${Date.now()}`;
     setStatusPatch({ sending: true, error: "" });
+    pendingStartedAtRef.current = Date.now();
 
     try {
-      if (!conversationId) {
-        const conversationPayload = await createAiConversation({ title: getConversationTitle(message) });
-        const conversation = normalizeConversation(getPayloadData(conversationPayload)?.conversation || getPayloadData(conversationPayload));
-        conversationId = conversation.id;
-
-        if (!conversationId) {
-          throw new Error("The AI service did not return a conversation id.");
-        }
-
-        setConversations((current) => [conversation, ...current]);
-        setActiveConversationId(conversationId);
-      }
-
-      const userMessage = createLocalMessage({ content: message, role: "user" });
+      const userMessage = createLocalMessage({ id: tempMessageId, content: message, role: "user" });
       setMessages((current) => [...current, userMessage]);
       setDraft("");
       resizeComposer("");
 
-      const payload = await sendAiConversationMessage(conversationId, {
-        message,
-        source_ids: [],
-        project_id: null
+      const payload = await sendChatMessage({
+        session_id: conversationId,
+        project_id: activeConversation?.project_id || null,
+        message_content: message
       });
-      const aiMessage = normalizeAiAnswer(getPayloadData(payload));
+      const data = getPayloadData(payload) || payload || {};
+      const nextSessionId = data.session_id || data.chat_session_id || conversationId;
 
-      setMessages((current) => [...current, aiMessage]);
-      setConversations((current) => current.map((conversation) => (
-        conversation.id === conversationId
-          ? { ...conversation, title: conversation.title || getConversationTitle(message), summary: message, updated_at: new Date().toISOString() }
-          : conversation
-      )));
+      if (!nextSessionId) {
+        throw new Error("The AI service did not return a session id.");
+      }
+
+      setActiveConversationId(nextSessionId);
+      setPendingAiSessionId(nextSessionId);
+      setConversations((current) => upsertConversation(current, {
+        id: nextSessionId,
+        title: activeConversation?.title || getConversationTitle(message),
+        summary: message,
+        project_id: activeConversation?.project_id || "",
+        updated_at: new Date().toISOString()
+      }));
       setSelectedFiles([]);
-      setStatusPatch({ sending: false, error: "" });
+      loadConversations({ silent: true });
     } catch (error) {
+      setMessages((current) => current.filter((item) => item.id !== tempMessageId));
+      setPendingAiSessionId("");
       setStatusPatch({ sending: false, error: error.message || "Unable to send message." });
     }
   }
@@ -240,11 +255,6 @@ export default function AiChatPage() {
               <button type="button" onClick={loadConversations} aria-label="Refresh conversations">
                 <FiRefreshCw aria-hidden="true" />
               </button>
-              {activeConversation ? (
-                <button type="button" onClick={() => removeConversation(activeConversation.id)} aria-label="Delete conversation">
-                  <FiTrash2 aria-hidden="true" />
-                </button>
-              ) : null}
             </div>
           </header>
 
@@ -298,7 +308,7 @@ export default function AiChatPage() {
                 <FiMic aria-hidden="true" />
               </button>
               <button className="ai-send-button" type="submit" disabled={!draft.trim() || status.sending}>
-                {status.sending ? "Sending" : "Send"}
+                {status.sending ? "Waiting" : "Send"}
                 <FiSend aria-hidden="true" />
               </button>
             </div>
@@ -340,54 +350,54 @@ function ChatMessage({ message }) {
 }
 
 function extractConversations(data) {
-  const rows = data?.conversations || data?.data || data?.items || data || [];
+  const rows = data?.sessions || data?.conversations || data?.data?.sessions || data?.data || data?.items || data || [];
   return Array.isArray(rows) ? rows.map(normalizeConversation).filter((conversation) => conversation.id) : [];
 }
 
 function normalizeConversation(conversation = {}) {
+  const lastMessage = conversation.last_message || conversation.latest_message || conversation.message || null;
+
   return {
-    id: conversation.id || conversation.conversation_id || conversation.uuid || "",
-    title: conversation.title || conversation.name || "Untitled chat",
-    summary: conversation.summary || conversation.last_message || conversation.preview || "",
+    id: conversation.id || conversation.session_id || conversation.chat_session_id || conversation.conversation_id || conversation.uuid || "",
+    title: conversation.title || conversation.name || conversation.project?.name || "Untitled chat",
+    summary: conversation.summary || lastMessage?.content || lastMessage?.message_content || conversation.preview || "",
+    project_id: conversation.project_id || conversation.project?.id || "",
     created_at: conversation.created_at || conversation.createdAt || "",
     updated_at: conversation.updated_at || conversation.updatedAt || conversation.created_at || ""
   };
 }
 
 function extractMessages(data) {
-  const rows = data?.messages || data?.data || data?.items || data || [];
+  const rows = data?.messages || data?.data?.messages || data?.data || data?.items || data?.records || data || [];
   return Array.isArray(rows) ? rows.map(normalizeMessage).filter((message) => message.id || message.content) : [];
 }
 
 function normalizeMessage(message = {}) {
   return {
-    id: message.id || message.uuid || `${message.role || "message"}-${message.created_at || Math.random()}`,
+    id: message.id || message.message_id || message.uuid || `${message.role || "message"}-${message.created_at || Math.random()}`,
     role: normalizeRole(message.role || message.sender || message.type),
-    content: message.content || message.message || message.answer || message.text || "",
+    content: message.content || message.message_content || message.message || message.answer || message.text || "",
     sources: Array.isArray(message.sources) ? message.sources : [],
     created_at: message.created_at || message.createdAt || ""
   };
 }
 
-function normalizeAiAnswer(data = {}) {
-  const payload = data?.message || data?.data || data;
+function createLocalMessage({ id, content, role }) {
   return {
-    id: payload.id || `assistant-${Date.now()}`,
-    role: "assistant",
-    content: payload.answer || payload.content || payload.message || "",
-    sources: Array.isArray(payload.sources) ? payload.sources : [],
-    created_at: payload.created_at || new Date().toISOString()
-  };
-}
-
-function createLocalMessage({ content, role }) {
-  return {
-    id: `${role}-${Date.now()}`,
+    id: id || `${role}-${Date.now()}`,
     role,
     content,
     sources: [],
     created_at: new Date().toISOString()
   };
+}
+
+function upsertConversation(conversations, nextConversation) {
+  const normalized = normalizeConversation(nextConversation);
+  const existing = conversations.find((conversation) => conversation.id === normalized.id);
+  const merged = existing ? { ...existing, ...normalized } : normalized;
+
+  return [merged, ...conversations.filter((conversation) => conversation.id !== normalized.id)];
 }
 
 function normalizeRole(role) {

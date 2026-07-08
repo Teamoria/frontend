@@ -132,12 +132,28 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       try {
         const payload = await getUploadStatus(uploadId);
         const uploadStatus = normalizeUploadStatusPayload(getPayloadData(payload));
+        const nextProcessingStatus = uploadStatus.processing_status || uploadStatus.processingStatus || uploadStatus.status;
+        const shouldLoadFinalDetails = isProcessingReady(nextProcessingStatus) && !["failed", "skipped"].includes(String(nextProcessingStatus || "").toLowerCase());
+        let finalUpload = null;
+
+        if (shouldLoadFinalDetails) {
+          try {
+            const finalPayload = await getUpload(uploadId);
+            finalUpload = getUploadFromPayload(finalPayload);
+          } catch {
+            finalUpload = null;
+          }
+        }
+
         setAiResultsModal((current) => {
           if (!current || (current.upload?.id || current.asset?.id) !== uploadId) return current;
-          const nextUpload = mergeUploadStatus(current.upload || current.asset || {}, uploadStatus);
+          const waitingForFinalDetails = shouldLoadFinalDetails && !finalUpload;
+          const nextUpload = waitingForFinalDetails
+            ? current.upload || current.asset || {}
+            : finalUpload || mergeUploadStatus(current.upload || current.asset || {}, uploadStatus);
           return {
             ...current,
-            asset: normalizeAsset(mergeUploadStatus(current.asset || {}, uploadStatus)),
+            asset: normalizeAsset(waitingForFinalDetails ? current.asset || nextUpload : finalUpload || mergeUploadStatus(current.asset || {}, uploadStatus)),
             upload: nextUpload,
             error: ""
           };
@@ -394,7 +410,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     setAiResultsModal({ asset, isLoading: true, upload: null, error: "" });
     try {
       const payload = await getUpload(asset.id);
-      const upload = getPayloadData(payload)?.upload || getPayloadData(payload);
+      const upload = getUploadFromPayload(payload);
       setAiResultsModal({ asset, isLoading: false, upload, error: "" });
     } catch (error) {
       setAiResultsModal({ asset, isLoading: false, upload: null, error: error.message });
@@ -408,7 +424,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     setAiResultsModal((current) => current ? { ...current, isLoading: true, error: "" } : current);
     try {
       const payload = await getUpload(uploadId);
-      const upload = getPayloadData(payload)?.upload || getPayloadData(payload);
+      const upload = getUploadFromPayload(payload);
       setAiResultsModal((current) => current ? {
         ...current,
         asset: normalizeAsset(upload || current.asset),
@@ -1354,6 +1370,11 @@ function getFirstUploadFromPayload(data) {
   if (Array.isArray(data.data?.uploads)) return data.data.uploads[0] || null;
   if (Array.isArray(data.data?.files)) return data.data.files[0] || null;
   return data.upload || data.file || data.data || data;
+}
+
+function getUploadFromPayload(payload) {
+  const data = getPayloadData(payload);
+  return data?.upload || data?.file || data?.data?.upload || data?.data?.file || data;
 }
 
 function buildUploadJobDescription(form) {
