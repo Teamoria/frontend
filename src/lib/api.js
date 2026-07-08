@@ -141,7 +141,16 @@ function getRuntimeApiBaseUrl() {
     const pageIsLocal = ["localhost", "127.0.0.1", "::1"].includes(pageHost);
 
     if (configuredIsLocal && !pageIsLocal) {
-      return import.meta.env.VITE_API_ORIGIN || API_BASE_URL;
+      const originOverride = import.meta.env.VITE_API_ORIGIN;
+      if (originOverride) {
+        const originUrl = new URL(originOverride, window.location.origin);
+        const originIsLocal = ["localhost", "127.0.0.1", "::1"].includes(originUrl.hostname);
+        if (!originIsLocal) {
+          return originOverride;
+        }
+      }
+
+      return window.location.origin;
     }
   } catch {
     return API_BASE_URL;
