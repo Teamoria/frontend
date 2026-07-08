@@ -112,16 +112,28 @@ export default function TasksPage() {
       return;
     }
 
-    try {
-      const [projectsPayload, peoplePayload] = await Promise.all([
-        isAdmin ? listAdminProjects() : listCompanyProjects(),
-        isAdmin ? listUsers({ page: 1 }) : listStaff({ page: 1 })
-      ]);
+    const [projectsResult, peopleResult] = await Promise.allSettled([
+      isAdmin ? listAdminProjects() : listCompanyProjects(),
+      isAdmin ? listUsers({ page: 1 }) : listStaff({ page: 1 })
+    ]);
 
+    if (projectsResult.status === "fulfilled") {
+      const projectsPayload = projectsResult.value;
       setProjects(extractRows(getPayloadData(projectsPayload), ["projects"]).map(normalizeProject).filter((project) => project.id && project.isValidUuid));
+    } else {
+      setProjects([]);
+    }
+
+    if (peopleResult.status === "fulfilled") {
+      const peoplePayload = peopleResult.value;
       setPeople(extractRows(getPayloadData(peoplePayload), ["users", "staff"]).map(normalizePerson).filter((person) => person.id));
-    } catch (error) {
-      setStatus({ type: "error", message: error.message });
+    } else {
+      setPeople([]);
+    }
+
+    const failedResult = [projectsResult, peopleResult].find((result) => result.status === "rejected");
+    if (failedResult) {
+      setStatus({ type: "error", message: getTasksPageErrorMessage(failedResult.reason, "reference") });
     }
   }
 
@@ -130,7 +142,7 @@ export default function TasksPage() {
     setStatus({ type: "", message: "" });
 
     try {
-      const payload = await listTasks({
+      const taskFilters = {
         role: normalizedRole,
         project_id: filters.project_id,
         "statuses[]": filters.status ? [filters.status] : undefined,
@@ -140,14 +152,15 @@ export default function TasksPage() {
         due_to: filters.due_to,
         archived: filters.archived ? "1" : undefined,
         per_page: filters.per_page
-      });
+      };
+      const payload = await listTasksWithRetry(taskFilters);
       const data = getPayloadData(payload);
       const rows = extractRows(data, ["tasks"]);
       setTasks(rows.map(normalizeTask));
       setPagination(data?.pagination || payload?.pagination || { current_page: 1, last_page: 1, per_page: filters.per_page, total: rows.length, has_more: false });
     } catch (error) {
       setTasks([]);
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: getTasksPageErrorMessage(error, "tasks", normalizedRole) });
     } finally {
       setIsLoading(false);
     }
@@ -930,6 +943,57 @@ function extractRows(data, keys) {
   }
   if (Array.isArray(data?.data)) return data.data;
   return [];
+}
+
+async function listTasksWithRetry(filters) {
+  try {
+    return await listTasks(filters);
+  } catch (error) {
+    if (!isServerError(error) || !hasActiveTaskFilters(filters)) {
+      throw error;
+    }
+
+    return listTasks({ role: filters.role });
+  }
+}
+
+function hasActiveTaskFilters(filters) {
+  return Boolean(
+    filters.project_id ||
+    filters["statuses[]"] ||
+    filters["priorities[]"] ||
+    filters.assignee_id ||
+    filters.due_from ||
+    filters.due_to ||
+    filters.archived
+  );
+}
+
+function getTasksPageErrorMessage(error, area, role) {
+  const message = error?.message || "";
+
+  if (error?.status === 0 && /Missing VITE_API_KEY/i.test(message)) {
+    return message;
+  }
+
+  if (isServerError(error) || /unexpected error occurred/i.test(message)) {
+    if (area === "tasks") {
+      const path = normalizeRoleForTasksPath(role) === "admin" ? "/api/v1/admin/tasks" : "/api/v1/company/tasks";
+      return `${path} returned a server error. The task board is connected correctly, but the backend task list endpoint needs a backend fix or valid task data for this company.`;
+    }
+
+    return "One of the reference APIs for projects or assignees returned a server error. You can still use the task board if the tasks endpoint is available.";
+  }
+
+  return message || "Unable to load tasks.";
+}
+
+function normalizeRoleForTasksPath(role) {
+  return String(role || "").toLowerCase().replace(/[\s-]+/g, "_");
+}
+
+function isServerError(error) {
+  return Number(error?.status || 0) >= 500;
 }
 
 function normalizeProject(project) {
