@@ -29,7 +29,14 @@ import { aiInsights, dashboardCharts, workspaceActivities } from "../data/dashbo
 import AppShell, { AppPageLayout, AppSidebar } from "../components/app/AppShell.jsx";
 import AppHeader from "../components/app/AppHeader.jsx";
 import { useAuth } from "../lib/AuthContext.jsx";
-import { getCompanyDashboard, getPayloadData } from "../lib/api.js";
+import {
+  getCompanyDashboard,
+  getPayloadData,
+  listCompanyProjects,
+  listStaff,
+  listTasks,
+  listUploads
+} from "../lib/api.js";
 import { normalizeRole } from "../lib/authRoles.js";
 import { getDemoRole, getHashSearchParams, isDemoMode } from "../lib/demoMode.js";
 
@@ -114,6 +121,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   const projectProgress = hasLiveDashboard ? getProjectProgressFromDashboard(dashboard) : isPreview ? dashboardCharts.projectProgress : [];
   const activityOverview = hasLiveDashboard ? getActivityOverviewFromDashboard(dashboard) : isPreview ? dashboardCharts.activityOverview : [];
   const liveStatusSummary = getStatusSummaryFromDashboard(dashboard);
+  const hasOverviewDashboard = hasLiveDashboard && dashboard?.source !== "fallback";
   const dashboardUnavailable = !isPreview && !dashboardStatus.loading && !hasLiveDashboard;
 
   useEffect(() => {
@@ -122,10 +130,10 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
     let isMounted = true;
     setDashboardStatus({ loading: true, error: "" });
 
-    getCompanyDashboard()
-      .then((payload) => {
+    loadCompanyDashboard()
+      .then((nextDashboard) => {
         if (!isMounted) return;
-        setDashboard(normalizeCompanyDashboardPayload(payload));
+        setDashboard(nextDashboard);
         setDashboardStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -148,7 +156,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
         <AppPageLayout
           className="owner-page"
           title={`${companyName} Overview`}
-          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${hasLiveDashboard ? " Live metrics are synced from the company dashboard API." : isPreview ? " Preview data is shown in demo mode." : dashboardStatus.error ? " The company dashboard API is currently unavailable." : " No company dashboard data has been returned yet."}`}
+          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${hasOverviewDashboard ? " Live metrics are synced from the company dashboard API." : hasLiveDashboard ? " Live metrics are assembled from workspace APIs while the overview endpoint is unavailable." : isPreview ? " Preview data is shown in demo mode." : dashboardStatus.error ? " The company dashboard API is currently unavailable." : " No company dashboard data has been returned yet."}`}
           actions={(
             <div className="owner-period">
               <FiCalendar aria-hidden="true" />
@@ -254,7 +262,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
                   <h3>AI Company Hub</h3>
-                    <p>{hasLiveDashboard ? "Live workspace signals with AI recommendations" : isPreview ? "Strategic suggestions" : "Waiting for company dashboard data"}</p>
+                    <p>{hasOverviewDashboard ? "Live workspace signals with AI recommendations" : hasLiveDashboard ? "Workspace metrics are available; AI recommendations are waiting for overview data" : isPreview ? "Strategic suggestions" : "Waiting for company dashboard data"}</p>
                   </div>
                 </div>
                 <div className="owner-ai-status-strip" aria-label="Dashboard status summary">
@@ -266,11 +274,11 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                   ))}
                 </div>
                 <div className="owner-ai-suggestions">
-                  {(hasLiveDashboard || isPreview) ? aiInsights.filter((insight) => insight.scope === "company").map((insight) => (
+                  {(hasOverviewDashboard || isPreview) ? aiInsights.filter((insight) => insight.scope === "company").map((insight) => (
                     <AIInsightCard classNamePrefix="owner" insight={insight} key={insight.id} />
                   )) : <p className="owner-live-empty">AI recommendations will appear after the company dashboard API returns workspace activity.</p>}
                 </div>
-                {(hasLiveDashboard || isPreview) ? (
+                {(hasOverviewDashboard || isPreview) ? (
                   <article className="owner-projection-card">
                     <span>Projection</span>
                     <h4>Staffing Plan</h4>
@@ -517,10 +525,10 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
     let isMounted = true;
     setDashboardStatus({ loading: true, error: "" });
 
-    getCompanyDashboard()
-      .then((payload) => {
+    loadCompanyDashboard()
+      .then((nextDashboard) => {
         if (!isMounted) return;
-        setDashboard(normalizeCompanyDashboardPayload(payload));
+        setDashboard(nextDashboard);
         setDashboardStatus({ loading: false, error: "" });
       })
       .catch((error) => {
@@ -782,6 +790,56 @@ function AiHelper({ classNamePrefix }) {
   );
 }
 
+async function loadCompanyDashboard() {
+  try {
+    const payload = await getCompanyDashboard();
+    const dashboard = normalizeCompanyDashboardPayload(payload);
+    if (dashboard) return dashboard;
+  } catch (error) {
+    const fallbackDashboard = await loadCompanyDashboardFallback();
+    if (fallbackDashboard) return fallbackDashboard;
+    throw error;
+  }
+
+  const fallbackDashboard = await loadCompanyDashboardFallback();
+  if (fallbackDashboard) return fallbackDashboard;
+
+  return null;
+}
+
+async function loadCompanyDashboardFallback() {
+  const [projectsResult, staffResult, tasksResult, uploadsResult] = await Promise.allSettled([
+    listCompanyProjects({ page: 1 }),
+    listStaff({ page: 1 }),
+    listTasks({ role: "company_owner", per_page: 50 }),
+    listUploads({ per_page: 5 })
+  ]);
+
+  const projects = getRowsFromSettledPayload(projectsResult, ["projects"]);
+  const staff = getRowsFromSettledPayload(staffResult, ["staff", "users"]);
+  const tasks = getRowsFromSettledPayload(tasksResult, ["tasks"]);
+  const uploads = getRowsFromSettledPayload(uploadsResult, ["uploads", "files"]);
+
+  if (!projects.length && !staff.length && !tasks.length && !uploads.length) {
+    return null;
+  }
+
+  return {
+    totals: {
+      projects: getTotalFromSettledPayload(projectsResult, projects.length),
+      users: getTotalFromSettledPayload(staffResult, staff.length),
+      tasks: getTotalFromSettledPayload(tasksResult, tasks.length),
+      overdue_tasks: tasks.filter(isOverdueTask).length
+    },
+    project_statuses: countByStatus(projects, "active"),
+    task_statuses: countByStatus(tasks, "todo"),
+    recent_projects: projects,
+    upcoming_tasks: tasks.filter((task) => String(task.status || "") !== "done").slice(0, 5),
+    recent_uploads: uploads,
+    source: "fallback"
+  };
+}
+
 function normalizeCompanyDashboardPayload(payload) {
   const data = getPayloadData(payload);
   const dashboard = data?.dashboard || data?.company_dashboard || data?.overview || data;
@@ -813,6 +871,43 @@ function getDashboardErrorMessage(error) {
   }
 
   return message || "Unable to load dashboard data.";
+}
+
+function getRowsFromSettledPayload(result, keys) {
+  if (result.status !== "fulfilled") return [];
+  return extractDashboardRows(getPayloadData(result.value), keys);
+}
+
+function getTotalFromSettledPayload(result, fallback) {
+  if (result.status !== "fulfilled") return fallback;
+  const data = getPayloadData(result.value);
+  return Number(data?.pagination?.total || data?.meta?.total || result.value?.pagination?.total || fallback || 0);
+}
+
+function extractDashboardRows(data, keys) {
+  if (Array.isArray(data)) return data;
+
+  for (const key of keys) {
+    if (Array.isArray(data?.[key])) return data[key];
+    if (Array.isArray(data?.data?.[key])) return data.data[key];
+  }
+
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+}
+
+function countByStatus(items, defaultStatus) {
+  return items.reduce((counts, item) => {
+    const status = String(item.status || defaultStatus);
+    counts[status] = Number(counts[status] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function isOverdueTask(task) {
+  if (!task?.due_date || String(task.status || "") === "done") return false;
+  const dueDate = new Date(task.due_date);
+  return !Number.isNaN(dueDate.getTime()) && dueDate < new Date();
 }
 
 function getOwnerMetricsFromDashboard(dashboard) {
