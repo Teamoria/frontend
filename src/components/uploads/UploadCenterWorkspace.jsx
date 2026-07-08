@@ -1096,7 +1096,7 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
   );
 }
 
-function ProcessingState({ category, error, isLoading, onRefresh, progress, status }) {
+function ProcessingState({ category, error, isLoading, progress, status }) {
   const contentLabel = getProcessingContentLabel(category);
   const copy = getProcessingStateCopy(status, contentLabel, isLoading);
 
@@ -1115,10 +1115,6 @@ function ProcessingState({ category, error, isLoading, onRefresh, progress, stat
         </div>
       ) : <small>Status: {formatLabel(status)}</small>}
       {error ? <p className="auth-alert auth-alert--error">{error}</p> : null}
-      <button type="button" onClick={onRefresh} disabled={isLoading}>
-        <FiRefreshCw aria-hidden="true" />
-        Refresh
-      </button>
     </div>
   );
 }
