@@ -4,7 +4,6 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_ORIGIN ||
   "http://localhost:8000";
-const UPLOAD_API_BASE_URL = import.meta.env.VITE_UPLOAD_API_BASE_URL || API_BASE_URL;
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const INTERNAL_API_KEY = import.meta.env.VITE_INTERNAL_API_KEY || import.meta.env.VITE_AI_INTERNAL_API_KEY || "";
@@ -116,7 +115,7 @@ function buildUrl(path) {
 
 function buildUploadUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const cleanBaseUrl = UPLOAD_API_BASE_URL.replace(/\/$/, "");
+  const cleanBaseUrl = getRuntimeApiBaseUrl().replace(/\/$/, "");
 
   if (cleanPath.startsWith("/api/")) {
     return `${cleanBaseUrl}${cleanPath}`;
@@ -444,7 +443,7 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
     });
   } catch (error) {
     throw new ApiError(
-      `Unable to reach the Teamoria upload API at ${url.origin}. Check that the upload service is online, CORS allows this frontend domain, and VITE_UPLOAD_API_BASE_URL is configured correctly.`,
+      `Unable to reach the Teamoria upload API at ${url.origin}. Check that the Laravel API is online, CORS allows this frontend domain, and VITE_API_BASE_URL is configured correctly.`,
       { status: 0, payload: { original_error: error.message } }
     );
   }
