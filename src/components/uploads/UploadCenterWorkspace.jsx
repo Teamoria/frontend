@@ -31,6 +31,7 @@ import {
   getConfiguredUploadApiBaseUrl,
   getPayloadData,
   getUpload,
+  getUploadStatus,
   listAdminProjects,
   listCompanyProjects,
   listMyUploads,
@@ -111,14 +112,15 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
 
     const timerId = window.setTimeout(async () => {
       try {
-        const payload = await getUpload(uploadId);
-        const upload = getPayloadData(payload)?.upload || getPayloadData(payload);
+        const payload = await getUploadStatus(uploadId);
+        const uploadStatus = normalizeUploadStatusPayload(getPayloadData(payload));
         setAiResultsModal((current) => {
           if (!current || (current.upload?.id || current.asset?.id) !== uploadId) return current;
+          const nextUpload = mergeUploadStatus(current.upload || current.asset || {}, uploadStatus);
           return {
             ...current,
-            asset: normalizeAsset(upload || current.asset),
-            upload: upload || current.upload,
+            asset: normalizeAsset(mergeUploadStatus(current.asset || {}, uploadStatus)),
+            upload: nextUpload,
             error: ""
           };
         });
@@ -1171,6 +1173,27 @@ function getFirstUploadFromPayload(data) {
   if (Array.isArray(data.data?.uploads)) return data.data.uploads[0] || null;
   if (Array.isArray(data.data?.files)) return data.data.files[0] || null;
   return data.upload || data.file || data.data || data;
+}
+
+function normalizeUploadStatusPayload(data) {
+  const value = data?.upload || data?.status || data?.data || data || {};
+  if (typeof value === "string") return { processing_status: value };
+  return {
+    ...value,
+    processing_status: value.processing_status || value.processingStatus || value.status,
+    processing_error: value.processing_error || value.processingError || value.error || null
+  };
+}
+
+function mergeUploadStatus(upload, statusPayload) {
+  const status = normalizeUploadStatusPayload(statusPayload);
+  return {
+    ...upload,
+    ...status,
+    id: upload.id || status.id || status.upload_id,
+    processing_status: status.processing_status || upload.processing_status || upload.status,
+    processing_error: status.processing_error ?? upload.processing_error ?? null
+  };
 }
 
 function normalizeSummary(upload) {

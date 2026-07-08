@@ -657,7 +657,7 @@ export function uploadFiles({
 }
 
 export function listUploads(filters = {}) {
-  return uploadApiRequest("/uploads/list", { auth: true, query: normalizeUploadListFilters(filters) });
+  return uploadApiRequest("/uploads", { auth: true, query: normalizeUploadListFilters(filters) });
 }
 
 export function listUploadCollection(filters = {}) {
@@ -674,6 +674,10 @@ export function listProjectUploads(projectId, filters = {}) {
 
 export function getUpload(uploadId) {
   return uploadApiRequest(`/uploads/${uploadId}`, { auth: true });
+}
+
+export function getUploadStatus(uploadId) {
+  return uploadApiRequest(`/uploads/${uploadId}/status`, { auth: true });
 }
 
 export function downloadUpload(uploadId) {
