@@ -57,6 +57,17 @@ const visibilityOptions = [
   { value: "selected", label: "Selected users" }
 ];
 
+const documentTypeOptions = [
+  { value: "auto", label: "Auto detect" },
+  { value: "cv", label: "CV / Resume" },
+  { value: "contract", label: "Contract" },
+  { value: "meeting", label: "Meeting notes" },
+  { value: "company_document", label: "Company document" },
+  { value: "report", label: "Report" },
+  { value: "invoice", label: "Invoice" },
+  { value: "other", label: "Other" }
+];
+
 export default function UploadCenterWorkspace({ view = "all", filesHref = "#/owner/uploads/files", uploadHref = "#/owner/uploads", showHeader = true }) {
   const { isAdmin, normalizedRole, user } = useAuth();
   const isMember = normalizedRole === "company_member";
@@ -69,6 +80,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   const [form, setForm] = useState({
     scope: "personal",
     visibility: "private",
+    document_type: "auto",
+    job_description: "",
     project_id: "",
     task_id: "",
     shared_with_user_ids: []
@@ -259,6 +272,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         visibility: form.visibility,
         project_id: ["project", "task"].includes(form.scope) ? form.project_id : undefined,
         task_id: form.scope === "task" ? form.task_id : undefined,
+        document_type: form.document_type,
+        job_description: buildUploadJobDescription(form),
         shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : []
       });
       const uploaded = getFirstUploadFromPayload(getPayloadData(payload));
@@ -463,6 +478,23 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
               <input value={form.task_id} onChange={(event) => updateForm("task_id", event.target.value)} placeholder="Task id" />
             </label>
           ) : null}
+        </div>
+
+        <div className="owner-upload-brief">
+          <label>
+            <span>Processing profile</span>
+            <select value={form.document_type} onChange={(event) => updateForm("document_type", event.target.value)}>
+              {documentTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>AI instructions</span>
+            <textarea
+              value={form.job_description}
+              onChange={(event) => updateForm("job_description", event.target.value)}
+              placeholder="Example: extract hiring signals, contract risks, decisions, or action items."
+            />
+          </label>
         </div>
 
         {form.visibility === "selected" ? (
@@ -739,7 +771,7 @@ function PreviewModal({ state, onClose }) {
 function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, people, projects, role, state }) {
   const upload = state.upload || {};
   const summary = normalizeSummary(upload);
-  const decisions = Array.isArray(upload.decisions) ? upload.decisions : [];
+  const decisions = normalizeDecisions(upload);
   const extractedTasks = normalizeExtractedTasks(upload, { defaultProjectId });
   const [activeTab, setActiveTab] = useState("summary");
   const [transcriptSearch, setTranscriptSearch] = useState("");
@@ -748,11 +780,14 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
   const [editingTaskIds, setEditingTaskIds] = useState(() => new Set());
   const [taskDrafts, setTaskDrafts] = useState(() => extractedTasks);
   const [savingTaskId, setSavingTaskId] = useState("");
-  const chunks = Array.isArray(upload.chunks) ? upload.chunks : [];
+  const chunks = normalizeKnowledgeChunks(upload);
   const processingStatus = upload.processing_status || upload.processingStatus || upload.status || "queued";
   const isReady = isProcessingReady(processingStatus);
   const fileName = state.asset?.name || upload.original_name || upload.file_name || "Uploaded file";
   const transcript = summary.transcript || upload.transcript || "";
+  const structuredSummary = summary.structured_summary || {};
+  const transcriptQuality = summary.transcript_quality || upload.transcript_quality || {};
+  const sourceType = upload.document_type || upload.source_type || structuredSummary.document_type || state.asset?.category || inferCategory(fileName);
   const progressValue = getProcessingProgress(upload, state.asset);
   const transcriptMatches = getMatchCount(transcript, transcriptSearch);
   const tabs = [
@@ -848,6 +883,12 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
           <div className="owner-upload-ai-titleblock">
             <h2 id="upload-ai-results-title">AI Results</h2>
             <p>{fileName}</p>
+            <div className="owner-upload-ai-meta">
+              <span>{formatLabel(sourceType)}</span>
+              <span>{formatQualityLabel(transcriptQuality)}</span>
+              <span>{extractedTasks.length} tasks</span>
+              <span>{decisions.length} decisions</span>
+            </div>
           </div>
           <div className="owner-upload-ai-header-actions">
             <span className={`owner-upload-ai-status is-${String(processingStatus).toLowerCase()}`}>{formatLabel(processingStatus)}</span>
@@ -860,6 +901,8 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
         </header>
 
         {state.error ? <p className="auth-alert auth-alert--error owner-upload-ai-alert">{state.error}</p> : null}
+
+        <ProcessingTimeline status={processingStatus} />
 
         {state.isLoading || (!state.error && !isReady) ? (
           <ProcessingState
@@ -888,10 +931,31 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
             </nav>
             <div className="owner-upload-ai-results" key={activeTab}>
               {activeTab === "summary" ? (
-                summary.summary ? (
-                  <article className="owner-upload-ai-summary-card" dir="auto">
-                    {splitParagraphs(summary.summary).map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)}
-                  </article>
+                summary.summary || structuredSummary.overview ? (
+                  <div className="owner-upload-ai-summary-stack">
+                    {structuredSummary.title || structuredSummary.priority || Array.isArray(structuredSummary.key_points) ? (
+                      <article className="owner-upload-ai-structured-card">
+                        <div>
+                          <span>Document brief</span>
+                          <h3>{structuredSummary.title || formatLabel(sourceType)}</h3>
+                          <p>{structuredSummary.overview || summary.summary}</p>
+                        </div>
+                        <dl>
+                          <div><dt>Priority</dt><dd>{formatLabel(structuredSummary.priority || "not set")}</dd></div>
+                          <div><dt>Tasks</dt><dd>{structuredSummary.task_count ?? extractedTasks.length}</dd></div>
+                          <div><dt>Decisions</dt><dd>{structuredSummary.decision_count ?? decisions.length}</dd></div>
+                        </dl>
+                        {Array.isArray(structuredSummary.key_points) && structuredSummary.key_points.length ? (
+                          <ul>
+                            {structuredSummary.key_points.map((point, index) => <li key={`${point}-${index}`}>{point}</li>)}
+                          </ul>
+                        ) : null}
+                      </article>
+                    ) : null}
+                    <article className="owner-upload-ai-summary-card" dir="auto">
+                      {splitParagraphs(summary.summary || structuredSummary.overview).map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)}
+                    </article>
+                  </div>
                 ) : <EmptyAiState title="No AI analysis yet" detail="Once the document has enough usable content, the summary will appear here." />
               ) : null}
 
@@ -1002,7 +1066,7 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
                       );
                     })}
                   </div>
-                ) : <EmptyAiState title="No tasks extracted" detail="Action items detected in the document will become editable task cards here." />
+                ) : <EmptyAiState title="No tasks extracted" detail="The AI result did not include task_items yet. Choose a processing profile before upload, then refresh after the backend job is processed." />
               ) : null}
 
               {activeTab === "knowledge" ? (
@@ -1059,6 +1123,35 @@ function ProcessingState({ category, error, isLoading, onRefresh, progress, stat
   );
 }
 
+function ProcessingTimeline({ status }) {
+  const normalizedStatus = String(status || "queued").toLowerCase();
+  const timelineStatus = ["completed", "done", "success"].includes(normalizedStatus) ? "processed" : normalizedStatus;
+  const steps = [
+    { id: "uploaded", label: "Uploaded" },
+    { id: "queued", label: "Queued" },
+    { id: "processing", label: "Processing" },
+    { id: "processed", label: "Ready" }
+  ];
+  const activeIndex = timelineStatus === "failed"
+    ? 2
+    : Math.max(0, steps.findIndex((step) => step.id === timelineStatus));
+
+  return (
+    <ol className={`owner-upload-ai-timeline is-${normalizedStatus}`} aria-label="AI processing progress">
+      {steps.map((step, index) => {
+        const isDone = index < activeIndex || timelineStatus === "processed";
+        const isActive = index === activeIndex && timelineStatus !== "processed";
+        return (
+          <li className={`${isDone ? "is-done" : ""} ${isActive ? "is-active" : ""}`} key={step.id}>
+            <span>{index + 1}</span>
+            <b>{step.label}</b>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 function getProcessingStateCopy(status, contentLabel, isLoading) {
   if (isLoading) {
     return {
@@ -1072,9 +1165,9 @@ function getProcessingStateCopy(status, contentLabel, isLoading) {
 
   if (normalizedStatus === "queued") {
     return {
-      title: "Waiting for backend queue worker",
-      detail: `The ${contentLabel} was uploaded successfully and is queued for AI processing.`,
-      hint: "If this stays queued, start Laravel queue:work and confirm the AI service URL/API key are reachable from the backend."
+      title: "Waiting in processing queue",
+      detail: `The ${contentLabel} was uploaded successfully and is next in line for AI extraction.`,
+      hint: "If this status does not move, check the backend worker and AI service connection."
     };
   }
 
@@ -1254,6 +1347,18 @@ function getFirstUploadFromPayload(data) {
   return data.upload || data.file || data.data || data;
 }
 
+function buildUploadJobDescription(form) {
+  const parts = [];
+  const documentType = documentTypeOptions.find((item) => item.value === form.document_type);
+  if (documentType && documentType.value !== "auto") {
+    parts.push(`Document type: ${documentType.label}.`);
+  }
+  if (form.job_description?.trim()) {
+    parts.push(form.job_description.trim());
+  }
+  return parts.join(" ");
+}
+
 function normalizeUploadStatusPayload(data) {
   const value = data?.upload || data?.status || data?.data || data || {};
   if (typeof value === "string") return { processing_status: value };
@@ -1280,23 +1385,48 @@ function normalizeSummary(upload) {
   if (typeof rawSummary === "string") {
     return {
       summary: rawSummary,
-      transcript: upload.transcript || upload.result?.transcript || ""
+      transcript: upload.transcript || upload.result?.transcript || "",
+      structured_summary: upload.structured_summary || upload.result?.structured_summary || null,
+      transcript_quality: upload.transcript_quality || upload.result?.transcript_quality || null
     };
   }
 
   return {
     summary: rawSummary?.summary || rawSummary?.text || upload.summary_text || "",
-    transcript: rawSummary?.transcript || upload.transcript || upload.result?.transcript || ""
+    transcript: rawSummary?.transcript || upload.transcript || upload.result?.transcript || "",
+    structured_summary: rawSummary?.structured_summary || upload.structured_summary || upload.result?.structured_summary || null,
+    transcript_quality: rawSummary?.transcript_quality || upload.transcript_quality || upload.result?.transcript_quality || null
   };
+}
+
+function normalizeDecisions(upload) {
+  const candidates = [
+    upload.decision_items,
+    upload.decisions,
+    upload.summary?.decision_items,
+    upload.summary?.decisions,
+    upload.result?.decision_items,
+    upload.result?.decisions
+  ].find((collection) => Array.isArray(collection)) || [];
+
+  return candidates.map((item, index) => {
+    if (typeof item === "string") {
+      return { title: `Decision ${index + 1}`, description: item };
+    }
+    return item;
+  });
 }
 
 function normalizeExtractedTasks(upload, { defaultProjectId = "" } = {}) {
   const candidates = [
+    upload.task_items,
     upload.tasks,
     upload.action_items,
     upload.actionItems,
+    upload.summary?.task_items,
     upload.summary?.tasks,
     upload.summary?.action_items,
+    upload.result?.task_items,
     upload.result?.tasks,
     upload.result?.action_items
   ].find((collection) => Array.isArray(collection)) || [];
@@ -1315,6 +1445,17 @@ function normalizeExtractedTasks(upload, { defaultProjectId = "" } = {}) {
       rejected: false
     };
   });
+}
+
+function normalizeKnowledgeChunks(upload) {
+  return [
+    upload.knowledge_chunks,
+    upload.knowledgeChunks,
+    upload.chunks,
+    upload.summary?.knowledge_chunks,
+    upload.result?.knowledge_chunks,
+    upload.result?.chunks
+  ].find((collection) => Array.isArray(collection)) || [];
 }
 
 function splitParagraphs(value) {
@@ -1344,6 +1485,13 @@ function formatConfidence(value) {
   const numeric = Number(value);
   if (Number.isNaN(numeric)) return formatLabel(value);
   return numeric <= 1 ? `${Math.round(numeric * 100)}%` : `${Math.round(numeric)}%`;
+}
+
+function formatQualityLabel(quality) {
+  if (!quality || typeof quality !== "object") return "Quality pending";
+  const level = quality.level ? formatLabel(quality.level) : "Quality";
+  const score = Number(quality.score);
+  return Number.isFinite(score) ? `${level} ${Math.round(score)}%` : level;
 }
 
 function getProcessingProgress(upload, asset) {

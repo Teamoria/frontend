@@ -639,6 +639,8 @@ export function uploadFiles({
   project_id,
   task_id,
   shared_with_user_ids,
+  document_type,
+  job_description,
   category
 }) {
   const formData = new FormData();
@@ -654,6 +656,8 @@ export function uploadFiles({
   if (company_id) formData.append("company_id", company_id);
   if (project_id) formData.append("project_id", project_id);
   if (task_id) formData.append("task_id", task_id);
+  if (document_type && document_type !== "auto") formData.append("document_type", document_type);
+  if (job_description) formData.append("job_description", job_description);
   if (category) formData.append("category", category);
 
   Array.from(shared_with_user_ids || []).forEach((userId) => {
