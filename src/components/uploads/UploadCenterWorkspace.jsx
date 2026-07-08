@@ -138,7 +138,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   function updateForm(field, value) {
     setForm((current) => {
       const next = { ...current, [field]: value };
-      if (field === "scope" && value !== "project") next.project_id = "";
+      if (field === "scope" && !["project", "task"].includes(value)) next.project_id = "";
       if (field === "scope" && value !== "task") next.task_id = "";
       if (field === "visibility" && value !== "selected") next.shared_with_user_ids = [];
       return next;
@@ -225,8 +225,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       setStatus({ type: "error", message: "Select at least one file to upload." });
       return;
     }
-    if (form.scope === "project" && !form.project_id) {
-      setStatus({ type: "error", message: "Choose a project for project files." });
+    if (["project", "task"].includes(form.scope) && !form.project_id) {
+      setStatus({ type: "error", message: `Choose a project for ${form.scope} files.` });
       return;
     }
     if (form.scope === "task" && !form.task_id.trim()) {
@@ -244,7 +244,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         files: selectedFiles,
         scope: form.scope,
         visibility: form.visibility,
-        project_id: form.scope === "project" ? form.project_id : undefined,
+        project_id: ["project", "task"].includes(form.scope) ? form.project_id : undefined,
         task_id: form.scope === "task" ? form.task_id : undefined,
         shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : []
       });
@@ -435,7 +435,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
               {visibilityOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
-          {form.scope === "project" ? (
+          {["project", "task"].includes(form.scope) ? (
             <label>
               <span>Project</span>
               <select value={form.project_id} onChange={(event) => updateForm("project_id", event.target.value)}>
@@ -1111,7 +1111,6 @@ function PermissionsModal({ asset, users, onClose, onError, onSaved }) {
     try {
       await updateUploadPermissions(asset.id, {
         user_ids: selectedIds,
-        shared_with_user_ids: selectedIds,
         access_level: accessLevel
       });
       const removedIds = currentIds.filter((id) => !selectedIds.includes(id));
@@ -1412,11 +1411,11 @@ function getUploadSubmitErrorMessage(error, form) {
   }
 
   if (form.scope === "project" && status >= 500) {
-    return `Upload failed because the selected project could not be saved by the AI service. Check that project_id exists in the AI database: ${form.project_id}`;
+    return `Upload failed while saving the selected project file. Check that project_id exists in Laravel: ${form.project_id}`;
   }
 
   if (form.scope === "task" && status >= 500) {
-    return `Upload failed because the selected task could not be saved by the AI service. Check that task_id exists in the AI database: ${form.task_id}`;
+    return `Upload failed while saving the selected task file. Check that project_id and task_id exist in Laravel: ${form.project_id}, ${form.task_id}`;
   }
 
   return message;
