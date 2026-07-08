@@ -29,7 +29,6 @@ import {
   downloadUpload,
   createTask,
   getConfiguredUploadApiBaseUrl,
-  getInternalCompanyId,
   getPayloadData,
   getUpload,
   listAdminProjects,
@@ -242,7 +241,6 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         files: selectedFiles,
         scope: form.scope,
         visibility: form.visibility,
-        company_id: getInternalCompanyId() || user?.company_id || user?.company?.id,
         project_id: form.scope === "project" ? form.project_id : undefined,
         task_id: form.scope === "task" ? form.task_id : undefined,
         shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : []
