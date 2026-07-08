@@ -11,9 +11,9 @@ export default function OwnerUploadCenterPage() {
       <AppPageLayout
         className="upload-center-page"
         title="Upload Center"
-        subtitle="Upload files with scope, visibility, selected-user sharing, download, delete, and permission controls."
+        subtitle="Upload and manage Laravel-backed files, sharing, downloads, deletion, and AI processing status."
       >
-        <UploadCenterWorkspace view="upload" showHeader={false} />
+        <UploadCenterWorkspace view="all" showHeader={false} />
       </AppPageLayout>
     </AppShell>
   );

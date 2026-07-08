@@ -359,6 +359,14 @@
   margin: 0;
 }
 
+.owner-upload-section-head p {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
 .owner-upload-section-head > span {
   color: #002d9b;
   font-size: 12px;
@@ -576,6 +584,36 @@
   min-height: 36px;
   padding: 0 12px;
   text-decoration: none;
+}
+
+.owner-upload-pagination {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.owner-upload-pagination button {
+  background: #fff;
+  border: 1px solid #c4c5d6;
+  border-radius: 8px;
+  color: #131b2e;
+  cursor: pointer;
+  font-weight: 850;
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+.owner-upload-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.owner-upload-pagination span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 850;
 }
 
 .owner-upload-filter-panel {

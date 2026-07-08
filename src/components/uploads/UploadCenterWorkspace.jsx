@@ -79,10 +79,12 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     project_id: "",
     task_id: "",
     per_page: 15,
+    page: 1,
     mine: false
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [assets, setAssets] = useState([]);
+  const [pagination, setPagination] = useState(null);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [uploadsRefreshedAt, setUploadsRefreshedAt] = useState("");
   const [uploadApiUnavailable, setUploadApiUnavailable] = useState(false);
@@ -99,7 +101,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
 
   useEffect(() => {
     if (showFiles) loadUploads();
-  }, [filters.scope, filters.visibility, filters.project_id, filters.task_id, filters.per_page, filters.mine, showFiles]);
+  }, [filters.scope, filters.visibility, filters.project_id, filters.task_id, filters.per_page, filters.page, filters.mine, showFiles]);
 
   useEffect(() => {
     const uploadId = aiResultsModal?.upload?.id || aiResultsModal?.asset?.id;
@@ -147,7 +149,11 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   }
 
   function updateFilter(field, value) {
-    setFilters((current) => ({ ...current, [field]: value }));
+    setFilters((current) => ({
+      ...current,
+      [field]: value,
+      page: field === "page" ? value : 1
+    }));
   }
 
   async function loadProjects() {
@@ -188,14 +194,18 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         visibility: filters.visibility,
         project_id: filters.project_id,
         task_id: filters.task_id,
-        per_page: filters.per_page
+        per_page: filters.per_page,
+        page: filters.page
       });
       const payload = isMember || filters.mine ? await listMyUploads(cleanFilters) : await listUploads(cleanFilters);
-      const nextAssets = extractRows(getPayloadData(payload), ["files", "uploads", "assets"]).map(normalizeAsset);
+      const data = getPayloadData(payload);
+      const nextAssets = extractRows(data, ["files", "uploads", "assets"]).map(normalizeAsset);
       setAssets(nextAssets);
+      setPagination(extractPagination(data));
       setUploadsRefreshedAt(new Date().toISOString());
     } catch (error) {
       setAssets([]);
+      setPagination(null);
       setStatus({ type: "error", message: error.message });
     } finally {
       setIsLoading(false);
@@ -505,11 +515,11 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
       {showFiles ? <section className="owner-upload-assets">
         <div className="owner-upload-section-head">
           <div>
-            <h2>Backend Uploads</h2>
-            {uploadsRefreshedAt ? <p>{assets.length} files returned by Laravel. Last refresh: {formatDate(uploadsRefreshedAt)}</p> : null}
+            <h2>Uploaded Files</h2>
+            {uploadsRefreshedAt ? <p>{formatUploadListMeta(assets, pagination, uploadsRefreshedAt)}</p> : null}
           </div>
           <div className="owner-upload-actions">
-            <button type="button" onClick={() => setFilters({ scope: "", visibility: "", project_id: "", task_id: "", per_page: 15, mine: isMember })}>
+            <button type="button" onClick={() => setFilters({ scope: "", visibility: "", project_id: "", task_id: "", per_page: 15, page: 1, mine: isMember })}>
               <FiFilter aria-hidden="true" />
               Clear
             </button>
@@ -573,6 +583,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
                   <th>File Name</th>
                   <th>Scope</th>
                   <th>Visibility</th>
+                  <th>Size</th>
+                  <th>AI Status</th>
                   <th>Uploaded Date</th>
                   <th>Source</th>
                   <th>Actions</th>
@@ -580,7 +592,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
               </thead>
               <tbody>
                 {!assets.length ? (
-                  <tr><td colSpan="6">{isLoading ? "Loading uploads from API..." : "No uploaded files found."}</td></tr>
+                  <tr><td colSpan="8">{isLoading ? "Loading uploads from API..." : "No uploaded files found."}</td></tr>
                 ) : assets.map((asset) => (
                   <tr key={asset.id || asset.path || asset.name}>
                     <td><FileIcon category={asset.category} /><span>{asset.name}</span></td>
@@ -591,6 +603,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
                         {formatLabel(asset.visibility)}
                       </span>
                     </td>
+                    <td>{formatBytes(asset.file_size || asset.size)}</td>
+                    <td><span className={`owner-upload-ai-status is-${String(asset.processing_status || "").toLowerCase()}`}>{formatLabel(asset.processing_status || "queued")}</span></td>
                     <td>{asset.date}</td>
                     <td><div className="owner-upload-tags"><span>{asset.sourceLabel}</span></div></td>
                     <td>
@@ -608,6 +622,18 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
             </table>
           </div>
         </div>
+
+        {pagination ? (
+          <div className="owner-upload-pagination">
+            <button type="button" disabled={isLoading || Number(pagination.current_page || 1) <= 1} onClick={() => updateFilter("page", Math.max(1, Number(pagination.current_page || 1) - 1))}>
+              Previous
+            </button>
+            <span>Page {pagination.current_page || 1} of {pagination.last_page || 1}</span>
+            <button type="button" disabled={isLoading || Number(pagination.current_page || 1) >= Number(pagination.last_page || 1)} onClick={() => updateFilter("page", Number(pagination.current_page || 1) + 1)}>
+              Next
+            </button>
+          </div>
+        ) : null}
       </section> : null}
 
       {canManageUploads && permissionsModal ? (
@@ -1176,6 +1202,10 @@ function extractRows(data, keys) {
   return [];
 }
 
+function extractPagination(data) {
+  return data?.pagination || data?.meta || data?.data?.pagination || null;
+}
+
 function normalizeProject(project) {
   return { id: String(project.id || project.uuid || ""), name: project.name || project.title || "Untitled project" };
 }
@@ -1463,4 +1493,10 @@ function formatBytes(bytes) {
     unitIndex += 1;
   }
   return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+}
+
+function formatUploadListMeta(assets, pagination, refreshedAt) {
+  const total = pagination?.total;
+  const count = Number.isFinite(Number(total)) ? Number(total) : assets.length;
+  return `${count} ${count === 1 ? "file" : "files"} synced from Laravel. Last refresh: ${formatDate(refreshedAt)}`;
 }
