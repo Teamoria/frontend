@@ -1,7 +1,7 @@
 /* Canonical workspace sidebar theme.
    Loaded last so page-level styles cannot drift the shared AppSidebar. */
 :root {
-  --sidebar-width: 240px;
+  --sidebar-width: 280px;
   --page-padding-x: 32px;
   --page-padding-y: 24px;
   --sidebar-bg: #F8FAFC;
@@ -200,20 +200,19 @@ body,
 }
 
 .product-sidebar .sidebar-brand-wrap {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
   margin: 0 !important;
-  padding: 4px 12px 0 !important;
+  overflow: visible !important;
+  padding: 4px 12px 24px !important;
   position: relative !important;
 }
 
+.product-sidebar .sidebar-brand-wrap::before,
 .product-sidebar .sidebar-brand-wrap::after {
-  background: #E2E8F0 !important;
-  border-radius: 999px !important;
-  content: "" !important;
-  display: block !important;
-  height: 1px !important;
-  margin: 20px 0 28px !important;
-  position: static !important;
-  width: 100% !important;
+  content: none !important;
+  display: none !important;
 }
 
 .product-sidebar .brand,
@@ -228,6 +227,18 @@ body,
   overflow: visible !important;
   text-decoration: none !important;
   width: 100% !important;
+}
+
+.product-sidebar .brand::before,
+.product-sidebar .brand::after,
+.product-sidebar .brand--compact::before,
+.product-sidebar .brand--compact::after,
+.product-sidebar .brand-word::before,
+.product-sidebar .brand-word::after,
+.product-sidebar .brand--compact .brand-word::before,
+.product-sidebar .brand--compact .brand-word::after {
+  content: none !important;
+  display: none !important;
 }
 
 .product-sidebar .brand-mark,
@@ -265,13 +276,14 @@ body,
   color: #2563EB !important;
   display: grid !important;
   font-family: "Be Vietnam Pro", Inter, "Noto Sans Arabic", sans-serif !important;
-  font-size: 30px !important;
+  font-size: 26px !important;
   font-weight: 900 !important;
-  letter-spacing: -0.04em !important;
+  letter-spacing: -0.03em !important;
   line-height: 1 !important;
   max-width: 100% !important;
   min-width: 0 !important;
   overflow: visible !important;
+  text-overflow: unset !important;
   white-space: nowrap !important;
 }
 
@@ -280,13 +292,13 @@ body,
   color: #64748B !important;
   display: block !important;
   font-family: Inter, "Noto Sans Arabic", sans-serif !important;
-  font-size: 10.5px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.18em !important;
+  letter-spacing: 0.14em !important;
   line-height: 1.25 !important;
   margin-top: 7px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
   text-transform: uppercase !important;
   white-space: nowrap !important;
 }
@@ -306,7 +318,7 @@ body,
 
 .product-sidebar .sidebar-brand-wrap+nav.sidebar-nav,
 .product-sidebar .sidebar-brand-wrap+nav {
-  margin-top: 20px !important;
+  margin-top: 18px !important;
 }
 
 .sidebar-nav-section {
@@ -561,6 +573,6 @@ body,
 
   .product-sidebar .brand-word,
   .product-sidebar .brand--compact .brand-word {
-    font-size: 28px !important;
+    font-size: 26px !important;
   }
 }
