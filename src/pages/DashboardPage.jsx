@@ -107,12 +107,14 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
   const [dashboard, setDashboard] = useState(null);
   const [dashboardStatus, setDashboardStatus] = useState({ loading: false, error: "" });
   const companyName = authUser?.company?.name || "Your Company";
-  const liveMetrics = dashboard ? getOwnerMetricsFromDashboard(dashboard) : isPreview ? ownerMetrics : getEmptyOwnerMetrics();
-  const liveTeams = dashboard ? getOwnerTeamsFromDashboard(dashboard) : isPreview ? ownerTeams : [];
-  const liveRisks = dashboard ? getOwnerRisksFromDashboard(dashboard) : getOwnerRisksFromDashboard(null);
-  const projectProgress = dashboard ? getProjectProgressFromDashboard(dashboard) : isPreview ? dashboardCharts.projectProgress : [];
-  const activityOverview = dashboard ? getActivityOverviewFromDashboard(dashboard) : isPreview ? dashboardCharts.activityOverview : [];
+  const hasLiveDashboard = hasDashboardData(dashboard);
+  const liveMetrics = hasLiveDashboard ? getOwnerMetricsFromDashboard(dashboard) : isPreview ? ownerMetrics : getEmptyOwnerMetrics();
+  const liveTeams = hasLiveDashboard ? getOwnerTeamsFromDashboard(dashboard) : isPreview ? ownerTeams : [];
+  const liveRisks = hasLiveDashboard ? getOwnerRisksFromDashboard(dashboard) : getOwnerRisksFromDashboard(null);
+  const projectProgress = hasLiveDashboard ? getProjectProgressFromDashboard(dashboard) : isPreview ? dashboardCharts.projectProgress : [];
+  const activityOverview = hasLiveDashboard ? getActivityOverviewFromDashboard(dashboard) : isPreview ? dashboardCharts.activityOverview : [];
   const liveStatusSummary = getStatusSummaryFromDashboard(dashboard);
+  const dashboardUnavailable = !isPreview && !dashboardStatus.loading && !hasLiveDashboard;
 
   useEffect(() => {
     if (isPreview || isDemoMode()) return;
@@ -123,12 +125,13 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
     getCompanyDashboard()
       .then((payload) => {
         if (!isMounted) return;
-        setDashboard(getPayloadData(payload));
+        setDashboard(normalizeCompanyDashboardPayload(payload));
         setDashboardStatus({ loading: false, error: "" });
       })
       .catch((error) => {
         if (!isMounted) return;
-        setDashboardStatus({ loading: false, error: error.message || "Unable to load dashboard data." });
+        setDashboard(null);
+        setDashboardStatus({ loading: false, error: getDashboardErrorMessage(error) });
       });
 
     return () => {
@@ -145,7 +148,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
         <AppPageLayout
           className="owner-page"
           title={`${companyName} Overview`}
-          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${dashboard ? " Live metrics are synced from the company dashboard API." : isPreview ? " Preview data is shown in demo mode." : " No company dashboard data has been returned yet."}`}
+          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${hasLiveDashboard ? " Live metrics are synced from the company dashboard API." : isPreview ? " Preview data is shown in demo mode." : dashboardStatus.error ? " The company dashboard API is currently unavailable." : " No company dashboard data has been returned yet."}`}
           actions={(
             <div className="owner-period">
               <FiCalendar aria-hidden="true" />
@@ -157,6 +160,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
           {isPreview ? <RoleSwitcher activeRole={roleId} variant="owner" onRoleChange={onRoleChange} /> : null}
           {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">Loading dashboard from API...</p> : null}
           {!isPreview && dashboardStatus.error ? <p className="dashboard-api-state dashboard-api-state--error">{dashboardStatus.error}</p> : null}
+          {dashboardUnavailable && !dashboardStatus.error ? <p className="dashboard-api-state">The dashboard API responded, but it did not include company totals, projects, tasks, or uploads yet.</p> : null}
 
           <section className="owner-metrics-grid">
             {liveMetrics.map((metric, index) => (
@@ -250,7 +254,7 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
                   <h3>AI Company Hub</h3>
-                    <p>{dashboard ? "Live workspace signals with AI recommendations" : isPreview ? "Strategic suggestions" : "Waiting for company dashboard data"}</p>
+                    <p>{hasLiveDashboard ? "Live workspace signals with AI recommendations" : isPreview ? "Strategic suggestions" : "Waiting for company dashboard data"}</p>
                   </div>
                 </div>
                 <div className="owner-ai-status-strip" aria-label="Dashboard status summary">
@@ -262,20 +266,22 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                   ))}
                 </div>
                 <div className="owner-ai-suggestions">
-                  {aiInsights.filter((insight) => insight.scope === "company").map((insight) => (
+                  {(hasLiveDashboard || isPreview) ? aiInsights.filter((insight) => insight.scope === "company").map((insight) => (
                     <AIInsightCard classNamePrefix="owner" insight={insight} key={insight.id} />
-                  ))}
+                  )) : <p className="owner-live-empty">AI recommendations will appear after the company dashboard API returns workspace activity.</p>}
                 </div>
-                <article className="owner-projection-card">
-                  <span>Projection</span>
-                  <h4>Staffing Plan</h4>
-                  <p>Mock model predicts hiring needs based on project and task activity.</p>
-                  <button type="button">Generate HR Roadmap</button>
-                </article>
+                {(hasLiveDashboard || isPreview) ? (
+                  <article className="owner-projection-card">
+                    <span>Projection</span>
+                    <h4>Staffing Plan</h4>
+                    <p>{isPreview ? "Mock model predicts hiring needs based on project and task activity." : "Model predictions are based on returned project and task activity."}</p>
+                    <button type="button">Generate HR Roadmap</button>
+                  </article>
+                ) : null}
               </section>
               <section className="owner-dashboard-charts">
-                <ProjectProgressChart classNamePrefix="owner" data={projectProgress} />
-                <ActivityOverviewChart classNamePrefix="owner" data={activityOverview} />
+                {projectProgress.length ? <ProjectProgressChart classNamePrefix="owner" data={projectProgress} /> : <p className="owner-live-empty">No project progress data returned yet.</p>}
+                {activityOverview.length ? <ActivityOverviewChart classNamePrefix="owner" data={activityOverview} /> : <p className="owner-live-empty">No activity chart data returned yet.</p>}
               </section>
             </aside>
           </section>
@@ -514,13 +520,13 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
     getCompanyDashboard()
       .then((payload) => {
         if (!isMounted) return;
-        setDashboard(getPayloadData(payload));
+        setDashboard(normalizeCompanyDashboardPayload(payload));
         setDashboardStatus({ loading: false, error: "" });
       })
       .catch((error) => {
         if (!isMounted) return;
         setDashboard(null);
-        setDashboardStatus({ loading: false, error: error.message || "Unable to load dashboard data." });
+        setDashboardStatus({ loading: false, error: getDashboardErrorMessage(error) });
       });
 
     return () => {
@@ -774,6 +780,39 @@ function AiHelper({ classNamePrefix }) {
       ))}
     </nav>
   );
+}
+
+function normalizeCompanyDashboardPayload(payload) {
+  const data = getPayloadData(payload);
+  const dashboard = data?.dashboard || data?.company_dashboard || data?.overview || data;
+  return hasDashboardData(dashboard) ? dashboard : null;
+}
+
+function hasDashboardData(dashboard) {
+  if (!dashboard || typeof dashboard !== "object") return false;
+
+  return Boolean(
+    hasObjectValues(dashboard.totals) ||
+    hasObjectValues(dashboard.project_statuses) ||
+    hasObjectValues(dashboard.task_statuses) ||
+    normalizeCollection(dashboard.recent_projects).length ||
+    normalizeCollection(dashboard.upcoming_tasks).length ||
+    normalizeCollection(dashboard.recent_uploads || dashboard.uploads || dashboard.recent_files).length
+  );
+}
+
+function hasObjectValues(value) {
+  return Boolean(value && typeof value === "object" && Object.values(value).some((item) => Number(item || 0) > 0));
+}
+
+function getDashboardErrorMessage(error) {
+  const message = error?.message || "";
+
+  if (/unexpected error occurred/i.test(message)) {
+    return "Company dashboard API returned a server error. Projects, tasks, and uploads may still work, but the overview endpoint needs backend data or a backend fix.";
+  }
+
+  return message || "Unable to load dashboard data.";
 }
 
 function getOwnerMetricsFromDashboard(dashboard) {

@@ -189,6 +189,17 @@ export class ApiError extends Error {
   }
 }
 
+function assertApiKeyConfigured(pathname) {
+  if (!pathname.includes(`/api/${API_VERSION}/`) || API_KEY) {
+    return;
+  }
+
+  throw new ApiError(
+    `Missing VITE_API_KEY. The Teamoria API requires x-api-key for ${pathname}. Add VITE_API_KEY to the frontend environment and rebuild/redeploy.`,
+    { status: 0, payload: { error_code: "MISSING_API_KEY" } }
+  );
+}
+
 function normalizeData(payload) {
   return payload?.data ?? payload;
 }
@@ -245,6 +256,9 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
   const headers = {
     Accept: "application/json"
   };
+  const url = new URL(buildUrl(path));
+
+  assertApiKeyConfigured(url.pathname);
 
   if (body && !isFormData) {
     headers["Content-Type"] = "application/json";
@@ -260,8 +274,6 @@ export async function apiRequest(path, { method = "GET", body, auth = false, que
       headers.Authorization = `Bearer ${token}`;
     }
   }
-
-  const url = new URL(buildUrl(path));
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
@@ -388,6 +400,9 @@ export function getInternalCompanyId() {
 async function uploadApiRequest(path, { method = "GET", body, auth = false, query } = {}) {
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const headers = { Accept: "application/json" };
+  const url = new URL(buildUploadUrl(path));
+
+  assertApiKeyConfigured(url.pathname);
 
   if (body && !isFormData) {
     headers["Content-Type"] = "application/json";
@@ -405,8 +420,6 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
       headers.Authorization = `Bearer ${token}`;
     }
   }
-
-  const url = new URL(buildUploadUrl(path));
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
@@ -561,6 +574,9 @@ export async function updateProfile(body) {
 
 async function apiBlobRequest(path, { auth = true, upload = false } = {}) {
   const headers = { Accept: "*/*" };
+  const url = upload ? buildUploadUrl(path) : buildUrl(path);
+
+  assertApiKeyConfigured(new URL(url).pathname);
 
   if (API_KEY) {
     headers["x-api-key"] = API_KEY;
@@ -577,7 +593,7 @@ async function apiBlobRequest(path, { auth = true, upload = false } = {}) {
     }
   }
 
-  const response = await fetch(upload ? buildUploadUrl(path) : buildUrl(path), { method: "GET", headers });
+  const response = await fetch(url, { method: "GET", headers });
   const contentType = response.headers.get("content-type") || "";
 
   if (!response.ok) {

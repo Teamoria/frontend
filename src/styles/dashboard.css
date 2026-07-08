@@ -1079,6 +1079,18 @@
   z-index: 1;
 }
 
+.owner-live-empty {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px dashed rgba(126, 143, 171, 0.38);
+  border-radius: 8px;
+  color: var(--owner-muted);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 0;
+  padding: 16px;
+}
+
 .owner-ai-suggestions article {
   background: rgba(250, 248, 255, 0.8);
   border: 1px solid rgba(196, 197, 214, 0.3);
