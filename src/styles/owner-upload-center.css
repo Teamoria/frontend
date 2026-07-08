@@ -344,20 +344,41 @@
   font-size: 12px;
 }
 
-.owner-upload-selected-list button {
+.owner-upload-selected-list .owner-upload-selected-remove {
   align-items: center;
-  background: #f2f3ff;
-  border: 0;
+  background: #ffffff;
+  border: 1px solid #fecaca;
   border-radius: 8px;
-  color: #444654;
+  color: #b91c1c;
   cursor: pointer;
   display: inline-flex;
   height: 34px;
   justify-content: center;
+  justify-self: end;
+  padding: 0;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
   width: 34px;
 }
 
-.owner-upload-dropzone button,
+.owner-upload-selected-list .owner-upload-selected-remove svg {
+  height: 18px;
+  stroke-width: 2.4;
+  width: 18px;
+}
+
+.owner-upload-selected-list .owner-upload-selected-remove:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  transform: translateY(-1px);
+}
+
+.owner-upload-selected-list .owner-upload-selected-remove:focus-visible {
+  outline: 3px solid rgba(185, 28, 28, .18);
+  outline-offset: 2px;
+}
+
+.owner-upload-dropzone button:not(.owner-upload-selected-remove),
 .owner-upload-table td button {
   background: #1a44c2;
   border: 0;
@@ -367,7 +388,7 @@
   font-weight: 900;
 }
 
-.owner-upload-dropzone button {
+.owner-upload-dropzone button:not(.owner-upload-selected-remove) {
   margin-top: 22px;
   min-height: 46px;
   padding: 0 24px;
@@ -963,7 +984,7 @@
   color: #0f172a !important;
 }
 
-.owner-upload-dropzone button,
+.owner-upload-dropzone button:not(.owner-upload-selected-remove),
 .owner-upload-table td button,
 .owner-upload-progress-row strong {
   background: var(--ui-primary) !important;

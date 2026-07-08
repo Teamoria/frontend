@@ -488,11 +488,11 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
             </select>
           </label>
           <label>
-            <span>AI instructions</span>
+            <span>What should AI extract?</span>
             <textarea
               value={form.job_description}
               onChange={(event) => updateForm("job_description", event.target.value)}
-              placeholder="Example: extract hiring signals, contract risks, decisions, or action items."
+              placeholder="Example: extract skills, experience, risks, decisions, deadlines, or action items."
             />
           </label>
         </div>
@@ -531,7 +531,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
                   <b>{file.name}</b>
                   <span>{formatBytes(file.size)}</span>
                 </div>
-                <button type="button" aria-label={`Remove ${file.name}`} onClick={() => setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+                <button className="owner-upload-selected-remove" type="button" aria-label={`Remove file ${file.name}`} title="Remove file" onClick={() => setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
                   <FiX aria-hidden="true" />
                 </button>
               </article>
