@@ -487,14 +487,6 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
               {documentTypeOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
             </select>
           </label>
-          <label>
-            <span>What should AI extract?</span>
-            <textarea
-              value={form.job_description}
-              onChange={(event) => updateForm("job_description", event.target.value)}
-              placeholder="Example: extract skills, experience, risks, decisions, deadlines, or action items."
-            />
-          </label>
         </div>
 
         {form.visibility === "selected" ? (
