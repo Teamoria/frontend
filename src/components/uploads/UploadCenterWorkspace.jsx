@@ -1002,14 +1002,16 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
 
 function ProcessingState({ category, error, isLoading, onRefresh, progress, status }) {
   const contentLabel = getProcessingContentLabel(category);
+  const copy = getProcessingStateCopy(status, contentLabel, isLoading);
 
   return (
     <div className="owner-upload-ai-processing" role="status">
       <div className="owner-upload-ai-orbit" aria-hidden="true">
         <FiCpu />
       </div>
-      <h3>{isLoading ? "Loading AI results..." : "Processing..."}</h3>
-      <p>{isLoading ? `Fetching the latest ${contentLabel} analysis.` : `Analyzing ${contentLabel}...`}</p>
+      <h3>{copy.title}</h3>
+      <p>{copy.detail}</p>
+      {copy.hint ? <p className="owner-upload-ai-processing-hint">{copy.hint}</p> : null}
       {Number.isFinite(progress) ? (
         <div className="owner-upload-ai-progress">
           <span><strong style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></span>
@@ -1023,6 +1025,48 @@ function ProcessingState({ category, error, isLoading, onRefresh, progress, stat
       </button>
     </div>
   );
+}
+
+function getProcessingStateCopy(status, contentLabel, isLoading) {
+  if (isLoading) {
+    return {
+      title: "Loading AI results...",
+      detail: `Fetching the latest ${contentLabel} analysis.`,
+      hint: ""
+    };
+  }
+
+  const normalizedStatus = String(status || "queued").toLowerCase();
+
+  if (normalizedStatus === "queued") {
+    return {
+      title: "Waiting for backend queue worker",
+      detail: `The ${contentLabel} was uploaded successfully and is queued for AI processing.`,
+      hint: "If this stays queued, start Laravel queue:work and confirm the AI service URL/API key are reachable from the backend."
+    };
+  }
+
+  if (normalizedStatus === "processing") {
+    return {
+      title: "Processing with AI...",
+      detail: `Analyzing ${contentLabel} and extracting summary, tasks, decisions, and knowledge chunks.`,
+      hint: ""
+    };
+  }
+
+  if (normalizedStatus === "failed") {
+    return {
+      title: "AI processing failed",
+      detail: `The ${contentLabel} was uploaded, but the backend AI processing job failed.`,
+      hint: "Check Laravel queue logs and the FastAPI AI service health endpoint."
+    };
+  }
+
+  return {
+    title: "Processing...",
+    detail: `Analyzing ${contentLabel}...`,
+    hint: ""
+  };
 }
 
 function EmptyAiState({ detail, title }) {

@@ -1278,6 +1278,17 @@
   max-width: 420px;
 }
 
+.owner-upload-ai-processing .owner-upload-ai-processing-hint {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  color: #9a3412;
+  font-weight: 800;
+  margin-top: 14px;
+  max-width: 560px;
+  padding: 10px 12px;
+}
+
 .owner-upload-ai-processing > small {
   color: #64748b;
   display: block;
