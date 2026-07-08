@@ -50,7 +50,7 @@ export default function AppHeader({
 
     try {
       const [notificationsPayload, countPayload] = await Promise.all([
-        listNotifications(),
+        listNotifications({ per_page: 8 }),
         getUnreadNotificationsCount()
       ]);
 
@@ -107,7 +107,7 @@ export default function AppHeader({
 
       try {
         const [notificationsPayload, countPayload] = await Promise.all([
-          listNotifications(),
+          listNotifications({ per_page: 8 }),
           getUnreadNotificationsCount()
         ]);
 

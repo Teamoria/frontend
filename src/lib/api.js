@@ -680,6 +680,13 @@ function normalizeUploadListFilters(filters = {}) {
   };
 }
 
+function normalizeNotificationFilters(filters = {}) {
+  return {
+    status: filters.status || undefined,
+    per_page: filters.per_page || undefined
+  };
+}
+
 export function updateUploadPermissions(uploadId, body) {
   return uploadApiRequest(`/uploads/${uploadId}/permissions`, { method: "POST", auth: true, body });
 }
@@ -840,8 +847,8 @@ export function forceDeleteStaffMember(id) {
   return apiRequest(`/company/staff/${id}/force-delete`, { method: "DELETE", auth: true });
 }
 
-export function listNotifications() {
-  return apiRequest("/notifications", { auth: true });
+export function listNotifications(filters = {}) {
+  return apiRequest("/notifications", { auth: true, query: normalizeNotificationFilters(filters) });
 }
 
 export function getUnreadNotificationsCount() {
@@ -854,6 +861,10 @@ export function markNotificationRead(id) {
 
 export function markAllNotificationsRead() {
   return apiRequest("/notifications/read-all", { method: "PATCH", auth: true });
+}
+
+export function deleteNotification(id) {
+  return apiRequest(`/notifications/${id}`, { method: "DELETE", auth: true });
 }
 
 export function listAiConversations() {
@@ -984,10 +995,18 @@ export function updateTask(id, body, { role } = {}) {
 }
 
 export function updateTaskStatus(id, status, { role } = {}) {
-  return apiRequest(`${getTasksBasePath(role)}/${id}`, {
-    method: "PUT",
+  return apiRequest(`${getTasksBasePath(role)}/${id}/status`, {
+    method: "PATCH",
     auth: true,
-    body: normalizeTaskBody({ status }, { partial: true })
+    body: { status }
+  });
+}
+
+export function updateTaskProgress(id, progress, { role } = {}) {
+  return apiRequest(`${getTasksBasePath(role)}/${id}/progress`, {
+    method: "PATCH",
+    auth: true,
+    body: { progress }
   });
 }
 

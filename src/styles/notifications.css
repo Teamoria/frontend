@@ -9,6 +9,13 @@
   grid-template-columns: repeat(2, minmax(0, 180px));
 }
 
+.notifications-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .notifications-summary article,
 .notifications-panel {
   background: #ffffff;
@@ -39,6 +46,68 @@
   overflow: hidden;
 }
 
+.notifications-filter-bar {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.notifications-status-tabs {
+  background: #f3f6fb;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.notifications-status-tabs button,
+.notifications-filter-bar select,
+.notifications-delete-button {
+  border: 0;
+  font: inherit;
+}
+
+.notifications-status-tabs button {
+  background: transparent;
+  border-radius: 8px;
+  color: #526070;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
+.notifications-status-tabs button.active {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.notifications-filter-bar label {
+  align-items: center;
+  color: #667085;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 850;
+  gap: 8px;
+}
+
+.notifications-filter-bar select {
+  background: #ffffff;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 750;
+  padding: 8px 10px;
+}
+
 .notifications-list {
   display: grid;
 }
@@ -46,14 +115,12 @@
 .notifications-item {
   align-items: flex-start;
   background: #ffffff;
-  border: 0;
   border-bottom: 1px solid #edf1f7;
   color: inherit;
-  cursor: pointer;
   display: grid;
-  gap: 14px;
-  grid-template-columns: 42px minmax(0, 1fr);
-  padding: 18px;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  padding: 0;
   text-align: left;
 }
 
@@ -67,6 +134,37 @@
 
 .notifications-item.is-unread {
   background: #f7f9ff;
+}
+
+.notifications-open-button {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  padding: 18px;
+  text-align: left;
+}
+
+.notifications-delete-button {
+  align-items: center;
+  align-self: start;
+  background: #fff5f5;
+  border-radius: 10px;
+  color: #b42318;
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  margin: 16px 16px 0 0;
+  width: 34px;
+}
+
+.notifications-delete-button:hover {
+  background: #fee4e2;
 }
 
 .notifications-icon {
@@ -134,12 +232,31 @@
     grid-template-columns: 1fr;
   }
 
-  .notifications-item,
+  .notifications-filter-bar {
+    align-items: stretch;
+    display: grid;
+  }
+
+  .notifications-status-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .notifications-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .notifications-open-button,
   .notifications-item-head {
     grid-template-columns: 1fr;
   }
 
   .notifications-item-head {
     display: grid;
+  }
+
+  .notifications-delete-button {
+    justify-self: end;
+    margin: 0 18px 18px 0;
   }
 }
