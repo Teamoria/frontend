@@ -78,6 +78,7 @@ export default function TasksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState("board");
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [taskApiUnavailable, setTaskApiUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const isMember = normalizedRole === "company_member";
@@ -137,7 +138,12 @@ export default function TasksPage() {
     }
   }
 
-  async function loadTasks() {
+  async function loadTasks({ force = false } = {}) {
+    if (taskApiUnavailable && !force) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setStatus({ type: "", message: "" });
 
@@ -158,9 +164,12 @@ export default function TasksPage() {
       const rows = extractRows(data, ["tasks"]);
       setTasks(rows.map(normalizeTask));
       setPagination(data?.pagination || payload?.pagination || { current_page: 1, last_page: 1, per_page: filters.per_page, total: rows.length, has_more: false });
+      setTaskApiUnavailable(false);
     } catch (error) {
       setTasks([]);
-      setStatus({ type: "error", message: getTasksPageErrorMessage(error, "tasks", normalizedRole) });
+      const isUnavailable = isServerError(error);
+      setTaskApiUnavailable(isUnavailable);
+      setStatus({ type: isUnavailable ? "warning" : "error", message: getTasksPageErrorMessage(error, "tasks", normalizedRole) });
     } finally {
       setIsLoading(false);
     }
@@ -331,7 +340,7 @@ export default function TasksPage() {
               <button className={viewMode === "board" ? "active" : ""} type="button" onClick={() => setViewMode("board")} aria-pressed={viewMode === "board"}><FiGrid aria-hidden="true" />Board</button>
               <button className={viewMode === "list" ? "active" : ""} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}><FiList aria-hidden="true" />List</button>
             </div>
-            {isMember ? null : (
+            {isMember || taskApiUnavailable ? null : (
               <button className="tasks-primary-button" type="button" onClick={() => setIsModalOpen(true)}>
                 <FiPlus aria-hidden="true" />New Task
               </button>
@@ -341,12 +350,23 @@ export default function TasksPage() {
       >
 
         {status.message ? <p className={`auth-alert auth-alert--${status.type}`} role="alert">{status.message}</p> : null}
+        {taskApiUnavailable ? (
+          <section className="tasks-api-unavailable" aria-label="Tasks API unavailable">
+            <div>
+              <h2>Task board is waiting for the backend task API</h2>
+              <p>Projects, staff, uploads, and other ready workspace APIs can still be used. The task list endpoint is disabled here until the backend migration/schema is fixed.</p>
+            </div>
+            <button type="button" onClick={() => loadTasks({ force: true })}>
+              <FiRefreshCw aria-hidden="true" />Retry task API
+            </button>
+          </section>
+        ) : null}
 
         <TaskFilters
           filters={filters}
           isMember={isMember}
           onChange={(field, value) => setFilters((current) => ({ ...current, [field]: value }))}
-          onRefresh={loadTasks}
+          onRefresh={() => loadTasks({ force: true })}
           people={people}
           projects={projects}
           total={pagination.total || tasks.length}
@@ -385,7 +405,7 @@ export default function TasksPage() {
                       task={task}
                     />
                   ))}
-                  {!isMember && column.id !== "done" ? (
+                  {!isMember && !taskApiUnavailable && column.id !== "done" ? (
                     <button className="tasks-add-card" type="button" onClick={() => {
                       updateDraft("status", column.id);
                       setIsModalOpen(true);
