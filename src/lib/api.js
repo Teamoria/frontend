@@ -470,6 +470,72 @@ async function uploadApiRequest(path, { method = "GET", body, auth = false, quer
   return payload;
 }
 
+function uploadApiRequestWithProgress(path, { method = "POST", body, auth = false, onUploadProgress } = {}) {
+  const headers = { Accept: "application/json" };
+  const url = new URL(buildUploadUrl(path));
+
+  assertApiKeyConfigured(url.pathname);
+
+  if (API_KEY) {
+    headers["x-api-key"] = API_KEY;
+  }
+
+  addTemporaryInternalHeaders(headers);
+
+  if (auth) {
+    const token = getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+
+    request.open(method, url.toString(), true);
+    Object.entries(headers).forEach(([key, value]) => request.setRequestHeader(key, value));
+
+    request.upload.onprogress = (event) => {
+      if (typeof onUploadProgress !== "function") return;
+      if (event.lengthComputable && event.total > 0) {
+        onUploadProgress({
+          loaded: event.loaded,
+          total: event.total,
+          percent: Math.round((event.loaded / event.total) * 100)
+        });
+      } else {
+        onUploadProgress({ loaded: event.loaded, total: null, percent: null });
+      }
+    };
+
+    request.onload = () => {
+      let payload = null;
+      try {
+        payload = request.responseText ? JSON.parse(request.responseText) : null;
+      } catch {
+        payload = null;
+      }
+
+      if (request.status < 200 || request.status >= 300 || payload?.success === false) {
+        const message = getApiErrorMessage(payload, `Upload request failed with status ${request.status}.`);
+        reject(new ApiError(message, { status: request.status, payload }));
+        return;
+      }
+
+      resolve(payload);
+    };
+
+    request.onerror = () => {
+      reject(new ApiError(
+        `Unable to reach the Teamoria upload API at ${url.origin}. Check that the Laravel API is online, CORS allows this frontend domain, and VITE_API_BASE_URL is configured correctly.`,
+        { status: 0, payload: { original_error: "XMLHttpRequest network error" } }
+      ));
+    };
+
+    request.send(body || null);
+  });
+}
+
 export async function loginWithGoogle(providerToken) {
   const payload = await apiRequest("/auth/google", {
     method: "POST",
@@ -641,7 +707,8 @@ export function uploadFiles({
   shared_with_user_ids,
   document_type,
   job_description,
-  category
+  category,
+  onUploadProgress
 }) {
   const formData = new FormData();
   const fileList = Array.from(files || []);
@@ -664,11 +731,20 @@ export function uploadFiles({
     formData.append("shared_with_user_ids[]", userId);
   });
 
-  return uploadApiRequest("/uploads", {
+  const requestOptions = {
     method: "POST",
     auth: true,
     body: formData
-  });
+  };
+
+  if (typeof onUploadProgress === "function") {
+    return uploadApiRequestWithProgress("/uploads", {
+      ...requestOptions,
+      onUploadProgress
+    });
+  }
+
+  return uploadApiRequest("/uploads", requestOptions);
 }
 
 export function listUploads(filters = {}) {

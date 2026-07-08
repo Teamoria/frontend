@@ -103,6 +103,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
   const [uploadApiUnavailable, setUploadApiUnavailable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [uploadProgressMessage, setUploadProgressMessage] = useState("");
   const [permissionsModal, setPermissionsModal] = useState(null);
   const [aiResultsModal, setAiResultsModal] = useState(null);
   const [previewModal, setPreviewModal] = useState(null);
@@ -265,6 +267,8 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     }
 
     setIsUploading(true);
+    setUploadProgress(null);
+    setUploadProgressMessage("Uploading to backend storage, please wait...");
     try {
       const payload = await uploadFiles({
         files: selectedFiles,
@@ -274,7 +278,10 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         task_id: form.scope === "task" ? form.task_id : undefined,
         document_type: form.document_type,
         job_description: buildUploadJobDescription(form),
-        shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : []
+        shared_with_user_ids: form.visibility === "selected" ? form.shared_with_user_ids : [],
+        onUploadProgress: ({ percent }) => {
+          setUploadProgress(Number.isFinite(percent) ? percent : null);
+        }
       });
       const uploaded = getFirstUploadFromPayload(getPayloadData(payload));
       const fallbackUpload = {
@@ -283,9 +290,12 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         processing_status: uploaded?.processing_status || "queued",
         status: uploaded?.status || "uploaded"
       };
+      setUploadProgress(100);
+      setUploadProgressMessage("Upload complete. Preparing AI processing...");
+      setStatus({ type: "success", message: "Upload complete. Preparing AI processing..." });
+      await wait(500);
       setSelectedFiles([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setStatus({ type: "success", message: "Files uploaded successfully." });
       setUploadApiUnavailable(false);
       setAiResultsModal({
         asset: normalizeAsset(uploaded || fallbackUpload),
@@ -297,9 +307,12 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
     } catch (error) {
       const isUnavailable = isUploadSchemaError(error);
       setUploadApiUnavailable(isUnavailable);
+      setUploadProgressMessage("");
       setStatus({ type: isUnavailable ? "warning" : "error", message: getUploadSubmitErrorMessage(error, form) });
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
+      setUploadProgressMessage("");
     }
   }
 
@@ -523,7 +536,7 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
                   <b>{file.name}</b>
                   <span>{formatBytes(file.size)}</span>
                 </div>
-                <button className="owner-upload-selected-remove" type="button" aria-label={`Remove file ${file.name}`} title="Remove file" onClick={() => setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
+                <button className="owner-upload-selected-remove" type="button" aria-label={`Remove file ${file.name}`} title="Remove file" disabled={isUploading} onClick={() => setSelectedFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
                   <FiX aria-hidden="true" />
                 </button>
               </article>
@@ -532,8 +545,16 @@ export default function UploadCenterWorkspace({ view = "all", filesHref = "#/own
         ) : null}
 
         <button type="submit" disabled={isUploading || (showFiles && isLoading)}>
-          {isUploading ? "Uploading..." : "Upload Files"}
+          {isUploading ? <><span className="owner-upload-button-spinner" aria-hidden="true" />Uploading file...</> : "Upload Files"}
         </button>
+        {isUploading || uploadProgressMessage ? (
+          <div className="owner-upload-progress-feedback" role="status" aria-live="polite">
+            <div className={`owner-upload-live-progress ${Number.isFinite(uploadProgress) ? "" : "is-indeterminate"}`} aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Number.isFinite(uploadProgress) ? uploadProgress : undefined} role="progressbar">
+              <span style={Number.isFinite(uploadProgress) ? { width: `${Math.max(4, Math.min(100, uploadProgress))}%` } : undefined} />
+            </div>
+            <small>{Number.isFinite(uploadProgress) ? `${uploadProgressMessage || "Uploading to backend storage, please wait..."} ${uploadProgress}% uploaded` : uploadProgressMessage || "Uploading to backend storage, please wait..."}</small>
+          </div>
+        ) : null}
       </form> : null}
 
       {showFiles ? <section className="owner-upload-assets">
@@ -1345,6 +1366,10 @@ function buildUploadJobDescription(form) {
     parts.push(form.job_description.trim());
   }
   return parts.join(" ");
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
 function normalizeUploadStatusPayload(data) {
