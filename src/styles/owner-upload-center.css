@@ -802,7 +802,7 @@
   box-sizing: border-box;
   display: grid;
   overflow: auto;
-  padding: 20px;
+  padding: 36px 20px;
   place-items: center;
 }
 
@@ -1072,8 +1072,8 @@
   flex-direction: column;
   gap: 0;
   left: auto;
-  max-height: calc(100vh - 40px) !important;
-  max-height: calc(100dvh - 40px) !important;
+  max-height: calc(100vh - 72px) !important;
+  max-height: calc(100dvh - 72px) !important;
   max-width: min(1080px, calc(100vw - 40px)) !important;
   margin: 0;
   overflow: hidden !important;
@@ -1088,8 +1088,8 @@
 .owner-upload-permissions-modal.owner-upload-ai-modal {
   left: auto;
   margin: 0;
-  max-height: calc(100vh - 40px) !important;
-  max-height: calc(100dvh - 40px) !important;
+  max-height: calc(100vh - 72px) !important;
+  max-height: calc(100dvh - 72px) !important;
   max-width: min(1080px, calc(100vw - 40px)) !important;
   overflow: hidden !important;
   padding: 0 !important;
@@ -1111,9 +1111,9 @@
   flex: 0 0 auto;
   gap: 18px 24px;
   grid-template-columns: minmax(0, 1fr) auto;
-  margin: 14px 14px 0;
+  margin: 18px 14px 0;
   overflow: visible;
-  padding: 20px 22px;
+  padding: 18px 22px;
   position: static;
   transform: none;
 }
@@ -1130,9 +1130,9 @@
 
 .owner-upload-ai-titleblock h2 {
   color: #0f172a;
-  font-size: 26px;
+  font-size: 24px;
   letter-spacing: 0;
-  line-height: 1.18;
+  line-height: 1.16;
   margin: 0;
   overflow: visible;
   position: static;
@@ -2369,20 +2369,20 @@
 
 @media (max-width: 768px) {
   .owner-upload-modal-layer:has(.owner-upload-ai-modal) {
-    padding: 12px;
+    padding: 18px 12px;
   }
 
   .owner-upload-ai-modal {
-    max-height: calc(100vh - 24px) !important;
-    max-height: calc(100dvh - 24px) !important;
+    max-height: calc(100vh - 36px) !important;
+    max-height: calc(100dvh - 36px) !important;
     overflow: hidden;
     max-width: calc(100vw - 24px) !important;
     width: calc(100vw - 24px) !important;
   }
 
   .owner-upload-permissions-modal.owner-upload-ai-modal {
-    max-height: calc(100vh - 24px) !important;
-    max-height: calc(100dvh - 24px) !important;
+    max-height: calc(100vh - 36px) !important;
+    max-height: calc(100dvh - 36px) !important;
     max-width: calc(100vw - 24px) !important;
     overflow: hidden !important;
     padding: 0 !important;
@@ -2393,6 +2393,7 @@
     align-items: flex-start;
     gap: 12px;
     grid-template-columns: minmax(0, 1fr);
+    margin-top: 12px;
     padding: 20px 18px 14px;
   }
 
