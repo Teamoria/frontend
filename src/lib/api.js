@@ -8,7 +8,6 @@ const AI_API_BASE_URL =
   import.meta.env.VITE_AI_API_BASE_URL ||
   import.meta.env.VITE_AI_SERVICE_URL ||
   "";
-const LOCAL_AI_API_BASE_URL = "http://127.0.0.1:3001";
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const INTERNAL_API_KEY = import.meta.env.VITE_INTERNAL_API_KEY || import.meta.env.VITE_AI_INTERNAL_API_KEY || "";
@@ -185,7 +184,7 @@ function getRuntimeApiBaseUrl() {
 
 function getRuntimeAiApiBaseUrl() {
   if (typeof window === "undefined") {
-    return AI_API_BASE_URL || LOCAL_AI_API_BASE_URL;
+    return AI_API_BASE_URL || API_BASE_URL;
   }
 
   try {
@@ -193,7 +192,7 @@ function getRuntimeAiApiBaseUrl() {
     const pageIsLocal = isLocalHostname(pageHost);
 
     if (!AI_API_BASE_URL) {
-      return pageIsLocal ? LOCAL_AI_API_BASE_URL : window.location.origin;
+      return pageIsLocal ? getRuntimeApiBaseUrl() : window.location.origin;
     }
 
     const configuredUrl = new URL(AI_API_BASE_URL, window.location.origin);
