@@ -929,197 +929,199 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
           </div>
         </header>
 
-        {state.error ? <p className="auth-alert auth-alert--error owner-upload-ai-alert">{state.error}</p> : null}
-
         <ProcessingTimeline status={processingStatus} />
 
-        {state.isLoading || (!state.error && !isReady) ? (
-          <ProcessingState
-            category={state.asset?.category || inferCategory(fileName)}
-            error={upload.processing_error}
-            isLoading={state.isLoading}
-            onRefresh={onRefresh}
-            progress={progressValue}
-            status={processingStatus}
-          />
-        ) : null}
+        <div className="owner-upload-ai-body">
+          {state.error ? <p className="owner-upload-ai-alert">{state.error}</p> : null}
 
-        {!state.isLoading && !state.error && isReady ? (
-          <>
-            <nav className="owner-upload-ai-tabs" aria-label="AI result sections">
-              {tabs.map((tab) => (
-                <button
-                  className={activeTab === tab.id ? "is-active" : ""}
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-            <div className="owner-upload-ai-results" key={activeTab}>
-              {activeTab === "summary" ? (
-                summary.summary || structuredSummary.overview ? (
-                  <div className="owner-upload-ai-summary-stack">
-                    {structuredSummary.title || structuredSummary.priority || Array.isArray(structuredSummary.key_points) ? (
-                      <article className="owner-upload-ai-structured-card">
-                        <div>
-                          <span>Document brief</span>
-                          <h3>{structuredSummary.title || formatLabel(sourceType)}</h3>
-                          <p>{structuredSummary.overview || summary.summary}</p>
-                        </div>
-                        <dl>
-                          <div><dt>Priority</dt><dd>{formatLabel(structuredSummary.priority || "not set")}</dd></div>
-                          <div><dt>Tasks</dt><dd>{structuredSummary.task_count ?? extractedTasks.length}</dd></div>
-                          <div><dt>Decisions</dt><dd>{structuredSummary.decision_count ?? decisions.length}</dd></div>
-                        </dl>
-                        {Array.isArray(structuredSummary.key_points) && structuredSummary.key_points.length ? (
-                          <ul>
-                            {structuredSummary.key_points.map((point, index) => <li key={`${point}-${index}`}>{point}</li>)}
-                          </ul>
-                        ) : null}
+          {state.isLoading || (!state.error && !isReady) ? (
+            <ProcessingState
+              category={state.asset?.category || inferCategory(fileName)}
+              error={upload.processing_error}
+              isLoading={state.isLoading}
+              onRefresh={onRefresh}
+              progress={progressValue}
+              status={processingStatus}
+            />
+          ) : null}
+
+          {!state.isLoading && !state.error && isReady ? (
+            <>
+              <nav className="owner-upload-ai-tabs" aria-label="AI result sections">
+                {tabs.map((tab) => (
+                  <button
+                    className={activeTab === tab.id ? "is-active" : ""}
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+              <div className="owner-upload-ai-results" key={activeTab}>
+                {activeTab === "summary" ? (
+                  summary.summary || structuredSummary.overview ? (
+                    <div className="owner-upload-ai-summary-stack">
+                      {structuredSummary.title || structuredSummary.priority || Array.isArray(structuredSummary.key_points) ? (
+                        <article className="owner-upload-ai-structured-card">
+                          <div>
+                            <span>Document brief</span>
+                            <h3>{structuredSummary.title || formatLabel(sourceType)}</h3>
+                            <p>{structuredSummary.overview || summary.summary}</p>
+                          </div>
+                          <dl>
+                            <div><dt>Priority</dt><dd>{formatLabel(structuredSummary.priority || "not set")}</dd></div>
+                            <div><dt>Tasks</dt><dd>{structuredSummary.task_count ?? extractedTasks.length}</dd></div>
+                            <div><dt>Decisions</dt><dd>{structuredSummary.decision_count ?? decisions.length}</dd></div>
+                          </dl>
+                          {Array.isArray(structuredSummary.key_points) && structuredSummary.key_points.length ? (
+                            <ul>
+                              {structuredSummary.key_points.map((point, index) => <li key={`${point}-${index}`}>{point}</li>)}
+                            </ul>
+                          ) : null}
+                        </article>
+                      ) : null}
+                      <article className="owner-upload-ai-summary-card" dir="auto">
+                        {splitParagraphs(summary.summary || structuredSummary.overview).map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)}
                       </article>
-                    ) : null}
-                    <article className="owner-upload-ai-summary-card" dir="auto">
-                      {splitParagraphs(summary.summary || structuredSummary.overview).map((paragraph, index) => <p key={`${paragraph}-${index}`}>{paragraph}</p>)}
-                    </article>
-                  </div>
-                ) : <EmptyAiState title="No AI analysis yet" detail="Once the document has enough usable content, the summary will appear here." />
-              ) : null}
-
-              {activeTab === "transcript" ? (
-                transcript ? (
-                  <div className="owner-upload-ai-transcript">
-                    <div className="owner-upload-ai-toolbar">
-                      <label>
-                        <FiSearch aria-hidden="true" />
-                        <input value={transcriptSearch} onChange={(event) => setTranscriptSearch(event.target.value)} placeholder="Search transcript" />
-                      </label>
-                      <span>{transcriptSearch ? `${transcriptMatches} matches` : `${transcript.length.toLocaleString()} chars`}</span>
-                      <button type="button" onClick={copyTranscript}>
-                        <FiClipboard aria-hidden="true" />
-                        {copiedTranscript ? "Copied" : "Copy"}
-                      </button>
                     </div>
-                    <pre dir="auto">{transcript}</pre>
-                  </div>
-                ) : <EmptyAiState title="Transcript is empty" detail="Audio, video, or text extraction results will be readable here after processing." />
-              ) : null}
+                  ) : <EmptyAiState title="No AI analysis yet" detail="Once the document has enough usable content, the summary will appear here." />
+                ) : null}
 
-              {activeTab === "decisions" ? (
-                decisions.length ? (
-                  <div className="owner-upload-ai-card-grid">
-                    {decisions.map((item, index) => (
-                      <article className="owner-upload-ai-decision-card" dir="auto" key={item.id || `decision-${index}`}>
-                        <span><FiCheck aria-hidden="true" /></span>
-                        <div>
-                          <h3>{getDecisionTitle(item, index)}</h3>
-                          <p>{getDecisionDescription(item)}</p>
-                          <small>Confidence: {formatConfidence(item.confidence || item.score)}</small>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : <EmptyAiState title="No decisions found" detail="Decisions extracted from meetings, plans, and notes will be listed here." />
-              ) : null}
+                {activeTab === "transcript" ? (
+                  transcript ? (
+                    <div className="owner-upload-ai-transcript">
+                      <div className="owner-upload-ai-toolbar">
+                        <label>
+                          <FiSearch aria-hidden="true" />
+                          <input value={transcriptSearch} onChange={(event) => setTranscriptSearch(event.target.value)} placeholder="Search transcript" />
+                        </label>
+                        <span>{transcriptSearch ? `${transcriptMatches} matches` : `${transcript.length.toLocaleString()} chars`}</span>
+                        <button type="button" onClick={copyTranscript}>
+                          <FiClipboard aria-hidden="true" />
+                          {copiedTranscript ? "Copied" : "Copy"}
+                        </button>
+                      </div>
+                      <pre dir="auto">{transcript}</pre>
+                    </div>
+                  ) : <EmptyAiState title="Transcript is empty" detail="Audio, video, or text extraction results will be readable here after processing." />
+                ) : null}
 
-              {activeTab === "tasks" ? (
-                taskDrafts.length ? (
-                  <div className="owner-upload-task-review">
-                    {taskDrafts.map((task) => {
-                      const isEditing = editingTaskIds.has(task.localId) || (!task.created && !task.rejected);
-                      return (
-                        <article className={`owner-upload-task-draft ${task.rejected ? "is-rejected" : ""} ${task.created ? "is-created" : ""}`} key={task.localId}>
-                          <div className="owner-upload-task-draft-head">
-                            <label className="owner-upload-task-check">
-                              <input checked={task.created} readOnly type="checkbox" />
-                              <span>{task.created ? "Created" : task.rejected ? "Deleted" : "Needs approval"}</span>
-                            </label>
-                            <div>
-                              <button type="button" disabled={task.created || task.rejected} onClick={() => updateTaskDraft(task.localId, "approved", true)}>
-                                <FiCheck aria-hidden="true" />Approve
-                              </button>
-                              <button type="button" disabled={task.created || task.rejected} onClick={() => toggleTaskEdit(task.localId)}>
-                                <FiEdit3 aria-hidden="true" />Edit
-                              </button>
-                              <button type="button" disabled={task.created || task.rejected} onClick={() => rejectTaskDraft(task.localId)}>
-                                <FiTrash2 aria-hidden="true" />Delete
-                              </button>
-                              <button type="button" disabled={task.created || task.rejected || savingTaskId === task.localId} onClick={() => approveTaskDraft(task)}>
-                                {savingTaskId === task.localId ? "Saving..." : <><FiPlus aria-hidden="true" />Create Task</>}
-                              </button>
+                {activeTab === "decisions" ? (
+                  decisions.length ? (
+                    <div className="owner-upload-ai-card-grid">
+                      {decisions.map((item, index) => (
+                        <article className="owner-upload-ai-decision-card" dir="auto" key={item.id || `decision-${index}`}>
+                          <span><FiCheck aria-hidden="true" /></span>
+                          <div>
+                            <h3>{getDecisionTitle(item, index)}</h3>
+                            <p>{getDecisionDescription(item)}</p>
+                            <small>Confidence: {formatConfidence(item.confidence || item.score)}</small>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : <EmptyAiState title="No decisions found" detail="Decisions extracted from meetings, plans, and notes will be listed here." />
+                ) : null}
+
+                {activeTab === "tasks" ? (
+                  taskDrafts.length ? (
+                    <div className="owner-upload-task-review">
+                      {taskDrafts.map((task) => {
+                        const isEditing = editingTaskIds.has(task.localId) || (!task.created && !task.rejected);
+                        return (
+                          <article className={`owner-upload-task-draft ${task.rejected ? "is-rejected" : ""} ${task.created ? "is-created" : ""}`} key={task.localId}>
+                            <div className="owner-upload-task-draft-head">
+                              <label className="owner-upload-task-check">
+                                <input checked={task.created} readOnly type="checkbox" />
+                                <span>{task.created ? "Created" : task.rejected ? "Deleted" : "Needs approval"}</span>
+                              </label>
+                              <div>
+                                <button type="button" disabled={task.created || task.rejected} onClick={() => updateTaskDraft(task.localId, "approved", true)}>
+                                  <FiCheck aria-hidden="true" />Approve
+                                </button>
+                                <button type="button" disabled={task.created || task.rejected} onClick={() => toggleTaskEdit(task.localId)}>
+                                  <FiEdit3 aria-hidden="true" />Edit
+                                </button>
+                                <button type="button" disabled={task.created || task.rejected} onClick={() => rejectTaskDraft(task.localId)}>
+                                  <FiTrash2 aria-hidden="true" />Delete
+                                </button>
+                                <button type="button" disabled={task.created || task.rejected || savingTaskId === task.localId} onClick={() => approveTaskDraft(task)}>
+                                  {savingTaskId === task.localId ? "Saving..." : <><FiPlus aria-hidden="true" />Create Task</>}
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          <label>
-                            <span>Title</span>
-                            <input value={task.title} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "title", event.target.value)} />
-                          </label>
-                          <label>
-                            <span>Description</span>
-                            <textarea value={task.description} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "description", event.target.value)} />
-                          </label>
-                          <div className="owner-upload-task-grid">
                             <label>
-                              <span>Priority</span>
-                              <select value={task.priority} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "priority", event.target.value)}>
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                                <option value="emergency">Emergency</option>
-                              </select>
+                              <span>Title</span>
+                              <input value={task.title} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "title", event.target.value)} />
                             </label>
                             <label>
-                              <span>Due date</span>
-                              <input type="date" value={task.due_date} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "due_date", event.target.value)} />
+                              <span>Description</span>
+                              <textarea value={task.description} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "description", event.target.value)} />
                             </label>
-                            <label>
-                              <span>Assignee</span>
-                              <select value={task.assignee_id} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "assignee_id", event.target.value)}>
-                                <option value="">Unassigned</option>
-                                {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span>Project</span>
-                              <select value={task.project_id} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "project_id", event.target.value)}>
-                                <option value="">Choose project</option>
-                                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                              </select>
-                            </label>
-                          </div>
-                          <button className="owner-upload-assign-member" type="button" disabled={task.created || task.rejected} onClick={() => toggleTaskEdit(task.localId)}>
-                            <FiUserPlus aria-hidden="true" />Assign Member
-                          </button>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : <EmptyAiState title="No tasks extracted" detail="The AI result did not include task_items yet. Choose a processing profile before upload, then refresh after the backend job is processed." />
-              ) : null}
+                            <div className="owner-upload-task-grid">
+                              <label>
+                                <span>Priority</span>
+                                <select value={task.priority} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "priority", event.target.value)}>
+                                  <option value="low">Low</option>
+                                  <option value="medium">Medium</option>
+                                  <option value="high">High</option>
+                                  <option value="emergency">Emergency</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span>Due date</span>
+                                <input type="date" value={task.due_date} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "due_date", event.target.value)} />
+                              </label>
+                              <label>
+                                <span>Assignee</span>
+                                <select value={task.assignee_id} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "assignee_id", event.target.value)}>
+                                  <option value="">Unassigned</option>
+                                  {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
+                                </select>
+                              </label>
+                              <label>
+                                <span>Project</span>
+                                <select value={task.project_id} disabled={!isEditing || task.created || task.rejected} onChange={(event) => updateTaskDraft(task.localId, "project_id", event.target.value)}>
+                                  <option value="">Choose project</option>
+                                  {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                                </select>
+                              </label>
+                            </div>
+                            <button className="owner-upload-assign-member" type="button" disabled={task.created || task.rejected} onClick={() => toggleTaskEdit(task.localId)}>
+                              <FiUserPlus aria-hidden="true" />Assign Member
+                            </button>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : <EmptyAiState title="No tasks extracted" detail="The AI result did not include task_items yet. Choose a processing profile before upload, then refresh after the backend job is processed." />
+                ) : null}
 
-              {activeTab === "knowledge" ? (
-                chunks.length ? (
-                  <div className="owner-upload-ai-knowledge">
-                    {chunks.map((item, index) => {
-                      const isExpanded = expandedChunks.has(String(index));
-                      return (
-                        <article className="owner-upload-ai-chunk" key={item.id || `chunk-${index}`}>
-                          <button type="button" onClick={() => toggleChunk(index)} aria-expanded={isExpanded}>
-                            {isExpanded ? <FiChevronDown aria-hidden="true" /> : <FiChevronRight aria-hidden="true" />}
-                            <span>Chunk {index + 1}</span>
-                            <small>{getChunkSource(item, fileName)}{getChunkPage(item) ? ` - Page ${getChunkPage(item)}` : ""}</small>
-                          </button>
-                          {isExpanded ? <p dir="auto">{item.content || item.text || item.chunk || ""}</p> : null}
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : <EmptyAiState title="No knowledge chunks" detail="Indexed source passages will appear here with document and page context." />
-              ) : null}
-            </div>
-          </>
-        ) : null}
+                {activeTab === "knowledge" ? (
+                  chunks.length ? (
+                    <div className="owner-upload-ai-knowledge">
+                      {chunks.map((item, index) => {
+                        const isExpanded = expandedChunks.has(String(index));
+                        return (
+                          <article className="owner-upload-ai-chunk" key={item.id || `chunk-${index}`}>
+                            <button type="button" onClick={() => toggleChunk(index)} aria-expanded={isExpanded}>
+                              {isExpanded ? <FiChevronDown aria-hidden="true" /> : <FiChevronRight aria-hidden="true" />}
+                              <span>Chunk {index + 1}</span>
+                              <small>{getChunkSource(item, fileName)}{getChunkPage(item) ? ` - Page ${getChunkPage(item)}` : ""}</small>
+                            </button>
+                            {isExpanded ? <p dir="auto">{item.content || item.text || item.chunk || ""}</p> : null}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : <EmptyAiState title="No knowledge chunks" detail="Indexed source passages will appear here with document and page context." />
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </div>
       </section>
     </div>
   );
@@ -1128,6 +1130,13 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
 function ProcessingState({ category, error, isLoading, progress, status }) {
   const contentLabel = getProcessingContentLabel(category);
   const copy = getProcessingStateCopy(status, contentLabel, isLoading);
+  const normalizedStatus = String(status || "queued").toLowerCase();
+  const stepItems = [
+    { id: "queued", label: "Queued" },
+    { id: "processing", label: "Analyzing" },
+    { id: "processed", label: "Review" }
+  ];
+  const activeStep = isLoading ? "queued" : normalizedStatus === "processing" ? "processing" : normalizedStatus === "failed" ? "processing" : "queued";
 
   return (
     <div className="owner-upload-ai-processing" role="status">
@@ -1136,14 +1145,19 @@ function ProcessingState({ category, error, isLoading, progress, status }) {
       </div>
       <h3>{copy.title}</h3>
       <p>{copy.detail}</p>
-      {copy.hint ? <p className="owner-upload-ai-processing-hint">{copy.hint}</p> : null}
+      <div className="owner-upload-ai-processing-steps" aria-hidden="true">
+        {stepItems.map((step) => (
+          <span className={step.id === activeStep ? "is-active" : ""} key={step.id}>{step.label}</span>
+        ))}
+      </div>
       {Number.isFinite(progress) ? (
         <div className="owner-upload-ai-progress">
           <span><strong style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} /></span>
           <small>{Math.round(progress)}% estimated progress</small>
         </div>
       ) : <small>Status: {formatLabel(status)}</small>}
-      {error ? <p className="auth-alert auth-alert--error">{error}</p> : null}
+      {copy.hint ? <p className="owner-upload-ai-processing-hint">{copy.hint}</p> : null}
+      {error ? <p className="owner-upload-ai-processing-note is-error">{error}</p> : null}
     </div>
   );
 }
