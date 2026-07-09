@@ -1089,7 +1089,9 @@ export function listAiConversations() {
 }
 
 export function listChatSessions() {
-  return aiServiceRequest("/chat/sessions");
+  return apiRequest("/chat/sessions", {
+    auth: true
+  });
 }
 
 export function listChatSessionMessages(sessionId, cursor) {
@@ -1100,23 +1102,27 @@ export function listChatSessionMessages(sessionId, cursor) {
 }
 
 export function sendChatMessage({
-  user_id,
-  company_id,
   project_id,
+  session_id,
   message,
-  message_content,
-  chat_history
+  message_content
 }) {
   const cleanBody = {
-    user_id: user_id || undefined,
-    company_id: company_id || undefined,
     project_id: project_id || undefined,
+    session_id: session_id || undefined,
     message: message || message_content || "",
-    chat_history: Array.isArray(chat_history) && chat_history.length ? chat_history : undefined
+    message_content: message_content || message || ""
   };
 
-  return aiServiceRequest("/ai/chat/generate", {
+  if (cleanBody.session_id) {
+    delete cleanBody.project_id;
+  }
+
+  delete cleanBody.message;
+
+  return apiRequest("/chat/messages", {
     method: "POST",
+    auth: true,
     body: cleanBody
   });
 }
@@ -1141,11 +1147,9 @@ export function getAiConversationMessages(conversationId) {
 
 export function sendAiConversationMessage(conversationId, body = {}) {
   return sendChatMessage({
-    user_id: body.user_id,
-    company_id: body.company_id,
     project_id: body.project_id,
+    session_id: conversationId,
     message: body.message_content || body.question || body.message || "",
-    chat_history: body.chat_history
   });
 }
 
