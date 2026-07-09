@@ -13,7 +13,6 @@ import {
   getInternalCompanyId,
   getInternalUserId,
   getPayloadData,
-  listChatSessions,
   sendChatMessage
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
@@ -56,20 +55,12 @@ export default function AiChatPage() {
     setStatus((current) => ({ ...current, ...patch }));
   }
 
-  async function loadConversations({ silent = false } = {}) {
+  function loadConversations({ silent = false } = {}) {
     if (!silent) {
       setStatusPatch({ loadingConversations: true, error: "" });
     }
 
-    try {
-      const payload = await listChatSessions();
-      const nextConversations = extractConversations(getPayloadData(payload));
-      setConversations((current) => mergeConversations(current, nextConversations));
-      setActiveConversationId((current) => current || nextConversations[0]?.id || "");
-      setStatusPatch({ loadingConversations: false, error: "" });
-    } catch (error) {
-      setStatusPatch({ loadingConversations: false, error: error.message || "Unable to load conversations." });
-    }
+    setStatusPatch({ loadingConversations: false, error: "" });
   }
 
   async function startConversation() {
