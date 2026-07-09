@@ -10,24 +10,26 @@ import {
 } from "react-icons/fi";
 import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import {
+  getInternalCompanyId,
+  getInternalUserId,
   getPayloadData,
-  listChatSessionMessages,
   listChatSessions,
   sendChatMessage
 } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/ai-chat.css";
 
 export default function AiChatPage() {
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [messages, setMessages] = useState([]);
+  const [conversationMessages, setConversationMessages] = useState({});
   const [draft, setDraft] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [pendingAiSessionId, setPendingAiSessionId] = useState("");
   const [status, setStatus] = useState({ loadingConversations: true, loadingMessages: false, sending: false, error: "" });
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
-  const pendingStartedAtRef = useRef(0);
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
@@ -40,44 +42,11 @@ export default function AiChatPage() {
 
   useEffect(() => {
     if (activeConversationId) {
-      loadMessages(activeConversationId);
+      setMessages(conversationMessages[activeConversationId] || []);
     } else {
       setMessages([]);
     }
-  }, [activeConversationId]);
-
-  useEffect(() => {
-    if (!pendingAiSessionId) return undefined;
-
-    let cancelled = false;
-    const startedAt = pendingStartedAtRef.current || Date.now();
-
-    async function pollForAiReply() {
-      const nextMessages = await loadMessages(pendingAiSessionId, { silent: true });
-      if (cancelled || !nextMessages) return;
-
-      const hasFreshAiMessage = nextMessages.some((message) => {
-        if (message.role !== "assistant") return false;
-        const messageTime = new Date(message.created_at || Date.now()).getTime();
-        return Number.isNaN(messageTime) || messageTime >= startedAt - 5000;
-      });
-      const timedOut = Date.now() - startedAt > 120000;
-
-      if (hasFreshAiMessage || timedOut) {
-        setPendingAiSessionId("");
-        setStatusPatch({ sending: false });
-        loadConversations({ silent: true });
-      }
-    }
-
-    const intervalId = window.setInterval(pollForAiReply, 2500);
-    pollForAiReply();
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [pendingAiSessionId]);
+  }, [activeConversationId, conversationMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
@@ -95,35 +64,11 @@ export default function AiChatPage() {
     try {
       const payload = await listChatSessions();
       const nextConversations = extractConversations(getPayloadData(payload));
-      setConversations(nextConversations);
+      setConversations((current) => mergeConversations(current, nextConversations));
       setActiveConversationId((current) => current || nextConversations[0]?.id || "");
       setStatusPatch({ loadingConversations: false, error: "" });
     } catch (error) {
-      setConversations([]);
-      setActiveConversationId("");
       setStatusPatch({ loadingConversations: false, error: error.message || "Unable to load conversations." });
-    }
-  }
-
-  async function loadMessages(conversationId, { silent = false } = {}) {
-    if (!conversationId) return [];
-
-    if (!silent) {
-      setStatusPatch({ loadingMessages: true, error: "" });
-    }
-
-    try {
-      const payload = await listChatSessionMessages(conversationId);
-      const nextMessages = extractMessages(getPayloadData(payload));
-      setMessages(nextMessages);
-      setStatusPatch({ loadingMessages: false, error: "" });
-      return nextMessages;
-    } catch (error) {
-      if (!silent) {
-        setMessages([]);
-        setStatusPatch({ loadingMessages: false, error: error.message || "Unable to load messages." });
-      }
-      return null;
     }
   }
 
@@ -141,43 +86,53 @@ export default function AiChatPage() {
 
     if (!message || status.sending) return;
 
-    const conversationId = activeConversationId || undefined;
+    const conversationId = activeConversationId || `local-${Date.now()}`;
     const tempMessageId = `user-${Date.now()}`;
     setStatusPatch({ sending: true, error: "" });
-    pendingStartedAtRef.current = Date.now();
 
     try {
       const userMessage = createLocalMessage({ id: tempMessageId, content: message, role: "user" });
-      setMessages((current) => [...current, userMessage]);
+      const nextUserMessages = [...messages, userMessage];
+
+      setActiveConversationId(conversationId);
+      setConversationMessages((current) => ({ ...current, [conversationId]: nextUserMessages }));
+      setMessages(nextUserMessages);
       setDraft("");
       resizeComposer("");
 
       const payload = await sendChatMessage({
-        session_id: conversationId,
+        user_id: normalizeApiId(user?.id || user?.user_id || getInternalUserId()),
+        company_id: normalizeApiId(user?.company_id || user?.company?.id || getInternalCompanyId()),
         project_id: activeConversation?.project_id || null,
-        message_content: message
+        message,
+        chat_history: toChatHistory(messages)
       });
       const data = getPayloadData(payload) || payload || {};
-      const nextSessionId = data.session_id || data.chat_session_id || conversationId;
+      const reply = extractAiReply(data);
+      const sources = extractAiSources(data);
+      const assistantMessage = createLocalMessage({
+        id: `assistant-${Date.now()}`,
+        content: reply || "Teamoria AI did not return a reply.",
+        role: "assistant",
+        sources
+      });
+      const nextMessages = [...nextUserMessages, assistantMessage];
 
-      if (!nextSessionId) {
-        throw new Error("The AI service did not return a session id.");
-      }
-
-      setActiveConversationId(nextSessionId);
-      setPendingAiSessionId(nextSessionId);
+      setConversationMessages((current) => ({ ...current, [conversationId]: nextMessages }));
+      setMessages(nextMessages);
       setConversations((current) => upsertConversation(current, {
-        id: nextSessionId,
+        id: conversationId,
         title: activeConversation?.title || getConversationTitle(message),
-        summary: message,
+        summary: reply || message,
         project_id: activeConversation?.project_id || "",
         updated_at: new Date().toISOString()
       }));
       setSelectedFiles([]);
-      loadConversations({ silent: true });
+      setStatusPatch({ sending: false, error: "" });
     } catch (error) {
-      setMessages((current) => current.filter((item) => item.id !== tempMessageId));
-      setPendingAiSessionId("");
+      const rollbackMessages = messages;
+      setConversationMessages((current) => ({ ...current, [conversationId]: rollbackMessages }));
+      setMessages(rollbackMessages);
       setStatusPatch({ sending: false, error: error.message || "Unable to send message." });
     }
   }
@@ -244,7 +199,7 @@ export default function AiChatPage() {
           <header className="ai-chat-thread-head">
             <div>
               <h2>{activeConversation?.title || "New conversation"}</h2>
-              <span>{activeConversation ? "Backend AI/RAG conversation" : "Create or select a conversation"}</span>
+              <span>{activeConversation ? "Teamoria AI service conversation" : "Create or select a conversation"}</span>
             </div>
             <div className="ai-thread-actions">
               <label>
@@ -354,6 +309,13 @@ function extractConversations(data) {
   return Array.isArray(rows) ? rows.map(normalizeConversation).filter((conversation) => conversation.id) : [];
 }
 
+function mergeConversations(currentConversations, nextConversations) {
+  return nextConversations.reduce(
+    (merged, conversation) => upsertConversation(merged, conversation),
+    currentConversations
+  );
+}
+
 function normalizeConversation(conversation = {}) {
   const lastMessage = conversation.last_message || conversation.latest_message || conversation.message || null;
 
@@ -382,12 +344,12 @@ function normalizeMessage(message = {}) {
   };
 }
 
-function createLocalMessage({ id, content, role }) {
+function createLocalMessage({ id, content, role, sources = [] }) {
   return {
     id: id || `${role}-${Date.now()}`,
     role,
     content,
-    sources: [],
+    sources,
     created_at: new Date().toISOString()
   };
 }
@@ -404,6 +366,38 @@ function normalizeRole(role) {
   const value = String(role || "").toLowerCase();
   if (["assistant", "ai", "bot"].includes(value)) return "assistant";
   return "user";
+}
+
+function normalizeApiId(value) {
+  if (value === undefined || value === null || value === "") return undefined;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) && String(value).trim() !== "" ? numberValue : value;
+}
+
+function toChatHistory(messageList) {
+  return messageList
+    .filter((message) => message.content)
+    .slice(-12)
+    .map((message) => ({
+      role: message.role === "assistant" ? "assistant" : "user",
+      content: message.content
+    }));
+}
+
+function extractAiReply(data) {
+  return (
+    data?.data?.reply ||
+    data?.reply ||
+    data?.answer ||
+    data?.data?.answer ||
+    data?.message ||
+    ""
+  );
+}
+
+function extractAiSources(data) {
+  const sources = data?.data?.sources_used || data?.sources_used || data?.sources || data?.data?.sources || [];
+  return Array.isArray(sources) ? sources : [];
 }
 
 function getConversationTitle(message) {

@@ -4,6 +4,10 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_ORIGIN ||
   "http://localhost:8000";
+const AI_API_BASE_URL =
+  import.meta.env.VITE_AI_API_BASE_URL ||
+  import.meta.env.VITE_AI_SERVICE_URL ||
+  "http://127.0.0.1:8001";
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const INTERNAL_API_KEY = import.meta.env.VITE_INTERNAL_API_KEY || import.meta.env.VITE_AI_INTERNAL_API_KEY || "";
@@ -116,6 +120,21 @@ function buildUrl(path) {
 function buildUploadUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   const cleanBaseUrl = getRuntimeApiBaseUrl().replace(/\/$/, "");
+
+  if (cleanPath.startsWith("/api/")) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
+
+  if (cleanBaseUrl.endsWith(`/api/${API_VERSION}`)) {
+    return `${cleanBaseUrl}${cleanPath}`;
+  }
+
+  return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
+}
+
+function buildAiUrl(path) {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const cleanBaseUrl = AI_API_BASE_URL.replace(/\/$/, "");
 
   if (cleanPath.startsWith("/api/")) {
     return `${cleanBaseUrl}${cleanPath}`;
@@ -404,6 +423,65 @@ export function getConfiguredUploadApiBaseUrl() {
 
 export function getInternalCompanyId() {
   return INTERNAL_COMPANY_ID;
+}
+
+export function getInternalUserId() {
+  return INTERNAL_USER_ID;
+}
+
+export function getInternalUserRole() {
+  return INTERNAL_USER_ROLE;
+}
+
+async function aiServiceRequest(path, { method = "GET", body, query } = {}) {
+  const headers = {
+    Accept: "application/json"
+  };
+  const url = new URL(buildAiUrl(path));
+
+  if (body) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  addTemporaryInternalHeaders(headers);
+
+  if (query) {
+    Object.entries(query).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item !== undefined && item !== null && item !== "") {
+            url.searchParams.append(key, item);
+          }
+        });
+      } else if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, value);
+      }
+    });
+  }
+
+  let response;
+  try {
+    response = await fetch(url.toString(), {
+      method,
+      headers,
+      cache: "no-store",
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (error) {
+    throw new ApiError(
+      `Unable to reach the Teamoria AI service at ${url.origin}. Check that ai-service is online, CORS allows this frontend domain, and VITE_AI_API_BASE_URL is configured correctly.`,
+      { status: 0, payload: { original_error: error.message } }
+    );
+  }
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || payload?.status === "error" || payload?.success === false) {
+    const message = getApiErrorMessage(payload, `AI service request failed with status ${response.status}.`);
+    throw new ApiError(message, { status: response.status, payload });
+  }
+
+  return payload;
 }
 
 async function uploadApiRequest(path, { method = "GET", body, auth = false, query } = {}) {
@@ -982,7 +1060,7 @@ export function listAiConversations() {
 }
 
 export function listChatSessions() {
-  return apiRequest("/chat/sessions", { auth: true });
+  return aiServiceRequest("/chat/sessions");
 }
 
 export function listChatSessionMessages(sessionId, cursor) {
@@ -992,15 +1070,25 @@ export function listChatSessionMessages(sessionId, cursor) {
   });
 }
 
-export function sendChatMessage({ session_id, project_id, message_content }) {
-  return apiRequest("/chat/messages", {
+export function sendChatMessage({
+  user_id,
+  company_id,
+  project_id,
+  message,
+  message_content,
+  chat_history
+}) {
+  const cleanBody = {
+    user_id: user_id || undefined,
+    company_id: company_id || undefined,
+    project_id: project_id || undefined,
+    message: message || message_content || "",
+    chat_history: Array.isArray(chat_history) && chat_history.length ? chat_history : undefined
+  };
+
+  return aiServiceRequest("/ai/chat/generate", {
     method: "POST",
-    auth: true,
-    body: {
-      session_id: session_id || undefined,
-      project_id: project_id || undefined,
-      message_content
-    }
+    body: cleanBody
   });
 }
 
@@ -1024,9 +1112,11 @@ export function getAiConversationMessages(conversationId) {
 
 export function sendAiConversationMessage(conversationId, body = {}) {
   return sendChatMessage({
-    session_id: conversationId,
+    user_id: body.user_id,
+    company_id: body.company_id,
     project_id: body.project_id,
-    message_content: body.message_content || body.question || body.message || ""
+    message: body.message_content || body.question || body.message || "",
+    chat_history: body.chat_history
   });
 }
 
