@@ -15,9 +15,12 @@ import {
   listChatSessions,
   sendChatMessage
 } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
+import { getEcho, isRealtimeChatConfigured } from "../lib/reverb.js";
 import "../styles/ai-chat.css";
 
 export default function AiChatPage() {
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [messages, setMessages] = useState([]);
@@ -55,6 +58,29 @@ export default function AiChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [messages, status.sending]);
+
+  useEffect(() => {
+    const userId = user?.id || user?.user_id;
+    if (!userId || !isRealtimeChatConfigured()) {
+      return undefined;
+    }
+
+    const echo = getEcho();
+    if (!echo) {
+      return undefined;
+    }
+
+    const channelName = `chat.${userId}`;
+    const channel = echo.private(channelName);
+
+    channel.listen(".ai.message.received", (event) => {
+      handleRealtimeAiMessage(event?.message || event);
+    });
+
+    return () => {
+      echo.leave(channelName);
+    };
+  }, [user?.id, user?.user_id]);
 
   function setStatusPatch(patch) {
     setStatus((current) => ({ ...current, ...patch }));
@@ -198,6 +224,41 @@ export default function AiChatPage() {
         }
       }
     }, delay);
+  }
+
+  function handleRealtimeAiMessage(rawMessage) {
+    const nextMessage = normalizeMessage(rawMessage);
+    const conversationId = rawMessage?.chat_session_id || rawMessage?.session_id || rawMessage?.conversation_id;
+
+    if (!conversationId || !nextMessage.content) {
+      return;
+    }
+
+    setConversationMessages((current) => {
+      const existingMessages = current[conversationId] || [];
+      const withoutProcessing = existingMessages.filter(
+        (message) => !(message.role === "assistant" && String(message.id || "").startsWith("processing-"))
+      );
+      const alreadyExists = withoutProcessing.some((message) => message.id === nextMessage.id);
+      const nextMessages = alreadyExists ? withoutProcessing : [...withoutProcessing, nextMessage];
+      return { ...current, [conversationId]: nextMessages };
+    });
+
+    if (activeConversationIdRef.current === conversationId) {
+      setMessages((current) => {
+        const withoutProcessing = current.filter(
+          (message) => !(message.role === "assistant" && String(message.id || "").startsWith("processing-"))
+        );
+        const alreadyExists = withoutProcessing.some((message) => message.id === nextMessage.id);
+        return alreadyExists ? withoutProcessing : [...withoutProcessing, nextMessage];
+      });
+    }
+
+    setConversations((current) => upsertConversation(current, {
+      id: conversationId,
+      summary: nextMessage.content,
+      updated_at: nextMessage.created_at || new Date().toISOString()
+    }));
   }
 
   return (

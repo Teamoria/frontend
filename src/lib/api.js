@@ -462,6 +462,10 @@ export function getInternalUserRole() {
   return INTERNAL_USER_ROLE;
 }
 
+export function getPublicApiKey() {
+  return API_KEY;
+}
+
 async function aiServiceRequest(path, { method = "GET", body, query } = {}) {
   const headers = {
     Accept: "application/json"
