@@ -134,7 +134,7 @@ function buildUploadUrl(path) {
 
 function buildAiUrl(path) {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const cleanBaseUrl = AI_API_BASE_URL.replace(/\/$/, "");
+  const cleanBaseUrl = getRuntimeAiApiBaseUrl().replace(/\/$/, "");
 
   if (cleanPath.startsWith("/api/")) {
     return `${cleanBaseUrl}${cleanPath}`;
@@ -147,6 +147,10 @@ function buildAiUrl(path) {
   return `${cleanBaseUrl}/api/${API_VERSION}${cleanPath}`;
 }
 
+function isLocalHostname(hostname) {
+  return ["localhost", "127.0.0.1", "::1"].includes(hostname);
+}
+
 function getRuntimeApiBaseUrl() {
   if (typeof window === "undefined") {
     return API_BASE_URL;
@@ -156,14 +160,14 @@ function getRuntimeApiBaseUrl() {
     const configuredUrl = new URL(API_BASE_URL, window.location.origin);
     const configuredHost = configuredUrl.hostname;
     const pageHost = window.location.hostname;
-    const configuredIsLocal = ["localhost", "127.0.0.1", "::1"].includes(configuredHost);
-    const pageIsLocal = ["localhost", "127.0.0.1", "::1"].includes(pageHost);
+    const configuredIsLocal = isLocalHostname(configuredHost);
+    const pageIsLocal = isLocalHostname(pageHost);
 
     if (configuredIsLocal && !pageIsLocal) {
       const originOverride = import.meta.env.VITE_API_ORIGIN;
       if (originOverride) {
         const originUrl = new URL(originOverride, window.location.origin);
-        const originIsLocal = ["localhost", "127.0.0.1", "::1"].includes(originUrl.hostname);
+        const originIsLocal = isLocalHostname(originUrl.hostname);
         if (!originIsLocal) {
           return originOverride;
         }
@@ -176,6 +180,25 @@ function getRuntimeApiBaseUrl() {
   }
 
   return API_BASE_URL;
+}
+
+function getRuntimeAiApiBaseUrl() {
+  if (typeof window === "undefined") {
+    return AI_API_BASE_URL;
+  }
+
+  try {
+    const configuredUrl = new URL(AI_API_BASE_URL, window.location.origin);
+    const pageHost = window.location.hostname;
+
+    if (isLocalHostname(configuredUrl.hostname) && !isLocalHostname(pageHost)) {
+      return window.location.origin;
+    }
+  } catch {
+    return AI_API_BASE_URL;
+  }
+
+  return AI_API_BASE_URL;
 }
 
 export function getAccessToken() {
