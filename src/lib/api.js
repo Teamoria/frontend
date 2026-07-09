@@ -7,7 +7,7 @@ const API_BASE_URL =
 const AI_API_BASE_URL =
   import.meta.env.VITE_AI_API_BASE_URL ||
   import.meta.env.VITE_AI_SERVICE_URL ||
-  "http://127.0.0.1:8001";
+  "http://127.0.0.1:3001";
 const API_VERSION = import.meta.env.VITE_API_VERSION || "v1";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 const INTERNAL_API_KEY = import.meta.env.VITE_INTERNAL_API_KEY || import.meta.env.VITE_AI_INTERNAL_API_KEY || "";
