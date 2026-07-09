@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FiChevronDown,
   FiChevronRight,
@@ -762,6 +763,7 @@ function PreviewModal({ state, onClose }) {
   }, [state.blob, isText]);
 
   return (
+    <ModalPortal>
     <div className="owner-upload-modal-layer" role="presentation">
       <button className="owner-upload-modal-backdrop" type="button" aria-label="Close preview modal" onClick={onClose} />
       <section className="owner-upload-permissions-modal owner-upload-preview-modal" role="dialog" aria-modal="true" aria-labelledby="upload-preview-title">
@@ -794,6 +796,7 @@ function PreviewModal({ state, onClose }) {
         ) : null}
       </section>
     </div>
+    </ModalPortal>
   );
 }
 
@@ -905,6 +908,7 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
   }
 
   return (
+    <ModalPortal>
     <div className="owner-upload-modal-layer" role="presentation">
       <button className="owner-upload-modal-backdrop" type="button" aria-label="Close AI results modal" onClick={onClose} />
       <section className="owner-upload-permissions-modal owner-upload-ai-modal" role="dialog" aria-modal="true" aria-labelledby="upload-ai-results-title">
@@ -1124,6 +1128,7 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
         </div>
       </section>
     </div>
+    </ModalPortal>
   );
 }
 
@@ -1288,6 +1293,7 @@ function PermissionsModal({ asset, users, onClose, onError, onSaved }) {
   }
 
   return (
+    <ModalPortal>
     <div className="owner-upload-modal-layer" role="presentation">
       <button className="owner-upload-modal-backdrop" type="button" aria-label="Close permissions modal" onClick={onClose} />
       <form className="owner-upload-permissions-modal" role="dialog" aria-modal="true" aria-labelledby="upload-permissions-title" onSubmit={savePermissions}>
@@ -1316,7 +1322,13 @@ function PermissionsModal({ asset, users, onClose, onError, onSaved }) {
         </footer>
       </form>
     </div>
+    </ModalPortal>
   );
+}
+
+function ModalPortal({ children }) {
+  if (typeof document === "undefined") return children;
+  return createPortal(children, document.body);
 }
 
 function FileIcon({ category }) {
