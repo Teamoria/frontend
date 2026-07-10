@@ -1,19 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  FiCheck,
+  FiEdit3,
   FiFilePlus,
   FiMic,
+  FiMoreVertical,
   FiPaperclip,
   FiPlus,
   FiRefreshCw,
   FiSend,
+  FiTrash2,
+  FiX,
   FiZap
 } from "react-icons/fi";
 import AppShell, { AppPageLayout } from "../components/app/AppShell.jsx";
 import {
   getPayloadData,
+  deleteAiConversation,
   listChatSessionMessages,
   listChatSessions,
-  sendChatMessage
+  sendChatMessage,
+  updateAiConversation
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { getEcho, isRealtimeChatConfigured } from "../lib/reverb.js";
@@ -28,9 +35,17 @@ export default function AiChatPage() {
   const [draft, setDraft] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [status, setStatus] = useState({ loadingConversations: true, loadingMessages: false, sending: false, error: "" });
+  const [openMenuId, setOpenMenuId] = useState("");
+  const [renamingConversationId, setRenamingConversationId] = useState("");
+  const [renameDraft, setRenameDraft] = useState("");
+  const thinkingTimersRef = useRef({});
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const activeConversationIdRef = useRef("");
+  const sourceCount = useMemo(
+    () => messages.reduce((total, message) => total + (Array.isArray(message.sources) ? message.sources.length : 0), 0) + selectedFiles.length,
+    [messages, selectedFiles]
+  );
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
@@ -58,6 +73,10 @@ export default function AiChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [messages, status.sending]);
+
+  useEffect(() => () => {
+    Object.values(thinkingTimersRef.current).forEach((timerId) => window.clearInterval(timerId));
+  }, []);
 
   useEffect(() => {
     const userId = user?.id || user?.user_id;
@@ -110,8 +129,13 @@ export default function AiChatPage() {
     try {
       const payload = await listChatSessionMessages(conversationId);
       const nextMessages = extractMessages(getPayloadData(payload) || payload);
-      setConversationMessages((current) => ({ ...current, [conversationId]: nextMessages }));
-      setMessages(nextMessages);
+      setConversationMessages((current) => {
+        const mergedMessages = mergeLoadedMessages(current[conversationId] || [], nextMessages);
+        if (activeConversationIdRef.current === conversationId) {
+          setMessages(mergedMessages);
+        }
+        return { ...current, [conversationId]: mergedMessages };
+      });
       setStatusPatch({ loadingMessages: false, error: "" });
     } catch (error) {
       setStatusPatch({ loadingMessages: false, error: error.message || "Unable to load messages." });
@@ -134,15 +158,23 @@ export default function AiChatPage() {
 
     const conversationId = activeConversationId || `pending-${Date.now()}`;
     const tempMessageId = `user-${Date.now()}`;
+    const processingMessageId = `processing-${Date.now()}`;
     setStatusPatch({ sending: true, error: "" });
 
     try {
       const userMessage = createLocalMessage({ id: tempMessageId, content: message, role: "user" });
-      const nextUserMessages = [...messages, userMessage];
+      const assistantThinkingMessage = createLocalMessage({
+        id: processingMessageId,
+        content: getThinkingStep(0),
+        role: "assistant",
+        isThinking: true
+      });
+      const nextUserMessages = [...messages, userMessage, assistantThinkingMessage];
 
       setActiveConversationId(conversationId);
       setConversationMessages((current) => ({ ...current, [conversationId]: nextUserMessages }));
       setMessages(nextUserMessages);
+      startThinkingProgress(conversationId, processingMessageId);
       setDraft("");
       resizeComposer("");
 
@@ -153,22 +185,20 @@ export default function AiChatPage() {
       });
       const data = getPayloadData(payload) || payload || {};
       const serverConversationId = data.session_id || data.chat_session_id || conversationId;
-      const assistantMessage = createLocalMessage({
-        id: data.message_id ? `processing-${data.message_id}` : `processing-${Date.now()}`,
-        content: "Message is being processed. The AI reply will appear here when it is ready.",
-        role: "assistant"
-      });
-      const nextMessages = [...nextUserMessages, assistantMessage];
 
       setActiveConversationId(serverConversationId);
       setConversationMessages((current) => {
-        const next = { ...current, [serverConversationId]: nextMessages };
+        const currentMessages = current[conversationId] || nextUserMessages;
+        const next = { ...current, [serverConversationId]: currentMessages };
         if (serverConversationId !== conversationId) {
           delete next[conversationId];
+          moveThinkingProgress(conversationId, serverConversationId, processingMessageId);
         }
         return next;
       });
-      setMessages(nextMessages);
+      setMessages((current) => current.map((item) => (
+        item.id === processingMessageId ? { ...item, content: "Searching workspace context..." } : item
+      )));
       setConversations((current) => upsertConversation(current, {
         id: serverConversationId,
         title: activeConversation?.title || getConversationTitle(message),
@@ -181,6 +211,7 @@ export default function AiChatPage() {
       await loadConversations({ silent: true });
       scheduleMessageRefresh(serverConversationId);
     } catch (error) {
+      stopThinkingProgress(conversationId);
       const rollbackMessages = messages;
       setConversationMessages((current) => ({ ...current, [conversationId]: rollbackMessages }));
       setMessages(rollbackMessages);
@@ -191,6 +222,14 @@ export default function AiChatPage() {
   function updateDraft(value) {
     setDraft(value);
     resizeComposer(value);
+  }
+
+  function applyPrompt(prompt) {
+    setDraft(prompt);
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      resizeComposer(prompt);
+    });
   }
 
   function resizeComposer(value) {
@@ -209,12 +248,17 @@ export default function AiChatPage() {
       try {
         const payload = await listChatSessionMessages(conversationId);
         const nextMessages = extractMessages(getPayloadData(payload) || payload);
-        setConversationMessages((current) => ({ ...current, [conversationId]: nextMessages }));
-        if (activeConversationIdRef.current === conversationId) {
-          setMessages(nextMessages);
-        }
-
         const hasAiReply = nextMessages.some((message) => message.role === "assistant");
+        if (hasAiReply) {
+          stopThinkingProgress(conversationId);
+        }
+        setConversationMessages((current) => {
+          const mergedMessages = mergeLoadedMessages(current[conversationId] || [], nextMessages);
+          if (activeConversationIdRef.current === conversationId) {
+            setMessages(mergedMessages);
+          }
+          return { ...current, [conversationId]: mergedMessages };
+        });
         if (!hasAiReply && attempt < 6) {
           scheduleMessageRefresh(conversationId, attempt + 1);
         }
@@ -235,6 +279,7 @@ export default function AiChatPage() {
     }
 
     setConversationMessages((current) => {
+      stopThinkingProgress(conversationId);
       const existingMessages = current[conversationId] || [];
       const withoutProcessing = existingMessages.filter(
         (message) => !(message.role === "assistant" && String(message.id || "").startsWith("processing-"))
@@ -261,6 +306,87 @@ export default function AiChatPage() {
     }));
   }
 
+  function startThinkingProgress(conversationId, messageId) {
+    stopThinkingProgress(conversationId);
+    let step = 0;
+    thinkingTimersRef.current[conversationId] = window.setInterval(() => {
+      step = Math.min(step + 1, THINKING_STEPS.length - 1);
+      updateThinkingMessage(conversationId, messageId, getThinkingStep(step));
+    }, 1800);
+  }
+
+  function moveThinkingProgress(fromConversationId, toConversationId, messageId) {
+    const timerId = thinkingTimersRef.current[fromConversationId];
+    if (!timerId || fromConversationId === toConversationId) return;
+    delete thinkingTimersRef.current[fromConversationId];
+    thinkingTimersRef.current[toConversationId] = timerId;
+    updateThinkingMessage(toConversationId, messageId, "Searching workspace context...");
+  }
+
+  function stopThinkingProgress(conversationId) {
+    const timerId = thinkingTimersRef.current[conversationId];
+    if (!timerId) return;
+    window.clearInterval(timerId);
+    delete thinkingTimersRef.current[conversationId];
+  }
+
+  function updateThinkingMessage(conversationId, messageId, content) {
+    setConversationMessages((current) => {
+      const currentMessages = current[conversationId] || [];
+      const nextMessages = currentMessages.map((message) => (
+        message.id === messageId ? { ...message, content } : message
+      ));
+      if (activeConversationIdRef.current === conversationId) {
+        setMessages(nextMessages);
+      }
+      return { ...current, [conversationId]: nextMessages };
+    });
+  }
+
+  function beginRename(conversation) {
+    setOpenMenuId("");
+    setRenamingConversationId(conversation.id);
+    setRenameDraft(conversation.title || "");
+  }
+
+  async function saveConversationRename(conversationId) {
+    const title = renameDraft.trim();
+    if (!title) return;
+    setConversations((current) => current.map((conversation) => (
+      conversation.id === conversationId ? { ...conversation, title, updated_at: new Date().toISOString() } : conversation
+    )));
+    setRenamingConversationId("");
+    setRenameDraft("");
+    try {
+      await updateAiConversation(conversationId, { title });
+    } catch (error) {
+      setStatusPatch({ error: error.message || "Unable to rename conversation." });
+    }
+  }
+
+  async function deleteConversation(conversationId) {
+    setOpenMenuId("");
+    const conversation = conversations.find((item) => item.id === conversationId);
+    const ok = window.confirm(`Delete "${conversation?.title || "this conversation"}"? This will remove it from the list.`);
+    if (!ok) return;
+    setConversations((current) => current.filter((item) => item.id !== conversationId));
+    setConversationMessages((current) => {
+      const next = { ...current };
+      delete next[conversationId];
+      return next;
+    });
+    if (activeConversationId === conversationId) {
+      setActiveConversationId("");
+      setMessages([]);
+    }
+    try {
+      await deleteAiConversation(conversationId);
+    } catch (error) {
+      setStatusPatch({ error: error.message || "Unable to delete conversation." });
+      await loadConversations({ silent: true });
+    }
+  }
+
   return (
     <AppShell active="AI Chat">
       <AppPageLayout
@@ -277,11 +403,18 @@ export default function AiChatPage() {
       <section className="ai-chat-command">
         <aside className="ai-chat-sidebar" aria-label="Conversations">
           <div className="ai-sidebar-head">
-            <h2>Conversations</h2>
+            <div>
+              <h2>Chats</h2>
+              <span>{conversations.length} conversations</span>
+            </div>
+            <button type="button" onClick={startConversation}>
+              <FiPlus aria-hidden="true" />
+              New
+            </button>
           </div>
 
           <div className="ai-conversation-list">
-            {status.loadingConversations ? <p className="ai-chat-state">Loading conversations...</p> : null}
+            {status.loadingConversations ? <ConversationSkeleton /> : null}
             {!status.loadingConversations && conversations.length === 0 ? (
               <div className="ai-chat-empty">
                 <FiZap aria-hidden="true" />
@@ -290,16 +423,56 @@ export default function AiChatPage() {
               </div>
             ) : null}
             {!status.loadingConversations ? conversations.map((conversation) => (
-              <button
+              <article
                 className={conversation.id === activeConversationId ? "is-active" : ""}
                 key={conversation.id}
-                type="button"
-                onClick={() => setActiveConversationId(conversation.id)}
               >
-                <b>{conversation.title}</b>
-                <span>{conversation.summary || "No messages yet"}</span>
-                <time>{formatConversationTime(conversation.updated_at || conversation.created_at)}</time>
-              </button>
+                {renamingConversationId === conversation.id ? (
+                  <form className="ai-conversation-rename" onSubmit={(event) => {
+                    event.preventDefault();
+                    saveConversationRename(conversation.id);
+                  }}>
+                    <input
+                      autoFocus
+                      value={renameDraft}
+                      onChange={(event) => setRenameDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          setRenamingConversationId("");
+                          setRenameDraft("");
+                        }
+                      }}
+                    />
+                    <button type="submit" aria-label="Save conversation name"><FiCheck aria-hidden="true" /></button>
+                    <button type="button" aria-label="Cancel rename" onClick={() => setRenamingConversationId("")}><FiX aria-hidden="true" /></button>
+                  </form>
+                ) : (
+                  <>
+                    <button className="ai-conversation-main" type="button" onClick={() => setActiveConversationId(conversation.id)}>
+                      <b>{getDisplayConversationTitle(conversation, conversations)}</b>
+                      <span>{conversation.summary || "No messages yet"}</span>
+                      <time>{formatConversationTime(conversation.updated_at || conversation.created_at) || "Recent"}</time>
+                    </button>
+                    <button
+                      className="ai-conversation-menu-button"
+                      type="button"
+                      aria-label="Conversation actions"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenMenuId((current) => current === conversation.id ? "" : conversation.id);
+                      }}
+                    >
+                      <FiMoreVertical aria-hidden="true" />
+                    </button>
+                    {openMenuId === conversation.id ? (
+                      <div className="ai-conversation-menu">
+                        <button type="button" onClick={() => beginRename(conversation)}><FiEdit3 aria-hidden="true" />Rename</button>
+                        <button type="button" onClick={() => deleteConversation(conversation.id)}><FiTrash2 aria-hidden="true" />Delete</button>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+              </article>
             )) : null}
           </div>
         </aside>
@@ -308,7 +481,7 @@ export default function AiChatPage() {
           <header className="ai-chat-thread-head">
             <div>
               <h2>{activeConversation?.title || "New conversation"}</h2>
-              <span>{activeConversation ? "Teamoria AI service conversation" : "Create or select a conversation"}</span>
+              <span>{sourceCount ? `${sourceCount} sources attached or cited` : activeConversation ? "Workspace context ready" : "Start with a question or choose a chat"}</span>
             </div>
             <div className="ai-thread-actions">
               <label>
@@ -319,28 +492,36 @@ export default function AiChatPage() {
               <button type="button" onClick={() => loadConversations()} aria-label="Refresh conversations">
                 <FiRefreshCw aria-hidden="true" />
               </button>
+              {activeConversation ? (
+                <>
+                  <button type="button" onClick={() => beginRename(activeConversation)} aria-label="Rename conversation">
+                    <FiEdit3 aria-hidden="true" />
+                  </button>
+                  <button type="button" onClick={() => deleteConversation(activeConversation.id)} aria-label="Delete conversation">
+                    <FiTrash2 aria-hidden="true" />
+                  </button>
+                </>
+              ) : null}
             </div>
           </header>
 
           {status.error ? <p className="ai-chat-alert">{status.error}</p> : null}
 
           <section className="ai-message-window" aria-label="AI chat messages">
-            {status.loadingMessages ? <p className="ai-chat-state">Loading messages...</p> : null}
+            {status.loadingMessages ? <MessageSkeleton /> : null}
             {!status.loadingMessages && messages.length === 0 ? (
               <div className="ai-message-empty">
                 <FiZap aria-hidden="true" />
-                <h2>Ask Teamoria AI</h2>
-                <p>Choose a conversation or send a first message. Answers will appear here with sources when the backend returns them.</p>
+                <h2>How can I help with Teamoria today?</h2>
+                <p>Ask about project risk, tasks, uploaded files, meetings, or company delivery status.</p>
+                <div className="ai-prompt-grid">
+                  {SUGGESTED_PROMPTS.map((prompt) => (
+                    <button type="button" key={prompt} onClick={() => applyPrompt(prompt)}>{prompt}</button>
+                  ))}
+                </div>
               </div>
             ) : null}
             {!status.loadingMessages ? messages.map((message) => <ChatMessage key={message.id} message={message} />) : null}
-            {status.sending ? (
-              <article className="ai-message ai-message--assistant ai-message--loading">
-                <span />
-                <span />
-                <span />
-              </article>
-            ) : null}
             <div ref={messagesEndRef} />
           </section>
 
@@ -372,7 +553,7 @@ export default function AiChatPage() {
                 <FiMic aria-hidden="true" />
               </button>
               <button className="ai-send-button" type="submit" disabled={!draft.trim() || status.sending}>
-                {status.sending ? "Waiting" : "Send"}
+                <span>{status.sending ? "Thinking" : "Send"}</span>
                 <FiSend aria-hidden="true" />
               </button>
             </div>
@@ -388,7 +569,7 @@ function ChatMessage({ message }) {
   const isUser = message.role === "user";
 
   return (
-    <article className={`ai-message ${isUser ? "ai-message--user" : "ai-message--assistant"}`}>
+    <article className={`ai-message ${isUser ? "ai-message--user" : "ai-message--assistant"} ${message.isThinking ? "ai-message--thinking" : ""}`}>
       {!isUser ? (
         <div className="ai-message-label">
           <FiZap aria-hidden="true" />
@@ -396,6 +577,13 @@ function ChatMessage({ message }) {
         </div>
       ) : null}
       <p>{message.content}</p>
+      {message.isThinking ? (
+        <div className="ai-thinking-dots" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : null}
       {message.sources?.length ? (
         <div className="ai-citation-block">
           <b>Sources</b>
@@ -410,6 +598,24 @@ function ChatMessage({ message }) {
       ) : null}
       <time>{formatMessageTime(message.created_at)}</time>
     </article>
+  );
+}
+
+function ConversationSkeleton() {
+  return (
+    <div className="ai-conversation-skeleton" aria-label="Loading conversations">
+      {[0, 1, 2, 3].map((item) => <span key={item} />)}
+    </div>
+  );
+}
+
+function MessageSkeleton() {
+  return (
+    <div className="ai-message-skeleton" aria-label="Loading messages">
+      <span />
+      <span />
+      <span />
+    </div>
   );
 }
 
@@ -453,12 +659,13 @@ function normalizeMessage(message = {}) {
   };
 }
 
-function createLocalMessage({ id, content, role, sources = [] }) {
+function createLocalMessage({ id, content, role, sources = [], isThinking = false }) {
   return {
     id: id || `${role}-${Date.now()}`,
     role,
     content,
     sources,
+    isThinking,
     created_at: new Date().toISOString()
   };
 }
@@ -483,6 +690,43 @@ function isTemporaryConversationId(value) {
 
 function getConversationTitle(message) {
   return message.length > 42 ? `${message.slice(0, 42)}...` : message;
+}
+
+function getDisplayConversationTitle(conversation, conversations) {
+  if (conversation.title && conversation.title !== "Untitled chat") return conversation.title;
+  if (conversation.summary) return getConversationTitle(conversation.summary);
+  const index = conversations.findIndex((item) => item.id === conversation.id);
+  return `Workspace chat ${index + 1}`;
+}
+
+function mergeLoadedMessages(currentMessages, serverMessages) {
+  const hasServerAssistant = serverMessages.some((message) => message.role === "assistant");
+  if (hasServerAssistant) {
+    return serverMessages.filter((message) => !message.isThinking);
+  }
+  const thinkingMessages = currentMessages.filter((message) => message.isThinking);
+  if (!thinkingMessages.length) return serverMessages;
+  const localOnly = currentMessages.filter((message) => String(message.id || "").startsWith("user-"));
+  const baseMessages = serverMessages.length ? serverMessages : localOnly;
+  return [...baseMessages, ...thinkingMessages];
+}
+
+const THINKING_STEPS = [
+  "Teamoria AI is thinking...",
+  "Understanding your question...",
+  "Searching workspace context...",
+  "Drafting answer..."
+];
+
+const SUGGESTED_PROMPTS = [
+  "Summarize project risks",
+  "Show overdue tasks",
+  "Analyze uploaded files",
+  "Create task plan"
+];
+
+function getThinkingStep(index) {
+  return THINKING_STEPS[Math.min(index, THINKING_STEPS.length - 1)];
 }
 
 function formatConversationTime(value) {
