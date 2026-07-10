@@ -1,0 +1,8 @@
+Act as an Expert React & Vite Developer. We are integrating a Laravel API into this frontend.
+
+1. API CONTEXT: Read `postman/frontend-api-map.md` as your integration roadmap. Cross-reference it with `postman/Teamoria API - v1.postman_collection.json` to get exact endpoints, methods, and payloads.
+2. DESIGN BY REFERENCE: There are no Figma designs. You MUST extract the design system (colors, layout, spacing, typography) strictly from `index.html` and `src/styles.css`. Any new React components you build must perfectly match this existing aesthetic.
+3. ENVIRONMENT VARIABLES (CRITICAL): Before writing any component, if you need dynamic variables (like API Base URLs or Tokens), add their keys to `.env.example` as empty templates.
+4. EXECUTION: Build the API services and integrate them into the React components as outlined in the API map. Handle loading states and errors gracefully.
+
+Please output the variables you are adding to `.env.example` first, then generate the code.
