@@ -3,33 +3,12 @@ import AuthLayout from "../components/AuthLayout.jsx";
 import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiMail } from "react-icons/fi";
 import { PrimaryButton } from "../components/FormControls.jsx";
-import { getCurrentUser, loginWithEmail, registerCompany, sendOtp, verifyOtp } from "../lib/api.js";
+import { loginWithEmail, sendOtp, verifyOtp } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { getPostLoginPath } from "../lib/authRoles.js";
+import { clearPendingSignup, getPendingSignup, PENDING_SIGNUP_KEY } from "../lib/pendingRegistration.js";
 import "../styles/reset-access.css";
 import "../styles/auth-unified.css";
-
-const PENDING_SIGNUP_KEY = "teamoria_pending_signup";
-
-function getPendingSignup() {
-  const hashQuery = window.location.hash.split("?")[1] || "";
-  const params = new URLSearchParams(hashQuery);
-  const email = params.get("email");
-  const type = params.get("type");
-
-  if (email) {
-    return {
-      email,
-      type: type || "register"
-    };
-  }
-
-  try {
-    return JSON.parse(sessionStorage.getItem(PENDING_SIGNUP_KEY) || "null");
-  } catch {
-    return null;
-  }
-}
 
 export default function VerifyOtpPage() {
   const { login } = useAuth();
@@ -104,30 +83,20 @@ export default function VerifyOtpPage() {
       setStatus({ type: "success", message: "Email verified. Redirecting..." });
 
       if (pendingSignup.password) {
-        const { user: loginUser } = await loginWithEmail({
+        const { user } = await loginWithEmail({
           email: pendingSignup.email,
-          password: pendingSignup.password,
-          fetchProfile: false
+          password: pendingSignup.password
         });
 
-        if (pendingSignup.companyName) {
-          await registerCompany({
-            name: pendingSignup.companyName,
-            status: "active"
-          });
-        }
-
-        const profilePayload = await getCurrentUser();
-        const user = profilePayload?.data?.user || profilePayload?.data || profilePayload?.user || loginUser;
         login(user);
-        sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+        clearPendingSignup({ keepCompany: true });
         window.setTimeout(() => {
           window.location.hash = getPostLoginPath(user);
         }, 350);
         return;
       }
 
-      sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+      clearPendingSignup();
       window.setTimeout(() => {
         window.location.hash = "/signin";
       }, 350);

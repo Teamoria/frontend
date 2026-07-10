@@ -6,7 +6,7 @@ import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { registerWithEmail } from "../lib/api.js";
 import { formatAuthErrorMessage } from "../lib/authErrors.js";
-import { PENDING_SIGNUP_KEY } from "./VerifyOtpPage.jsx";
+import { setPendingSignup } from "../lib/pendingRegistration.js";
 import "../styles/sign-up.css";
 import "../styles/auth-unified.css";
 
@@ -55,12 +55,12 @@ export default function SignUpPage() {
     const password = form.password;
 
     try {
-      const payload = await registerWithEmail({ name, email, password });
-      sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
+      await registerWithEmail({ name, email, password });
+      setPendingSignup({
         email,
         companyName,
         password
-      }));
+      });
       window.location.hash = "/verify-otp";
     } catch (error) {
       setStatus({ type: "error", message: formatAuthErrorMessage(error, "signup") });

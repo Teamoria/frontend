@@ -4,6 +4,7 @@ import SignInPage from "./pages/SignInPage.jsx";
 import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import VerifyOtpPage from "./pages/VerifyOtpPage.jsx";
+import CompanyOnboardingPage from "./pages/CompanyOnboardingPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ProjectsPage from "./pages/ProjectsPage.jsx";
 import TasksPage from "./pages/TasksPage.jsx";
@@ -38,6 +39,20 @@ const adminRoutes = new Set([
   "/super-admin/payments",
   "/super-admin/profile",
   "/super-admin/notifications"
+]);
+
+const guestRoutes = new Set([
+  "/signin",
+  "/login",
+  "/signup",
+  "/register",
+  "/reset-password",
+  "/forgot-password"
+]);
+
+const companyOnboardingRoutes = new Set([
+  "/company/register",
+  "/onboarding/company"
 ]);
 
 const workspaceRoutes = new Set([
@@ -98,9 +113,14 @@ const companyMemberRoutes = new Set([
 const routes = {
   "/": LandingPage,
   "/signin": SignInPage,
+  "/login": SignInPage,
   "/reset-password": ResetPasswordPage,
+  "/forgot-password": ResetPasswordPage,
   "/signup": SignUpPage,
+  "/register": SignUpPage,
   "/verify-otp": VerifyOtpPage,
+  "/company/register": CompanyOnboardingPage,
+  "/onboarding/company": CompanyOnboardingPage,
   "/dashboard": DashboardPage,
   "/projects": ProjectsPage,
   "/tasks": TasksPage,
@@ -150,6 +170,7 @@ export default function App() {
   const isAdmin = normalizedRole === "admin";
   const isCompanyUser = ["company_owner", "company_manager", "company_member"].includes(normalizedRole);
   const isLoading = auth.isLoading && !demoUser;
+  const requiresCompany = Boolean(user?.requires_company);
 
   useEffect(() => {
     const onHashChange = () => setPath(getPath());
@@ -158,6 +179,34 @@ export default function App() {
   }, []);
 
   const Page = useMemo(() => routes[path] || LandingPage, [path]);
+
+  if (guestRoutes.has(path) && !isLoading && user && !requiresCompany) {
+    window.location.hash = isAdmin ? "/super-admin" : "/dashboard";
+    return null;
+  }
+
+  if (companyOnboardingRoutes.has(path)) {
+    if (isLoading) {
+      return <AccessMessage title="Loading..." message="Checking your account setup." />;
+    }
+
+    if (!user) {
+      window.location.hash = "/signin";
+      return null;
+    }
+
+    if (isAdmin) {
+      window.location.hash = "/super-admin";
+      return null;
+    }
+
+    if (!requiresCompany) {
+      window.location.hash = "/dashboard";
+      return null;
+    }
+
+    return <Page />;
+  }
 
   if (workspaceRoutes.has(path)) {
     if (isLoading) {
@@ -171,6 +220,11 @@ export default function App() {
 
     if (!user) {
       window.location.hash = "/signin";
+      return null;
+    }
+
+    if (requiresCompany) {
+      window.location.hash = "/company/register";
       return null;
     }
 

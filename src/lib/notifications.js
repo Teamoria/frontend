@@ -20,18 +20,30 @@ export function extractUnreadCount(payload) {
 }
 
 export function normalizeNotification(notification) {
-  const type = String(notification.type || notification.category || "system").toLowerCase();
+  const rawType = String(notification.type || notification.category || "system").toLowerCase();
+  const data = notification.data || {};
   const isRead = Boolean(notification.is_read ?? notification.read ?? notification.read_at ?? notification.readAt);
+  const type = getNotificationType(rawType, data);
 
   return {
     id: notification.id || notification.uuid,
-    title: notification.title || "Notification",
-    message: notification.message || notification.body || notification.text || "",
-    type: ["task", "file", "system", "ai"].includes(type) ? type : "system",
+    title: notification.title || data.title || data.subject || "Notification",
+    message: notification.message || notification.body || notification.text || data.message || data.body || data.text || "",
+    type,
     is_read: isRead,
     created_at: notification.created_at || notification.createdAt || notification.time || "",
-    action_url: notification.action_url || notification.actionUrl || notification.url || ""
+    action_url: notification.action_url || notification.actionUrl || notification.url || data.action_url || data.url || ""
   };
+}
+
+function getNotificationType(rawType, data) {
+  const haystack = `${rawType} ${data.type || ""} ${data.category || ""}`.toLowerCase();
+
+  if (haystack.includes("task")) return "task";
+  if (haystack.includes("upload") || haystack.includes("file") || haystack.includes("document")) return "file";
+  if (haystack.includes("ai") || haystack.includes("chat")) return "ai";
+
+  return "system";
 }
 
 export function formatNotificationTime(value) {
