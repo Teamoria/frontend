@@ -51,14 +51,18 @@ export function getApiErrorMessage(payload, fallback = "Something went wrong. Pl
 }
 
 export function isMissingCompanyError(error) {
-  const message = `${error?.message || ""} ${error?.payload?.message || ""}`.toLowerCase();
+  const message = `${error?.message || ""} ${error?.payload?.message || ""} ${error?.payload?.error_code || ""}`.toLowerCase();
 
   return (
     error?.status === 403 &&
     (
       message.includes("assigned to a company") ||
       message.includes("not assigned to a company") ||
+      message.includes("without company") ||
+      message.includes("no company") ||
+      message.includes("missing company") ||
       message.includes("create company") ||
+      message.includes("register company") ||
       message.includes("company profile")
     )
   );
