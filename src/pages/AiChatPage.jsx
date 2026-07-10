@@ -159,10 +159,12 @@ export default function AiChatPage() {
     const conversationId = activeConversationId || `pending-${Date.now()}`;
     const tempMessageId = `user-${Date.now()}`;
     const processingMessageId = `processing-${Date.now()}`;
+    const submittedAt = new Date().toISOString();
+    const previousAssistantCount = messages.filter((item) => item.role === "assistant" && !item.isThinking).length;
     setStatusPatch({ sending: true, error: "" });
 
     try {
-      const userMessage = createLocalMessage({ id: tempMessageId, content: message, role: "user" });
+      const userMessage = createLocalMessage({ id: tempMessageId, content: message, role: "user", created_at: submittedAt });
       const assistantThinkingMessage = createLocalMessage({
         id: processingMessageId,
         content: getThinkingStep(0),
@@ -209,7 +211,7 @@ export default function AiChatPage() {
       setSelectedFiles([]);
       setStatusPatch({ sending: false, error: "" });
       await loadConversations({ silent: true });
-      scheduleMessageRefresh(serverConversationId);
+      scheduleMessageRefresh(serverConversationId, 1, { submittedAt, previousAssistantCount });
     } catch (error) {
       stopThinkingProgress(conversationId);
       const rollbackMessages = messages;
@@ -242,29 +244,29 @@ export default function AiChatPage() {
     setSelectedFiles(Array.from(event.target.files || []));
   }
 
-  function scheduleMessageRefresh(conversationId, attempt = 1) {
+  function scheduleMessageRefresh(conversationId, attempt = 1, replyCheck = {}) {
     const delay = attempt === 1 ? 1500 : 3000;
     window.setTimeout(async () => {
       try {
         const payload = await listChatSessionMessages(conversationId);
         const nextMessages = extractMessages(getPayloadData(payload) || payload);
-        const hasAiReply = nextMessages.some((message) => message.role === "assistant");
-        if (hasAiReply) {
+        const hasNewAiReply = hasAssistantReplyForLatestQuestion(nextMessages, replyCheck);
+        if (hasNewAiReply) {
           stopThinkingProgress(conversationId);
         }
         setConversationMessages((current) => {
-          const mergedMessages = mergeLoadedMessages(current[conversationId] || [], nextMessages);
+          const mergedMessages = mergeLoadedMessages(current[conversationId] || [], nextMessages, { hasNewAiReply });
           if (activeConversationIdRef.current === conversationId) {
             setMessages(mergedMessages);
           }
           return { ...current, [conversationId]: mergedMessages };
         });
-        if (!hasAiReply && attempt < 6) {
-          scheduleMessageRefresh(conversationId, attempt + 1);
+        if (!hasNewAiReply && attempt < 10) {
+          scheduleMessageRefresh(conversationId, attempt + 1, replyCheck);
         }
       } catch {
         if (attempt < 3) {
-          scheduleMessageRefresh(conversationId, attempt + 1);
+          scheduleMessageRefresh(conversationId, attempt + 1, replyCheck);
         }
       }
     }, delay);
@@ -659,14 +661,14 @@ function normalizeMessage(message = {}) {
   };
 }
 
-function createLocalMessage({ id, content, role, sources = [], isThinking = false }) {
+function createLocalMessage({ id, content, role, sources = [], isThinking = false, created_at }) {
   return {
     id: id || `${role}-${Date.now()}`,
     role,
     content,
     sources,
     isThinking,
-    created_at: new Date().toISOString()
+    created_at: created_at || new Date().toISOString()
   };
 }
 
@@ -699,9 +701,9 @@ function getDisplayConversationTitle(conversation, conversations) {
   return `Workspace chat ${index + 1}`;
 }
 
-function mergeLoadedMessages(currentMessages, serverMessages) {
+function mergeLoadedMessages(currentMessages, serverMessages, { hasNewAiReply } = {}) {
   const hasServerAssistant = serverMessages.some((message) => message.role === "assistant");
-  if (hasServerAssistant) {
+  if (hasNewAiReply || (!currentMessages.some((message) => message.isThinking) && hasServerAssistant)) {
     return serverMessages.filter((message) => !message.isThinking);
   }
   const thinkingMessages = currentMessages.filter((message) => message.isThinking);
@@ -709,6 +711,20 @@ function mergeLoadedMessages(currentMessages, serverMessages) {
   const localOnly = currentMessages.filter((message) => String(message.id || "").startsWith("user-"));
   const baseMessages = serverMessages.length ? serverMessages : localOnly;
   return [...baseMessages, ...thinkingMessages];
+}
+
+function hasAssistantReplyForLatestQuestion(messages, { submittedAt, previousAssistantCount = 0 } = {}) {
+  const assistantMessages = messages.filter((message) => message.role === "assistant" && !message.isThinking);
+  if (assistantMessages.length > previousAssistantCount) return true;
+  if (!submittedAt) return assistantMessages.length > 0;
+
+  const submittedTime = new Date(submittedAt).getTime();
+  if (Number.isNaN(submittedTime)) return false;
+
+  return assistantMessages.some((message) => {
+    const createdTime = new Date(message.created_at || "").getTime();
+    return !Number.isNaN(createdTime) && createdTime >= submittedTime;
+  });
 }
 
 const THINKING_STEPS = [
