@@ -912,13 +912,13 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
     <div className="owner-upload-modal-layer" role="presentation">
       <button className="owner-upload-modal-backdrop" type="button" aria-label="Close AI results modal" onClick={onClose} />
       <section className="owner-upload-permissions-modal owner-upload-ai-modal" role="dialog" aria-modal="true" aria-labelledby="upload-ai-results-title">
-        <header className="owner-upload-ai-header">
-          <div className="owner-upload-ai-header-row">
-            <div className="owner-upload-ai-titleblock">
+        <header className="owner-upload-ai-modal-header">
+          <div className="owner-upload-ai-modal-header-row">
+            <div className="owner-upload-ai-modal-titleblock">
               <h2 id="upload-ai-results-title">AI Results</h2>
               <p>{fileName}</p>
             </div>
-            <div className="owner-upload-ai-header-actions">
+            <div className="owner-upload-ai-modal-actions">
               <span className={`owner-upload-ai-status is-${String(processingStatus).toLowerCase()}`}>{formatLabel(processingStatus)}</span>
               <button className="owner-upload-ai-refresh-button" type="button" aria-label="Refresh AI results" onClick={onRefresh} disabled={state.isLoading}>
                 <FiRefreshCw aria-hidden="true" />
@@ -927,19 +927,20 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
               <button className="owner-upload-ai-close-button" type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
             </div>
           </div>
-          <div className="owner-upload-ai-meta" aria-label="Document metadata">
-            <span>{formatLabel(sourceType)}</span>
-            <span>{formatQualityLabel(transcriptQuality)}</span>
-            <span>{extractedTasks.length} tasks</span>
-            <span>{decisions.length} decisions</span>
-          </div>
         </header>
 
-        <section className="owner-upload-ai-stepper-section" aria-label="Processing steps">
+        <section className="owner-upload-ai-modal-meta" aria-label="Document metadata">
+          <span>{formatLabel(sourceType)}</span>
+          <span>{formatQualityLabel(transcriptQuality)}</span>
+          <span>{extractedTasks.length} tasks</span>
+          <span>{decisions.length} decisions</span>
+        </section>
+
+        <section className="owner-upload-ai-modal-stepper" aria-label="Processing steps">
           <ProcessingTimeline status={processingStatus} />
         </section>
 
-        <div className="owner-upload-ai-body">
+        <div className="owner-upload-ai-modal-body">
           {state.error ? <p className="owner-upload-ai-alert">{state.error}</p> : null}
 
           {state.isLoading || (!state.error && !isReady) ? (
@@ -955,7 +956,7 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
 
           {!state.isLoading && !state.error && isReady ? (
             <>
-              <nav className="owner-upload-ai-tabs" aria-label="AI result sections">
+              <nav className="owner-upload-ai-modal-tabs" aria-label="AI result sections">
                 {tabs.map((tab) => (
                   <button
                     className={activeTab === tab.id ? "is-active" : ""}
@@ -967,7 +968,7 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
                   </button>
                 ))}
               </nav>
-              <div className="owner-upload-ai-results" key={activeTab}>
+              <div className="owner-upload-ai-modal-results" key={activeTab}>
                 {activeTab === "summary" ? (
                   summary.summary || structuredSummary.overview ? (
                     <div className="owner-upload-ai-summary-stack">
@@ -1185,7 +1186,7 @@ function ProcessingTimeline({ status }) {
     : Math.max(0, steps.findIndex((step) => step.id === timelineStatus));
 
   return (
-    <ol className={`owner-upload-ai-timeline is-${normalizedStatus}`} aria-label="AI processing progress">
+    <ol className={`owner-upload-ai-modal-timeline is-${normalizedStatus}`} aria-label="AI processing progress">
       {steps.map((step, index) => {
         const isDone = index < activeIndex || timelineStatus === "processed";
         const isActive = index === activeIndex && timelineStatus !== "processed";
