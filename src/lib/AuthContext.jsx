@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken, getStoredUser, setStoredUser } from "./api.js";
+import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken, getStoredUser, setStoredUser, isMissingCompanyError } from "./api.js";
 import { normalizeRole } from "./authRoles.js";
 import { clearDemoMode, getDemoUser, isDemoMode } from "./demoMode.js";
 
@@ -59,6 +59,13 @@ export function AuthProvider({ children }) {
       return nextUser;
     } catch (error) {
       const cachedUser = getStoredUser();
+      if (isMissingCompanyError(error)) {
+        const nextUser = cachedUser || { role: "company_owner", status: "active", requires_company: true };
+        setStoredUser(nextUser);
+        setUser(nextUser);
+        return nextUser;
+      }
+
       if (error.status === 404 && cachedUser) {
         setUser(cachedUser);
         return cachedUser;

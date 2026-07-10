@@ -9,5 +9,9 @@ export function normalizeRole(role) {
 }
 
 export function getPostLoginPath(user) {
+  if (user?.requires_company) {
+    return "/company/register";
+  }
+
   return normalizeRole(user?.role) === "admin" ? "/super-admin" : "/dashboard";
 }

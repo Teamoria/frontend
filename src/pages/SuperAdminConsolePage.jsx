@@ -6,6 +6,7 @@ import {
   FiBriefcase,
   FiCalendar,
   FiChevronDown,
+  FiCreditCard,
   FiMenu,
   FiLogOut,
   FiMoreVertical,
@@ -36,6 +37,7 @@ const navItems = [
   { label: "Dashboard", icon: FiBarChart2, path: "/super-admin" },
   { label: "Companies Management", icon: FiBriefcase, path: "/super-admin/companies" },
   { label: "User Management", icon: FiUsers, path: "/super-admin/users" },
+  { label: "Payments", icon: FiCreditCard, path: "/super-admin/payments" },
   { label: "Profile", icon: FiUser, path: "/super-admin/profile" }
 ];
 
