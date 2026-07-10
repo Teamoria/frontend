@@ -51,6 +51,10 @@ async function requestCurrentUserWithFallback() {
     return await apiRequest(firstPath, { auth: true, redirectOnUnauthorized: false });
   } catch (error) {
     firstError = error;
+    if (isMissingCompanyError(error)) {
+      throw error;
+    }
+
     if (![401, 403, 404].includes(error.status)) {
       throw error;
     }
@@ -118,15 +122,19 @@ export async function loginWithGoogle(providerToken) {
 
   const token = extractToken(payload);
   setAccessToken(token);
+  const userFromLogin = getProfileFromPayload(payload);
+  if (userFromLogin?.role || userFromLogin?.email) {
+    setStoredUser(userFromLogin);
+  }
 
   try {
     const profilePayload = await getCurrentUser();
-    const user = getProfileFromPayload(profilePayload) || getProfileFromPayload(payload);
+    const user = getProfileFromPayload(profilePayload) || userFromLogin;
     setStoredUser(user);
     return { token, user, payload };
   } catch (error) {
     if (isMissingCompanyError(error)) {
-      const user = createMissingCompanyUser(getProfileFromPayload(payload)?.email);
+      const user = createMissingCompanyUser(userFromLogin?.email);
       setStoredUser(user);
       return { token, user, payload };
     }

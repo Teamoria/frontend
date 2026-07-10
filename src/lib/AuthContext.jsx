@@ -30,7 +30,14 @@ export function AuthProvider({ children }) {
       }
 
       refreshUser()
-        .catch(() => {
+        .catch((error) => {
+          if (cachedUser?.requires_company || isMissingCompanyError(error)) {
+            const nextUser = cachedUser || { role: "company_owner", status: "active", requires_company: true };
+            setStoredUser(nextUser);
+            setUser(nextUser);
+            return;
+          }
+
           clearAccessToken();
           setUser(null);
         })
