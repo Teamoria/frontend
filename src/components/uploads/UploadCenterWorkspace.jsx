@@ -913,27 +913,31 @@ function AiResultsModal({ defaultProjectId = "", onClose, onRefresh, onStatus, p
       <button className="owner-upload-modal-backdrop" type="button" aria-label="Close AI results modal" onClick={onClose} />
       <section className="owner-upload-permissions-modal owner-upload-ai-modal" role="dialog" aria-modal="true" aria-labelledby="upload-ai-results-title">
         <header className="owner-upload-ai-header">
-          <div className="owner-upload-ai-titleblock">
-            <h2 id="upload-ai-results-title">AI Results</h2>
-            <p>{fileName}</p>
-            <div className="owner-upload-ai-meta">
-              <span>{formatLabel(sourceType)}</span>
-              <span>{formatQualityLabel(transcriptQuality)}</span>
-              <span>{extractedTasks.length} tasks</span>
-              <span>{decisions.length} decisions</span>
+          <div className="owner-upload-ai-header-row">
+            <div className="owner-upload-ai-titleblock">
+              <h2 id="upload-ai-results-title">AI Results</h2>
+              <p>{fileName}</p>
+            </div>
+            <div className="owner-upload-ai-header-actions">
+              <span className={`owner-upload-ai-status is-${String(processingStatus).toLowerCase()}`}>{formatLabel(processingStatus)}</span>
+              <button className="owner-upload-ai-refresh-button" type="button" aria-label="Refresh AI results" onClick={onRefresh} disabled={state.isLoading}>
+                <FiRefreshCw aria-hidden="true" />
+                <span>Refresh</span>
+              </button>
+              <button className="owner-upload-ai-close-button" type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
             </div>
           </div>
-          <div className="owner-upload-ai-header-actions">
-            <span className={`owner-upload-ai-status is-${String(processingStatus).toLowerCase()}`}>{formatLabel(processingStatus)}</span>
-            <button className="owner-upload-ai-refresh-button" type="button" aria-label="Refresh AI results" onClick={onRefresh} disabled={state.isLoading}>
-              <FiRefreshCw aria-hidden="true" />
-              <span>Refresh</span>
-            </button>
-            <button className="owner-upload-ai-close-button" type="button" aria-label="Close AI results modal" onClick={onClose}><FiX aria-hidden="true" /></button>
+          <div className="owner-upload-ai-meta" aria-label="Document metadata">
+            <span>{formatLabel(sourceType)}</span>
+            <span>{formatQualityLabel(transcriptQuality)}</span>
+            <span>{extractedTasks.length} tasks</span>
+            <span>{decisions.length} decisions</span>
           </div>
         </header>
 
-        <ProcessingTimeline status={processingStatus} />
+        <section className="owner-upload-ai-stepper-section" aria-label="Processing steps">
+          <ProcessingTimeline status={processingStatus} />
+        </section>
 
         <div className="owner-upload-ai-body">
           {state.error ? <p className="owner-upload-ai-alert">{state.error}</p> : null}
