@@ -161,6 +161,7 @@ export default function AiChatPage() {
     const processingMessageId = `processing-${Date.now()}`;
     const submittedAt = new Date().toISOString();
     const previousAssistantCount = messages.filter((item) => item.role === "assistant" && !item.isThinking).length;
+    const previousServerMessageCount = messages.filter((item) => !item.isThinking && !String(item.id || "").startsWith("user-")).length;
     setStatusPatch({ sending: true, error: "" });
 
     try {
@@ -187,20 +188,29 @@ export default function AiChatPage() {
       });
       const data = getPayloadData(payload) || payload || {};
       const serverConversationId = data.session_id || data.chat_session_id || conversationId;
+      const immediateAssistantMessage = extractImmediateAssistantMessage(data);
 
       setActiveConversationId(serverConversationId);
       setConversationMessages((current) => {
         const currentMessages = current[conversationId] || nextUserMessages;
-        const next = { ...current, [serverConversationId]: currentMessages };
+        const resolvedMessages = immediateAssistantMessage
+          ? replaceThinkingMessage(currentMessages, processingMessageId, immediateAssistantMessage)
+          : currentMessages;
+        const next = { ...current, [serverConversationId]: resolvedMessages };
         if (serverConversationId !== conversationId) {
           delete next[conversationId];
           moveThinkingProgress(conversationId, serverConversationId, processingMessageId);
         }
         return next;
       });
-      setMessages((current) => current.map((item) => (
-        item.id === processingMessageId ? { ...item, content: "Searching workspace context..." } : item
-      )));
+      if (immediateAssistantMessage) {
+        stopThinkingProgress(serverConversationId);
+        setMessages((current) => replaceThinkingMessage(current, processingMessageId, immediateAssistantMessage));
+      } else {
+        setMessages((current) => current.map((item) => (
+          item.id === processingMessageId ? { ...item, content: "Searching workspace context..." } : item
+        )));
+      }
       setConversations((current) => upsertConversation(current, {
         id: serverConversationId,
         title: activeConversation?.title || getConversationTitle(message),
@@ -211,7 +221,9 @@ export default function AiChatPage() {
       setSelectedFiles([]);
       setStatusPatch({ sending: false, error: "" });
       await loadConversations({ silent: true });
-      scheduleMessageRefresh(serverConversationId, 1, { submittedAt, previousAssistantCount });
+      if (!immediateAssistantMessage) {
+        scheduleMessageRefresh(serverConversationId, 1, { submittedAt, previousAssistantCount, previousServerMessageCount, userContent: message });
+      }
     } catch (error) {
       stopThinkingProgress(conversationId);
       const rollbackMessages = messages;
@@ -654,8 +666,8 @@ function extractMessages(data) {
 function normalizeMessage(message = {}) {
   return {
     id: message.id || message.message_id || message.uuid || `${message.role || "message"}-${message.created_at || Math.random()}`,
-    role: normalizeRole(message.role || message.sender || message.type),
-    content: message.content || message.message_content || message.message || message.answer || message.text || "",
+    role: normalizeRole(message.role || message.sender || message.type || message.author || message.source),
+    content: message.content || message.message_content || message.message || message.answer || message.reply || message.response || message.text || "",
     sources: Array.isArray(message.sources) ? message.sources : [],
     created_at: message.created_at || message.createdAt || ""
   };
@@ -682,7 +694,7 @@ function upsertConversation(conversations, nextConversation) {
 
 function normalizeRole(role) {
   const value = String(role || "").toLowerCase();
-  if (["assistant", "ai", "bot"].includes(value)) return "assistant";
+  if (["assistant", "ai", "bot", "model", "agent", "teamoria_ai", "ai_assistant"].includes(value)) return "assistant";
   return "user";
 }
 
@@ -713,9 +725,11 @@ function mergeLoadedMessages(currentMessages, serverMessages, { hasNewAiReply } 
   return [...baseMessages, ...thinkingMessages];
 }
 
-function hasAssistantReplyForLatestQuestion(messages, { submittedAt, previousAssistantCount = 0 } = {}) {
+function hasAssistantReplyForLatestQuestion(messages, { submittedAt, previousAssistantCount = 0, previousServerMessageCount = 0, userContent = "" } = {}) {
   const assistantMessages = messages.filter((message) => message.role === "assistant" && !message.isThinking);
   if (assistantMessages.length > previousAssistantCount) return true;
+  if (messages.length > previousServerMessageCount + 1 && assistantMessages.length) return true;
+  if (hasAssistantAfterSubmittedUser(messages, userContent)) return true;
   if (!submittedAt) return assistantMessages.length > 0;
 
   const submittedTime = new Date(submittedAt).getTime();
@@ -725,6 +739,62 @@ function hasAssistantReplyForLatestQuestion(messages, { submittedAt, previousAss
     const createdTime = new Date(message.created_at || "").getTime();
     return !Number.isNaN(createdTime) && createdTime >= submittedTime;
   });
+}
+
+function hasAssistantAfterSubmittedUser(messages, userContent) {
+  const needle = normalizeComparableText(userContent);
+  if (!needle) return false;
+  const submittedUserIndex = messages.findIndex((message) => (
+    message.role === "user" && normalizeComparableText(message.content) === needle
+  ));
+  if (submittedUserIndex < 0) return false;
+
+  const laterMessages = messages.slice(submittedUserIndex + 1);
+  const earlierMessages = messages.slice(0, submittedUserIndex);
+  return laterMessages.some((message) => message.role === "assistant")
+    || earlierMessages.some((message) => message.role === "assistant" && messages[0]?.role === "assistant");
+}
+
+function extractImmediateAssistantMessage(data = {}) {
+  const candidates = [
+    data.assistant_message,
+    data.ai_message,
+    data.reply_message,
+    data.response_message,
+    data.data?.assistant_message,
+    data.data?.ai_message,
+    data.data?.reply_message,
+    data.data?.response_message
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const normalized = typeof candidate === "string"
+      ? createLocalMessage({ role: "assistant", content: candidate })
+      : normalizeMessage(candidate);
+    if (normalized.content && normalized.role === "assistant") return normalized;
+  }
+
+  const content = data.reply || data.answer || data.response || data.ai_response || data.data?.reply || data.data?.answer || data.data?.response;
+  return content ? createLocalMessage({ role: "assistant", content }) : null;
+}
+
+function replaceThinkingMessage(messages, thinkingMessageId, assistantMessage) {
+  const normalizedAssistant = {
+    ...assistantMessage,
+    role: "assistant",
+    isThinking: false,
+    id: assistantMessage.id || `assistant-${Date.now()}`,
+    created_at: assistantMessage.created_at || new Date().toISOString()
+  };
+  const hasThinkingMessage = messages.some((message) => message.id === thinkingMessageId || message.isThinking);
+  if (!hasThinkingMessage) return [...messages, normalizedAssistant];
+  return messages.map((message) => (
+    message.id === thinkingMessageId || message.isThinking ? normalizedAssistant : message
+  ));
+}
+
+function normalizeComparableText(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 const THINKING_STEPS = [
