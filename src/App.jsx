@@ -31,6 +31,50 @@ import SuperAdminProfilePage from "./pages/SuperAdminProfilePage.jsx";
 import { useAuth } from "./lib/AuthContext.jsx";
 import { getDemoUser, isDemoMode } from "./lib/demoMode.js";
 import { normalizeRole } from "./lib/authRoles.js";
+import { usePreferences } from "./lib/PreferencesContext.jsx";
+
+const legacyRouteRedirects = Object.freeze({
+  "/ower/team-performance": "/owner/team-performance",
+  "/ower /team-performance": "/owner/team-performance"
+});
+
+const routeTitles = {
+  "/": { ar: "Teamoria — نظام تشغيل الفريق", en: "Teamoria — Team operating system" },
+  "/signin": { ar: "تسجيل الدخول", en: "Sign in" },
+  "/login": { ar: "تسجيل الدخول", en: "Sign in" },
+  "/reset-password": { ar: "إعادة تعيين كلمة المرور", en: "Reset password" },
+  "/forgot-password": { ar: "استعادة كلمة المرور", en: "Forgot password" },
+  "/signup": { ar: "إنشاء حساب", en: "Create account" },
+  "/register": { ar: "إنشاء حساب", en: "Create account" },
+  "/verify-otp": { ar: "تأكيد رمز التحقق", en: "Verify code" },
+  "/company/register": { ar: "إعداد الشركة", en: "Set up company" },
+  "/onboarding/company": { ar: "إعداد الشركة", en: "Set up company" },
+  "/dashboard": { ar: "نظرة عامة", en: "Dashboard" },
+  "/projects": { ar: "المشاريع", en: "Projects" },
+  "/tasks": { ar: "المهام", en: "Tasks" },
+  "/meetings": { ar: "الاجتماعات", en: "Meetings" },
+  "/workspace": { ar: "مساحة العمل", en: "Workspace" },
+  "/uploads": { ar: "مركز الملفات", en: "Upload center" },
+  "/ai-chat": { ar: "مساعد Teamoria", en: "Teamoria assistant" },
+  "/agent-runs": { ar: "عمليات الوكلاء", en: "Agent runs" },
+  "/agent-run-details": { ar: "تفاصيل عملية الوكيل", en: "Agent run details" },
+  "/workspace-graph": { ar: "خريطة المعرفة", en: "Knowledge graph" },
+  "/employees": { ar: "الفريق", en: "Team" },
+  "/owner/projects": { ar: "إدارة المشاريع", en: "Project management" },
+  "/owner/uploads": { ar: "إدارة الملفات", en: "File management" },
+  "/owner/uploads/files": { ar: "الملفات المرفوعة", en: "Uploaded files" },
+  "/team-performance": { ar: "أداء الفريق", en: "Team performance" },
+  "/owner/team-performance": { ar: "أداء الفريق", en: "Team performance" },
+  "/reports": { ar: "التقارير", en: "Reports" },
+  "/profile": { ar: "الملف الشخصي", en: "Profile" },
+  "/notifications": { ar: "الإشعارات", en: "Notifications" },
+  "/super-admin": { ar: "إدارة المنصة", en: "Platform administration" },
+  "/super-admin/companies": { ar: "إدارة الشركات", en: "Company management" },
+  "/super-admin/users": { ar: "إدارة المستخدمين", en: "User management" },
+  "/super-admin/payments": { ar: "إدارة المدفوعات", en: "Payment management" },
+  "/super-admin/profile": { ar: "الملف الشخصي", en: "Profile" },
+  "/super-admin/notifications": { ar: "الإشعارات", en: "Notifications" }
+};
 
 const adminRoutes = new Set([
   "/super-admin",
@@ -72,8 +116,6 @@ const workspaceRoutes = new Set([
   "/owner/uploads/files",
   "/team-performance",
   "/owner/team-performance",
-  "/ower/team-performance",
-  "/ower /team-performance",
   "/reports",
   "/profile",
   "/notifications"
@@ -137,8 +179,6 @@ const routes = {
   "/owner/uploads/files": OwnerUploadedFilesPage,
   "/team-performance": TeamPerformanceOversightPage,
   "/owner/team-performance": TeamPerformanceOversightPage,
-  "/ower/team-performance": TeamPerformanceOversightPage,
-  "/ower /team-performance": TeamPerformanceOversightPage,
   "/reports": ReportsPage,
   "/profile": ProfilePage,
   "/notifications": NotificationsPage,
@@ -150,20 +190,44 @@ const routes = {
   "/super-admin/notifications": NotificationsPage
 };
 
+function decodeRoutePath(path) {
+  try {
+    return decodeURIComponent(path);
+  } catch {
+    return path;
+  }
+}
+
+function resolveRoutePath(path) {
+  const decodedPath = decodeRoutePath(path);
+  return legacyRouteRedirects[decodedPath] || decodedPath;
+}
+
 function getPath() {
-  if (window.location.pathname !== "/" && routes[window.location.pathname]) {
-    const nextHash = `${window.location.pathname}${window.location.search || ""}`;
+  const directPath = resolveRoutePath(window.location.pathname);
+
+  if (window.location.pathname !== "/" && routes[directPath]) {
+    const nextHash = `${directPath}${window.location.search || ""}`;
     window.history.replaceState(null, "", `${window.location.origin}/#${nextHash}`);
   }
 
-  const hash = window.location.hash.replace("#", "");
-  const path = hash.split("?")[0];
+  const hash = window.location.hash.replace(/^#/, "");
+  const queryIndex = hash.indexOf("?");
+  const rawPath = queryIndex === -1 ? hash : hash.slice(0, queryIndex);
+  const hashQuery = queryIndex === -1 ? "" : hash.slice(queryIndex);
+  const path = resolveRoutePath(rawPath);
+
+  if (routes[path] && rawPath !== path) {
+    window.history.replaceState(null, "", `#${path}${hashQuery}`);
+  }
+
   return routes[path] ? path : "/";
 }
 
 export default function App() {
   const [path, setPath] = useState(getPath);
   const auth = useAuth();
+  const { language } = usePreferences();
   const demoUser = isDemoMode() ? getDemoUser() : null;
   const user = auth.user || demoUser;
   const normalizedRole = normalizeRole(user?.role);
@@ -177,6 +241,28 @@ export default function App() {
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
+
+  useEffect(() => {
+    const title = routeTitles[path] || routeTitles["/"];
+    document.title = path === "/"
+      ? title[language] || title.en
+      : `${title[language] || title.en} — Teamoria`;
+  }, [language, path]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const existingTarget = document.getElementById("main-content");
+      const mainContent = existingTarget || document.querySelector("#root main");
+
+      if (!(mainContent instanceof HTMLElement)) return;
+
+      if (!existingTarget) mainContent.id = "main-content";
+      if (!mainContent.hasAttribute("tabindex")) mainContent.tabIndex = -1;
+      mainContent.focus({ preventScroll: true });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [path]);
 
   const Page = useMemo(() => routes[path] || LandingPage, [path]);
 

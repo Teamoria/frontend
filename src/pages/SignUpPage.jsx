@@ -1,16 +1,19 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
-import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiBriefcase, FiEye, FiEyeOff, FiLock, FiMail, FiUser } from "react-icons/fi";
 import GoogleAuthButton from "../components/GoogleAuthButton.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { registerWithEmail } from "../lib/api.js";
 import { formatAuthErrorMessage } from "../lib/authErrors.js";
 import { setPendingSignup } from "../lib/pendingRegistration.js";
+import { getAuthPageCopy } from "../lib/authPageCopy.js";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
 import "../styles/sign-up.css";
 import "../styles/auth-unified.css";
 
 export default function SignUpPage() {
+  const { language } = usePreferences();
+  const copy = getAuthPageCopy(language, "signUp");
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -18,10 +21,10 @@ export default function SignUpPage() {
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
-  const fullNameError = getRequiredError(form.fullName, "Full name is required", submitted);
-  const emailError = getEmailError(form.email, touched.email, submitted);
-  const companyNameError = getRequiredError(form.companyName, "Company name is required", submitted);
-  const passwordError = getPasswordError(form.password, touched.password, submitted);
+  const fullNameError = getRequiredError(form.fullName, copy.fullNameRequired, submitted);
+  const emailError = getEmailError(form.email, touched.email, submitted, copy);
+  const companyNameError = getRequiredError(form.companyName, copy.companyRequired, submitted);
+  const passwordError = getPasswordError(form.password, touched.password, submitted, copy);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -37,10 +40,10 @@ export default function SignUpPage() {
     setStatus({ type: "", message: "" });
 
     const nextErrors = [
-      getRequiredError(form.fullName, "Full name is required", true),
-      getEmailError(form.email, true, true),
-      getRequiredError(form.companyName, "Company name is required", true),
-      getPasswordError(form.password, true, true)
+      getRequiredError(form.fullName, copy.fullNameRequired, true),
+      getEmailError(form.email, true, true, copy),
+      getRequiredError(form.companyName, copy.companyRequired, true),
+      getPasswordError(form.password, true, true, copy)
     ];
     if (nextErrors.some(Boolean)) {
       setTouched({ fullName: true, email: true, companyName: true, password: true });
@@ -63,7 +66,7 @@ export default function SignUpPage() {
       });
       window.location.hash = "/verify-otp";
     } catch (error) {
-      setStatus({ type: "error", message: formatAuthErrorMessage(error, "signup") });
+      setStatus({ type: "error", message: language === "ar" ? copy.signUpError : formatAuthErrorMessage(error, "signup") });
     } finally {
       setIsSubmitting(false);
     }
@@ -73,18 +76,18 @@ export default function SignUpPage() {
     <AuthLayout
       className="sign-up-shell"
       variant="analytics"
-      title="Start Your Intelligent Meeting Ecosystem."
-      text="Streamline your team collaboration with AI-powered meeting summaries and real-time operational insights."
-      visualContent={<SignUpWorkspaceVisual />}
+      eyebrow={copy.eyebrow}
+      title={copy.heroTitle}
+      text={copy.heroText}
     >
       <form className={`auth-form sign-up-form ${form.email ? "has-email" : ""}`} onSubmit={handleSubmit} noValidate>
         <div className="sign-up-mobile-brand">
           <span>Teamoria</span>
-          <small>Enterprise AI PM</small>
+          <small>{copy.eyebrow}</small>
         </div>
         <header className="sign-up-header">
-          <h1>Create account</h1>
-          <p>Join Teamoria and create your workspace.</p>
+          <h1>{copy.title}</h1>
+          <p>{copy.subtitle}</p>
         </header>
 
         {status.message && (
@@ -94,13 +97,13 @@ export default function SignUpPage() {
         )}
 
         <div className="form-stack">
-          <span className="label">Full Name</span>
+          <span className="label">{copy.fullName}</span>
           <TextInput
             autoComplete="name"
             error={fullNameError}
             icon={<FiUser />}
             name="fullName"
-            placeholder="Enter your full name"
+            placeholder={copy.fullNamePlaceholder}
             required
             disabled={isSubmitting}
             value={form.fullName}
@@ -108,7 +111,7 @@ export default function SignUpPage() {
             onChange={(event) => updateField("fullName", event.target.value)}
           />
 
-          <span className="label">Work Email</span>
+          <span className="label">{copy.email}</span>
           <TextInput
             autoComplete="email"
             error={emailError}
@@ -116,7 +119,7 @@ export default function SignUpPage() {
             inputMode="email"
             name="email"
             type="email"
-            placeholder="name@company.com"
+            placeholder={copy.emailPlaceholder}
             required
             disabled={isSubmitting}
             value={form.email}
@@ -124,13 +127,13 @@ export default function SignUpPage() {
             onChange={(event) => updateField("email", event.target.value)}
           />
 
-          <span className="label">Company Name</span>
+          <span className="label">{copy.companyName}</span>
           <TextInput
             autoComplete="organization"
             error={companyNameError}
             icon={<FiBriefcase />}
             name="companyName"
-            placeholder="Enter your company name"
+            placeholder={copy.companyPlaceholder}
             required
             disabled={isSubmitting}
             value={form.companyName}
@@ -138,15 +141,15 @@ export default function SignUpPage() {
             onChange={(event) => updateField("companyName", event.target.value)}
           />
 
-          <div className="sign-up-owner-notice" aria-label="Account role">
+          <div className="sign-up-owner-notice" aria-label={copy.ownerTitle}>
             <FiBriefcase aria-hidden="true" />
             <span>
-              <b>Company Owner account</b>
-              <small>Your workspace will be created under your company owner access.</small>
+              <b>{copy.ownerTitle}</b>
+              <small>{copy.ownerText}</small>
             </span>
           </div>
 
-          <span className="label">Password</span>
+          <span className="label">{copy.password}</span>
           <label className={`field input-wrapper sign-up-password-field ${passwordError ? "field--invalid" : ""}`}>
             <span className="field-icon icon" aria-hidden="true"><FiLock /></span>
             <input
@@ -156,7 +159,7 @@ export default function SignUpPage() {
               name="password"
               autoComplete="new-password"
               type={showPassword ? "text" : "password"}
-              placeholder="Password"
+              placeholder={copy.passwordPlaceholder}
               disabled={isSubmitting}
               value={form.password}
               onBlur={() => setTouched((current) => ({ ...current, password: true }))}
@@ -165,7 +168,7 @@ export default function SignUpPage() {
             <button
               className="password-toggle"
               type="button"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? copy.hidePassword : copy.showPassword}
               onClick={() => setShowPassword((current) => !current)}
               disabled={isSubmitting}
             >
@@ -175,18 +178,19 @@ export default function SignUpPage() {
           </label>
         </div>
 
-        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Creating Workspace...">Create Workspace</PrimaryButton>
-        <div className="divider"><span>or continue with</span></div>
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText={copy.submitting}>{copy.submit}</PrimaryButton>
+        <div className="divider"><span>{copy.orContinueWith}</span></div>
         <div className="social-row">
           <GoogleAuthButton
             disabled={isSubmitting}
-            onError={(message) => setStatus({ type: "error", message })}
+            loadingText={copy.googleLoading}
+            onError={(message) => setStatus({ type: "error", message: language === "ar" ? copy.googleError : message })}
             onStart={() => setStatus({ type: "", message: "" })}
           >
-            Sign up with Google
+            {copy.google}
           </GoogleAuthButton>
         </div>
-        <p className="auth-switch">Already have an account? <a href="#/signin">Log in</a></p>
+        <p className="auth-switch">{copy.haveAccount} <a href="#/signin">{copy.login}</a></p>
       </form>
     </AuthLayout>
   );
@@ -199,20 +203,16 @@ function getRequiredError(value, message, isSubmitted) {
   return "";
 }
 
-function getEmailError(value, isTouched, isSubmitted) {
+function getEmailError(value, isTouched, isSubmitted, copy) {
   const email = String(value || "").trim();
-  if (!email && isSubmitted) return "Email is required";
-  if (email && isTouched && !emailPattern.test(email)) return "Please enter a valid email address";
+  if (!email && isSubmitted) return copy.emailRequired;
+  if (email && isTouched && !emailPattern.test(email)) return copy.emailInvalid;
   return "";
 }
 
-function getPasswordError(value, isTouched, isSubmitted) {
+function getPasswordError(value, isTouched, isSubmitted, copy) {
   const password = String(value || "");
-  if (!password && isSubmitted) return "Password is required";
-  if (password && isTouched && password.length < 8) return "Password must be at least 8 characters";
+  if (!password && isSubmitted) return copy.passwordRequired;
+  if (password && isTouched && password.length < 8) return copy.passwordShort;
   return "";
-}
-
-function SignUpWorkspaceVisual() {
-  return <AuthLegacyVisual className="sign-up-visual-content" />;
 }

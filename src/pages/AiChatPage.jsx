@@ -23,11 +23,63 @@ import {
   updateAiConversation
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
-import { getEcho, isRealtimeChatConfigured } from "../lib/reverb.js";
+import { useRealtimePrivateChannel } from "../lib/RealtimeContext.jsx";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
 import "../styles/ai-chat.css";
+
+const aiChatCopy = {
+  ar: {
+    title: "مساعد Teamoria",
+    subtitle: "اسأل عن المشاريع والمهام والملفات والمخاطر، واحصل على إجابة مرتبطة بسياقك.",
+    newChat: "محادثة جديدة",
+    chats: "المحادثات",
+    conversations: (count) => `${count} محادثة`,
+    noConversations: "لا توجد محادثات بعد",
+    noConversationsText: "ابدأ محادثة واسأل عن عمل فريقك وسياقه.",
+    newConversation: "محادثة جديدة",
+    sourcesCount: (count) => `${count} مصدر مرفق أو مُستشهد به`,
+    contextReady: "سياق مساحة العمل جاهز",
+    startHint: "ابدأ بسؤال أو اختر محادثة",
+    addSource: "إضافة مصدر",
+    assistantQuestion: "كيف أساعدك في Teamoria اليوم؟",
+    assistantHint: "اسأل عن خطر مشروع أو مهمة أو ملف مرفوع أو حالة التسليم.",
+    placeholder: "اكتب سؤالك إلى مساعد Teamoria…",
+    thinking: "يفكّر",
+    send: "إرسال",
+    connected: "متصل عبر Reverb",
+    connecting: "جارٍ الاتصال اللحظي",
+    fallback: "التحديث عبر الاستعلام الاحتياطي",
+    prompts: ["ما أبرز مخاطر التسليم الآن؟", "لخّص آخر القرارات المرتبطة بالمشروع", "ما المهام المتوقفة ومن المسؤول عنها؟"]
+  },
+  en: {
+    title: "Teamoria Assistant",
+    subtitle: "Ask about projects, tasks, files, and risks, with answers grounded in your workspace context.",
+    newChat: "New chat",
+    chats: "Chats",
+    conversations: (count) => `${count} conversations`,
+    noConversations: "No conversations yet",
+    noConversationsText: "Start a chat and ask about your team's work and context.",
+    newConversation: "New conversation",
+    sourcesCount: (count) => `${count} sources attached or cited`,
+    contextReady: "Workspace context ready",
+    startHint: "Start with a question or choose a chat",
+    addSource: "Add source",
+    assistantQuestion: "How can I help with Teamoria today?",
+    assistantHint: "Ask about project risk, tasks, uploaded files, or delivery status.",
+    placeholder: "Message Teamoria AI…",
+    thinking: "Thinking",
+    send: "Send",
+    connected: "Connected through Reverb",
+    connecting: "Connecting realtime",
+    fallback: "Using polling fallback",
+    prompts: null
+  }
+};
 
 export default function AiChatPage() {
   const { user } = useAuth();
+  const { language } = usePreferences();
+  const copy = aiChatCopy[language] || aiChatCopy.en;
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [messages, setMessages] = useState([]);
@@ -38,10 +90,19 @@ export default function AiChatPage() {
   const [openMenuId, setOpenMenuId] = useState("");
   const [renamingConversationId, setRenamingConversationId] = useState("");
   const [renameDraft, setRenameDraft] = useState("");
+  const conversationMessagesRef = useRef({});
   const thinkingTimersRef = useRef({});
+  const pollingWatchdogsRef = useRef({});
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const activeConversationIdRef = useRef("");
+  const userId = user?.id || user?.user_id;
+  const { configured: isRealtimeConfigured, connectionStatus, isReady: isRealtimeReady, subscriptionStatus } = useRealtimePrivateChannel({
+    channelName: userId ? `chat.${userId}` : "",
+    eventName: ".ai.message.received",
+    enabled: Boolean(userId),
+    onEvent: (event) => handleRealtimeAiMessage(event?.message || event)
+  });
   const sourceCount = useMemo(
     () => messages.reduce((total, message) => total + (Array.isArray(message.sources) ? message.sources.length : 0), 0) + selectedFiles.length,
     [messages, selectedFiles]
@@ -55,6 +116,10 @@ export default function AiChatPage() {
   useEffect(() => {
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    conversationMessagesRef.current = conversationMessages;
+  }, [conversationMessages]);
 
   useEffect(() => {
     activeConversationIdRef.current = activeConversationId;
@@ -76,30 +141,8 @@ export default function AiChatPage() {
 
   useEffect(() => () => {
     Object.values(thinkingTimersRef.current).forEach((timerId) => window.clearInterval(timerId));
+    Object.keys(pollingWatchdogsRef.current).forEach(cancelMessagePollingWatchdog);
   }, []);
-
-  useEffect(() => {
-    const userId = user?.id || user?.user_id;
-    if (!userId || !isRealtimeChatConfigured()) {
-      return undefined;
-    }
-
-    const echo = getEcho();
-    if (!echo) {
-      return undefined;
-    }
-
-    const channelName = `chat.${userId}`;
-    const channel = echo.private(channelName);
-
-    channel.listen(".ai.message.received", (event) => {
-      handleRealtimeAiMessage(event?.message || event);
-    });
-
-    return () => {
-      echo.leave(channelName);
-    };
-  }, [user?.id, user?.user_id]);
 
   function setStatusPatch(patch) {
     setStatus((current) => ({ ...current, ...patch }));
@@ -175,6 +218,7 @@ export default function AiChatPage() {
       const nextUserMessages = [...messages, userMessage, assistantThinkingMessage];
 
       setActiveConversationId(conversationId);
+      conversationMessagesRef.current = { ...conversationMessagesRef.current, [conversationId]: nextUserMessages };
       setConversationMessages((current) => ({ ...current, [conversationId]: nextUserMessages }));
       setMessages(nextUserMessages);
       startThinkingProgress(conversationId, processingMessageId);
@@ -189,23 +233,42 @@ export default function AiChatPage() {
       const data = getPayloadData(payload) || payload || {};
       const serverConversationId = data.session_id || data.chat_session_id || conversationId;
       const immediateAssistantMessage = extractImmediateAssistantMessage(data);
+      const serverMessagesBeforeMerge = serverConversationId !== conversationId
+        ? conversationMessagesRef.current[serverConversationId] || []
+        : [];
+      const hasRealtimeReplyBeforeMerge = hasConcreteAssistantMessage(serverMessagesBeforeMerge);
+      let hasResolvedAssistantReply = Boolean(immediateAssistantMessage) || hasRealtimeReplyBeforeMerge;
 
       setActiveConversationId(serverConversationId);
       setConversationMessages((current) => {
         const currentMessages = current[conversationId] || nextUserMessages;
-        const resolvedMessages = immediateAssistantMessage
-          ? replaceThinkingMessage(currentMessages, processingMessageId, immediateAssistantMessage)
+        const existingServerMessages = serverConversationId !== conversationId ? current[serverConversationId] || [] : [];
+        const hasRealtimeReply = hasConcreteAssistantMessage(existingServerMessages);
+        const mergedMessages = existingServerMessages.length
+          ? mergeLoadedMessages(currentMessages, existingServerMessages, { hasNewAiReply: hasRealtimeReply })
           : currentMessages;
+        const resolvedMessages = immediateAssistantMessage
+          ? replaceThinkingMessage(mergedMessages, processingMessageId, immediateAssistantMessage)
+          : hasRealtimeReply
+            ? removeThinkingMessages(mergedMessages)
+            : mergedMessages;
         const next = { ...current, [serverConversationId]: resolvedMessages };
+        hasResolvedAssistantReply = hasResolvedAssistantReply || hasRealtimeReply;
         if (serverConversationId !== conversationId) {
           delete next[conversationId];
           moveThinkingProgress(conversationId, serverConversationId, processingMessageId);
         }
+        if (activeConversationIdRef.current === conversationId || activeConversationIdRef.current === serverConversationId) {
+          setMessages(resolvedMessages);
+        }
+        conversationMessagesRef.current = next;
         return next;
       });
-      if (immediateAssistantMessage) {
+      if (hasResolvedAssistantReply) {
         stopThinkingProgress(serverConversationId);
-        setMessages((current) => replaceThinkingMessage(current, processingMessageId, immediateAssistantMessage));
+        if (immediateAssistantMessage) {
+          setMessages((current) => replaceThinkingMessage(current, processingMessageId, immediateAssistantMessage));
+        }
       } else {
         setMessages((current) => current.map((item) => (
           item.id === processingMessageId ? { ...item, content: "Searching workspace context..." } : item
@@ -222,7 +285,11 @@ export default function AiChatPage() {
       setStatusPatch({ sending: false, error: "" });
       await loadConversations({ silent: true });
       if (!immediateAssistantMessage) {
-        scheduleMessageRefresh(serverConversationId, 1, { submittedAt, previousAssistantCount, previousServerMessageCount, userContent: message });
+        startMessagePollingWatchdog(
+          serverConversationId,
+          { submittedAt, previousAssistantCount, previousServerMessageCount, userContent: message },
+          { initialDelay: isRealtimeReady ? 5000 : 1200 }
+        );
       }
     } catch (error) {
       stopThinkingProgress(conversationId);
@@ -256,14 +323,23 @@ export default function AiChatPage() {
     setSelectedFiles(Array.from(event.target.files || []));
   }
 
-  function scheduleMessageRefresh(conversationId, attempt = 1, replyCheck = {}) {
-    const delay = attempt === 1 ? 1500 : 3000;
-    window.setTimeout(async () => {
+  function startMessagePollingWatchdog(conversationId, replyCheck = {}, { initialDelay = 5000 } = {}) {
+    cancelMessagePollingWatchdog(conversationId);
+
+    const watchdog = { cancelled: false, timeoutId: null };
+    pollingWatchdogsRef.current[conversationId] = watchdog;
+
+    async function poll(attempt) {
+      if (watchdog.cancelled) return;
+
       try {
         const payload = await listChatSessionMessages(conversationId);
+        if (watchdog.cancelled) return;
+
         const nextMessages = extractMessages(getPayloadData(payload) || payload);
         const hasNewAiReply = hasAssistantReplyForLatestQuestion(nextMessages, replyCheck);
         if (hasNewAiReply) {
+          cancelMessagePollingWatchdog(conversationId);
           stopThinkingProgress(conversationId);
         }
         setConversationMessages((current) => {
@@ -274,14 +350,42 @@ export default function AiChatPage() {
           return { ...current, [conversationId]: mergedMessages };
         });
         if (!hasNewAiReply && attempt < 10) {
-          scheduleMessageRefresh(conversationId, attempt + 1, replyCheck);
+          schedule(attempt + 1, 3000);
+        } else if (!hasNewAiReply) {
+          finishMessagePollingWatchdog(conversationId, watchdog);
         }
       } catch {
+        if (watchdog.cancelled) return;
         if (attempt < 3) {
-          scheduleMessageRefresh(conversationId, attempt + 1, replyCheck);
+          schedule(attempt + 1, 3000);
+        } else {
+          finishMessagePollingWatchdog(conversationId, watchdog);
         }
       }
-    }, delay);
+    }
+
+    function schedule(attempt, delay) {
+      if (watchdog.cancelled) return;
+      watchdog.timeoutId = window.setTimeout(() => poll(attempt), delay);
+    }
+
+    schedule(1, initialDelay);
+  }
+
+  function cancelMessagePollingWatchdog(conversationId) {
+    const watchdog = pollingWatchdogsRef.current[conversationId];
+    if (!watchdog) return;
+    watchdog.cancelled = true;
+    if (watchdog.timeoutId) {
+      window.clearTimeout(watchdog.timeoutId);
+    }
+    delete pollingWatchdogsRef.current[conversationId];
+  }
+
+  function finishMessagePollingWatchdog(conversationId, watchdog) {
+    if (pollingWatchdogsRef.current[conversationId] === watchdog) {
+      delete pollingWatchdogsRef.current[conversationId];
+    }
   }
 
   function handleRealtimeAiMessage(rawMessage) {
@@ -292,6 +396,8 @@ export default function AiChatPage() {
       return;
     }
 
+    cancelMessagePollingWatchdog(conversationId);
+
     setConversationMessages((current) => {
       stopThinkingProgress(conversationId);
       const existingMessages = current[conversationId] || [];
@@ -300,7 +406,9 @@ export default function AiChatPage() {
       );
       const alreadyExists = withoutProcessing.some((message) => message.id === nextMessage.id);
       const nextMessages = alreadyExists ? withoutProcessing : [...withoutProcessing, nextMessage];
-      return { ...current, [conversationId]: nextMessages };
+      const next = { ...current, [conversationId]: nextMessages };
+      conversationMessagesRef.current = next;
+      return next;
     });
 
     if (activeConversationIdRef.current === conversationId) {
@@ -332,9 +440,10 @@ export default function AiChatPage() {
   function moveThinkingProgress(fromConversationId, toConversationId, messageId) {
     const timerId = thinkingTimersRef.current[fromConversationId];
     if (!timerId || fromConversationId === toConversationId) return;
+    window.clearInterval(timerId);
     delete thinkingTimersRef.current[fromConversationId];
-    thinkingTimersRef.current[toConversationId] = timerId;
     updateThinkingMessage(toConversationId, messageId, "Searching workspace context...");
+    startThinkingProgress(toConversationId, messageId);
   }
 
   function stopThinkingProgress(conversationId) {
@@ -405,25 +514,31 @@ export default function AiChatPage() {
     <AppShell active="AI Chat">
       <AppPageLayout
         className="ai-chat-page"
-        title="AI Chat"
-        subtitle="Ask Teamoria AI about projects, files, tasks, and risks."
+        title={copy.title}
+        subtitle={copy.subtitle}
         actions={(
-          <button className="product-button" type="button" onClick={startConversation}>
-            <FiPlus aria-hidden="true" />
-            New Chat
-          </button>
+          <div className="ai-chat-page-actions">
+            <span className={`ai-realtime-pill ${isRealtimeReady ? "is-connected" : connectionStatus === "connecting" || subscriptionStatus === "subscribing" ? "is-connecting" : "is-fallback"}`} role="status" aria-live="polite">
+              <i aria-hidden="true" />
+              {isRealtimeReady ? copy.connected : isRealtimeConfigured && (connectionStatus === "connecting" || subscriptionStatus === "subscribing") ? copy.connecting : copy.fallback}
+            </span>
+            <button className="product-button" type="button" onClick={startConversation}>
+              <FiPlus aria-hidden="true" />
+              {copy.newChat}
+            </button>
+          </div>
         )}
       >
       <section className="ai-chat-command">
-        <aside className="ai-chat-sidebar" aria-label="Conversations">
+        <aside className="ai-chat-sidebar" aria-label={copy.chats}>
           <div className="ai-sidebar-head">
             <div>
-              <h2>Chats</h2>
-              <span>{conversations.length} conversations</span>
+              <h2>{copy.chats}</h2>
+              <span>{copy.conversations(conversations.length)}</span>
             </div>
             <button type="button" onClick={startConversation}>
               <FiPlus aria-hidden="true" />
-              New
+              {copy.newChat}
             </button>
           </div>
 
@@ -432,8 +547,8 @@ export default function AiChatPage() {
             {!status.loadingConversations && conversations.length === 0 ? (
               <div className="ai-chat-empty">
                 <FiZap aria-hidden="true" />
-                <h2>No conversations yet</h2>
-                <p>Start a new chat to ask about projects, files, tasks, and risks.</p>
+                <h2>{copy.noConversations}</h2>
+                <p>{copy.noConversationsText}</p>
               </div>
             ) : null}
             {!status.loadingConversations ? conversations.map((conversation) => (
@@ -494,14 +609,14 @@ export default function AiChatPage() {
         <main className="ai-chat-surface">
           <header className="ai-chat-thread-head">
             <div>
-              <h2>{activeConversation?.title || "New conversation"}</h2>
-              <span>{sourceCount ? `${sourceCount} sources attached or cited` : activeConversation ? "Workspace context ready" : "Start with a question or choose a chat"}</span>
+              <h2>{activeConversation?.title || copy.newConversation}</h2>
+              <span>{sourceCount ? copy.sourcesCount(sourceCount) : activeConversation ? copy.contextReady : copy.startHint}</span>
             </div>
             <div className="ai-thread-actions">
               <label>
                 <input type="file" multiple onChange={handleFiles} />
                 <FiFilePlus aria-hidden="true" />
-                Add Source
+                {copy.addSource}
               </label>
               <button type="button" onClick={() => loadConversations()} aria-label="Refresh conversations">
                 <FiRefreshCw aria-hidden="true" />
@@ -526,10 +641,10 @@ export default function AiChatPage() {
             {!status.loadingMessages && messages.length === 0 ? (
               <div className="ai-message-empty">
                 <FiZap aria-hidden="true" />
-                <h2>How can I help with Teamoria today?</h2>
-                <p>Ask about project risk, tasks, uploaded files, meetings, or company delivery status.</p>
+                <h2>{copy.assistantQuestion}</h2>
+                <p>{copy.assistantHint}</p>
                 <div className="ai-prompt-grid">
-                  {SUGGESTED_PROMPTS.map((prompt) => (
+                  {(copy.prompts || SUGGESTED_PROMPTS).map((prompt) => (
                     <button type="button" key={prompt} onClick={() => applyPrompt(prompt)}>{prompt}</button>
                   ))}
                 </div>
@@ -552,7 +667,7 @@ export default function AiChatPage() {
               </label>
               <textarea
                 ref={textareaRef}
-                placeholder="Message Teamoria AI..."
+                placeholder={copy.placeholder}
                 rows="1"
                 value={draft}
                 onChange={(event) => updateDraft(event.target.value)}
@@ -567,7 +682,7 @@ export default function AiChatPage() {
                 <FiMic aria-hidden="true" />
               </button>
               <button className="ai-send-button" type="submit" disabled={!draft.trim() || status.sending}>
-                <span>{status.sending ? "Thinking" : "Send"}</span>
+                <span>{status.sending ? copy.thinking : copy.send}</span>
                 <FiSend aria-hidden="true" />
               </button>
             </div>
@@ -723,6 +838,14 @@ function mergeLoadedMessages(currentMessages, serverMessages, { hasNewAiReply } 
   const localOnly = currentMessages.filter((message) => String(message.id || "").startsWith("user-"));
   const baseMessages = serverMessages.length ? serverMessages : localOnly;
   return [...baseMessages, ...thinkingMessages];
+}
+
+function hasConcreteAssistantMessage(messages) {
+  return messages.some((message) => message.role === "assistant" && !message.isThinking);
+}
+
+function removeThinkingMessages(messages) {
+  return messages.filter((message) => !message.isThinking && !String(message.id || "").startsWith("processing-"));
 }
 
 function hasAssistantReplyForLatestQuestion(messages, { submittedAt, previousAssistantCount = 0, previousServerMessageCount = 0, userContent = "" } = {}) {

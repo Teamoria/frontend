@@ -1,20 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  FiActivity,
   FiBarChart2,
   FiBriefcase,
   FiCloud,
   FiFolder,
+  FiGrid,
   FiHome,
   FiMessageCircle,
+  FiPlus,
   FiShield,
   FiUser,
   FiUsers,
-  FiZap,
+  FiZap
 } from "react-icons/fi";
 import Brand from "../Brand.jsx";
 import { navItems } from "../../data/teamoriaData.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
 import { getDemoRole } from "../../lib/demoMode.js";
+import { usePreferences } from "../../lib/PreferencesContext.jsx";
 import "../../styles/app-shell.css";
 import AppHeader from "./AppHeader.jsx";
 
@@ -31,6 +35,7 @@ const sidebarIconMap = {
   system: FiShield,
   profile: FiUser
 };
+
 const rolePreviewProfiles = {
   owner: { user: "Company Owner", role: "Company Owner", roleId: "owner" },
   admin: { user: "Ahmed Alyazouri", role: "Company Admin", roleId: "admin" },
@@ -82,19 +87,22 @@ const apiRoleLabel = {
 
 export default function AppShell({ active = "Dashboard", children, user = "Sarah Johnson", role = "Project Manager", roleId = "project-manager" }) {
   const { user: authUser, normalizedRole } = useAuth();
+  const { direction, label } = usePreferences();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
   useEffect(() => {
-    function onKey(e) {
-      if (e.key === "Escape") setMobileNavOpen(false);
+    function onKey(event) {
+      if (event.key === "Escape") setMobileNavOpen(false);
     }
-    if (mobileNavOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+
+    document.body.classList.toggle("tm-nav-open", mobileNavOpen);
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.classList.remove("tm-nav-open");
     };
   }, [mobileNavOpen]);
+
   const previewRole = getDemoRole();
   const mappedAuthRole = apiRoleToShellRole[normalizedRole];
   const profile =
@@ -105,50 +113,96 @@ export default function AppShell({ active = "Dashboard", children, user = "Sarah
     } : null) ||
     rolePreviewProfiles[previewRole] ||
     rolePreviewProfiles[roleId] ||
-    {
-      user: authUser?.name || user,
-      role: authUser?.role || role,
-      roleId: authUser?.role || roleId
-    };
+    { user, role, roleId };
+
+  function handleSkipToContent(event) {
+    event.preventDefault();
+    const mainContent = document.getElementById("main-content");
+    mainContent?.focus({ preventScroll: true });
+    mainContent?.scrollIntoView({ block: "start" });
+  }
+
   return (
-    <main className="product-shell" dir="ltr">
-      <div className="product-sidebar-desktop">
+    <main className="product-shell tm-app" dir={direction}>
+      <a className="tm-skip-link" href="#main-content" onClick={handleSkipToContent}>
+        {direction === "rtl" ? "انتقل إلى المحتوى" : "Skip to content"}
+      </a>
+
+      <div className="product-sidebar-desktop tm-app__sidebar">
         <AppSidebar active={active} roleId={profile.roleId} />
       </div>
-      <div className={`mobile-sidebar-overlay mobile-nav-overlay ${mobileNavOpen ? "is-open" : ""}`} aria-hidden={!mobileNavOpen} onClick={() => setMobileNavOpen(false)}>
-        <div className="mobile-sidebar-panel mobile-nav-panel" onClick={(event) => event.stopPropagation()}>
+
+      <div
+        className={`mobile-sidebar-overlay mobile-nav-overlay tm-drawer-scrim ${mobileNavOpen ? "is-open" : ""}`}
+        aria-hidden={!mobileNavOpen}
+        onClick={() => setMobileNavOpen(false)}
+      >
+        <div
+          className="mobile-sidebar-panel mobile-nav-panel tm-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={label("Workspace")}
+          onClick={(event) => event.stopPropagation()}
+        >
           <AppSidebar active={active} roleId={profile.roleId} onNavigate={() => setMobileNavOpen(false)} />
         </div>
       </div>
-      <section className="product-main">
-        <Topbar user={profile.user} role={profile.role} onMobileNavToggle={() => setMobileNavOpen((value) => !value)} />
-        {children}
+
+      <section className="product-main tm-app__main">
+        <Topbar
+          user={profile.user}
+          role={label(profile.role)}
+          onMobileNavToggle={() => setMobileNavOpen((value) => !value)}
+        />
+        <div className="tm-app__viewport" id="main-content" tabIndex="-1">
+          {children}
+        </div>
       </section>
     </main>
   );
 }
 
 export function AppSidebar({ active = "Dashboard", roleId = "project-manager", onNavigate }) {
-  const { isAdmin, normalizedRole } = useAuth();
+  const { isAdmin, normalizedRole, user } = useAuth();
+  const { direction, label, t } = usePreferences();
   const visibleNav = getRoleNavItems(normalizedRole, isAdmin, roleId);
-  const groupedNav = groupSidebarNavItems(visibleNav);
+  const groupedNav = groupSidebarNavItems(visibleNav, t);
+  const companyName = user?.company?.name || user?.company_name || (direction === "rtl" ? "مساحة شركتك" : "Your company");
 
   return (
-    <aside className="product-sidebar">
-      <div className="sidebar-brand-wrap">
-        <Brand compact tagline="Enterprise AI PM" />
+    <aside className="product-sidebar tm-sidebar">
+      <div className="sidebar-brand-wrap tm-sidebar__brand">
+        <Brand compact tagline={direction === "rtl" ? "نظام تشغيل الفريق" : "Team operating system"} />
       </div>
-      <nav className="sidebar-nav" aria-label="Workspace navigation">
+
+      <div className="tm-workspace-switcher" aria-label={t("workspace")}>
+        <span className="tm-workspace-switcher__mark" aria-hidden="true"><FiGrid /></span>
+        <span>
+          <small>{t("workspace")}</small>
+          <b>{companyName}</b>
+        </span>
+        <i className="tm-workspace-switcher__status" aria-label={t("live")} />
+      </div>
+
+      <nav className="sidebar-nav tm-sidebar__nav" aria-label={t("navigation")}>
         {groupedNav.map((group) => (
-          <div className="sidebar-nav-section" key={group.label}>
-            <span className="sidebar-nav-section-label">{group.label}</span>
-            <div className="sidebar-nav-section-list">
+          <div className="sidebar-nav-section tm-nav-group" key={group.label}>
+            <span className="sidebar-nav-section-label tm-nav-group__label">{group.label}</span>
+            <div className="sidebar-nav-section-list tm-nav-group__list">
               {group.items.map((item) => {
                 const Icon = sidebarIconMap[item.icon] || FiMessageCircle;
+                const isActive = active === item.label || (active === "System" && item.path === "/super-admin");
                 return (
-                  <a className={active === item.label ? "active" : ""} href={`#${item.path}`} key={item.label} onClick={onNavigate}>
+                  <a
+                    className={isActive ? "active" : ""}
+                    href={`#${item.path}`}
+                    key={`${item.path}-${item.label}`}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={onNavigate}
+                  >
                     <Icon className="sidebar-nav-icon" aria-hidden="true" />
-                    <span>{item.label}</span>
+                    <span>{label(item.label)}</span>
+                    {isActive ? <i className="tm-nav-active-dot" aria-hidden="true" /> : null}
                   </a>
                 );
               })}
@@ -156,22 +210,40 @@ export function AppSidebar({ active = "Dashboard", roleId = "project-manager", o
           </div>
         ))}
       </nav>
-      {normalizedRole === "company_member" ? null : (
-        <a className="sidebar-new-project" href={normalizedRole === "company_owner" ? "#/owner/projects" : "#/projects"} onClick={onNavigate}>
-          <span aria-hidden="true">+</span>
-          <span>New Project</span>
-        </a>
-      )}
+
+      <div className="tm-sidebar__footer">
+        {normalizedRole === "company_member" ? null : (
+          <a
+            className="sidebar-new-project tm-sidebar__primary"
+            href={normalizedRole === "company_owner" ? "#/owner/projects" : "#/projects"}
+            onClick={onNavigate}
+          >
+            <FiPlus aria-hidden="true" />
+            <span>{t("newProject")}</span>
+          </a>
+        )}
+
+        <div className="tm-pulse-rail" aria-hidden="true">
+          <span><FiActivity /></span>
+          <i />
+          <i />
+          <i />
+        </div>
+        <div className="tm-sidebar__signal-copy">
+          <b>{direction === "rtl" ? "نبض الفريق" : "Team pulse"}</b>
+          <small>{direction === "rtl" ? "المعرفة والعمل في مسار واحد" : "Knowledge and work, connected"}</small>
+        </div>
+      </div>
     </aside>
   );
 }
 
-function groupSidebarNavItems(items) {
+function groupSidebarNavItems(items, t) {
   const groups = [
-    { label: "Workspace", keys: new Set(["Dashboard"]) },
-    { label: "Management", keys: new Set(["Employees", "Projects", "Tasks", "My Tasks", "Upload Center", "Shared Files", "Reports"]) },
-    { label: "AI", keys: new Set(["AI Chat", "Agent Runs"]) },
-    { label: "Account", keys: new Set(["Profile", "Notifications"]) }
+    { label: t("workspace"), keys: new Set(["Dashboard"]) },
+    { label: t("management"), keys: new Set(["Employees", "Projects", "Tasks", "My Tasks", "Upload Center", "Shared Files", "Reports"]) },
+    { label: t("ai"), keys: new Set(["AI Chat", "Agent Runs"]) },
+    { label: t("account"), keys: new Set(["Profile", "Notifications"]) }
   ];
 
   const grouped = groups.map((group) => ({
@@ -181,10 +253,7 @@ function groupSidebarNavItems(items) {
   const knownLabels = new Set(groups.flatMap((group) => Array.from(group.keys)));
   const otherItems = items.filter((item) => !knownLabels.has(item.label));
 
-  if (otherItems.length) {
-    grouped.splice(1, 0, { label: "Tools", items: otherItems });
-  }
-
+  if (otherItems.length) grouped.splice(1, 0, { label: t("tools"), items: otherItems });
   return grouped.filter((group) => group.items.length);
 }
 
@@ -197,57 +266,46 @@ function getRoleNavItems(role, isAdmin, roleId) {
 }
 
 function getWorkspaceNavItems(isAdmin, roleId) {
-  const navWithPerformance = navItems.flatMap((item) => {
-    if (item.path === "/reports") {
-      return [
-        item
-      ];
-    }
-
-    return [item];
-  });
-  return navWithPerformance.filter((item) => {
-    if (item.path.startsWith("/super-admin")) {
-      return isAdmin;
-    }
-
+  return navItems.filter((item) => {
+    if (item.path.startsWith("/super-admin")) return isAdmin;
     return !item.roles || item.roles.includes(roleId) || item.roles.includes("employee");
   });
 }
+
 export function Topbar({ user, role, onMobileNavToggle }) {
   return <AppHeader classNamePrefix="product" role={role} user={user} onMobileNavToggle={onMobileNavToggle} />;
 }
 
 export function PageHeader({ title, eyebrow, actions }) {
+  const { label } = usePreferences();
+
   return (
-    <div className="product-page-head">
+    <div className="product-page-head tm-page-head">
       <div>
-        <h1>{title}</h1>
         {eyebrow ? <p>{eyebrow}</p> : null}
+        <h1>{label(title)}</h1>
       </div>
-      {actions ? <div className="page-actions">{actions}</div> : null}
+      {actions ? <div className="page-actions tm-page-head__actions">{actions}</div> : null}
     </div>
   );
 }
 
 export function PageShell({ actions, children, className = "", subtitle, title }) {
   return (
-    <div className={`app-page-layout ${className}`.trim()}>
+    <div className={`app-page-layout tm-page ${className}`.trim()}>
       {title ? <PageHeader title={title} eyebrow={subtitle} actions={actions} /> : null}
-      <div className="app-page-content">
-        {children}
-      </div>
+      <div className="app-page-content tm-page__content">{children}</div>
     </div>
   );
 }
 
 export const AppPageLayout = PageShell;
 
-export function QuickAction({ href = "#/", label, caption }) {
+export function QuickAction({ href = "#/", label: actionLabel, caption }) {
   return (
     <a className="quick-action-card" href={href}>
-      <span>{label.slice(0, 2).toUpperCase()}</span>
-      <b>{label}</b>
+      <span>{actionLabel.slice(0, 2).toUpperCase()}</span>
+      <b>{actionLabel}</b>
       <small>{caption}</small>
     </a>
   );
@@ -271,9 +329,9 @@ export function StatCard({ item }) {
 
 export function Panel({ title, action, children, className = "" }) {
   return (
-    <section className={`product-panel ${className}`}>
+    <section className={`product-panel tm-panel ${className}`}>
       {(title || action) ? (
-        <div className="panel-head">
+        <div className="panel-head tm-panel__head">
           {title ? <h2>{title}</h2> : <span />}
           {action ? <a href="#/">{action}</a> : null}
         </div>
@@ -286,9 +344,7 @@ export function Panel({ title, action, children, className = "" }) {
 export function AvatarStack({ people }) {
   return (
     <div className="team-stack">
-      {people.map((person) => (
-        <span key={person}>{person}</span>
-      ))}
+      {people.map((person) => <span key={person}>{person}</span>)}
     </div>
   );
 }

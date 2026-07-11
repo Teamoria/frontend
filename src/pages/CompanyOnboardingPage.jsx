@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { FiBriefcase, FiGlobe, FiMapPin, FiTag } from "react-icons/fi";
 import AuthLayout from "../components/AuthLayout.jsx";
-import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { registerCompany } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { clearPendingSignup, getPendingCompanyName } from "../lib/pendingRegistration.js";
+import { getAuthPageCopy, getLocalizedRequestError } from "../lib/authPageCopy.js";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
 import "../styles/sign-up.css";
 import "../styles/auth-unified.css";
 
 export default function CompanyOnboardingPage() {
   const { login, refreshUser, user } = useAuth();
+  const { language } = usePreferences();
+  const copy = getAuthPageCopy(language, "onboarding");
   const [form, setForm] = useState({
     name: getPendingCompanyName() || user?.company?.name || "",
     industry: "",
@@ -32,7 +35,7 @@ export default function CompanyOnboardingPage() {
     event.preventDefault();
 
     if (!form.name.trim()) {
-      setStatus({ type: "error", message: "Company name is required." });
+      setStatus({ type: "error", message: copy.nameRequired });
       return;
     }
 
@@ -46,7 +49,7 @@ export default function CompanyOnboardingPage() {
       clearPendingSignup();
       window.location.hash = "/dashboard";
     } catch (error) {
-      setStatus({ type: "error", message: error.message || "Unable to create company." });
+      setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.error) });
     } finally {
       setIsSubmitting(false);
     }
@@ -56,18 +59,18 @@ export default function CompanyOnboardingPage() {
     <AuthLayout
       className="sign-up-shell company-onboarding-shell"
       variant="analytics"
-      title="Create your Teamoria company workspace."
-      text="Complete the company profile so projects, staff, uploads, billing, and AI permissions can attach to one tenant."
-      visualContent={<AuthLegacyVisual className="sign-up-visual-content" />}
+      eyebrow={copy.eyebrow}
+      title={copy.heroTitle}
+      text={copy.heroText}
     >
       <form className="auth-form sign-up-form" onSubmit={handleSubmit} noValidate>
         <div className="sign-up-mobile-brand">
           <span>Teamoria</span>
-          <small>Company Setup</small>
+          <small>{copy.eyebrow}</small>
         </div>
         <header className="sign-up-header">
-          <h1>Company setup</h1>
-          <p>Create the company record linked to your owner account.</p>
+          <h1>{copy.title}</h1>
+          <p>{copy.subtitle}</p>
         </header>
 
         {status.message ? (
@@ -77,55 +80,55 @@ export default function CompanyOnboardingPage() {
         ) : null}
 
         <div className="form-stack">
-          <span className="label">Company Name</span>
+          <span className="label">{copy.companyName}</span>
           <TextInput
             autoComplete="organization"
             disabled={isSubmitting}
             icon={<FiBriefcase />}
             name="company-name"
-            placeholder="Teamoria Demo"
+            placeholder={copy.companyPlaceholder}
             required
             value={form.name}
             onChange={(event) => updateField("name", event.target.value)}
           />
 
-          <span className="label">Industry</span>
+          <span className="label">{copy.industry}</span>
           <TextInput
             autoComplete="organization-title"
             disabled={isSubmitting}
             icon={<FiTag />}
             name="company-industry"
-            placeholder="Software"
+            placeholder={copy.industryPlaceholder}
             value={form.industry}
             onChange={(event) => updateField("industry", event.target.value)}
           />
 
-          <span className="label">Website</span>
+          <span className="label">{copy.website}</span>
           <TextInput
             autoComplete="url"
             disabled={isSubmitting}
             icon={<FiGlobe />}
             name="company-website"
-            placeholder="https://teamoria.online"
+            placeholder={copy.websitePlaceholder}
             type="url"
             value={form.website}
             onChange={(event) => updateField("website", event.target.value)}
           />
 
-          <span className="label">Address</span>
+          <span className="label">{copy.address}</span>
           <TextInput
             autoComplete="street-address"
             disabled={isSubmitting}
             icon={<FiMapPin />}
             name="company-address"
-            placeholder="Ramallah"
+            placeholder={copy.addressPlaceholder}
             value={form.address}
             onChange={(event) => updateField("address", event.target.value)}
           />
         </div>
 
-        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Creating Company...">
-          Create Company
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText={copy.submitting}>
+          {copy.submit}
         </PrimaryButton>
       </form>
     </AuthLayout>
