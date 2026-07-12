@@ -161,7 +161,7 @@ export function PreferencesProvider({ children }) {
     root.style.colorScheme = resolvedTheme;
 
     const themeColor = document.querySelector('meta[name="theme-color"]');
-    themeColor?.setAttribute("content", resolvedTheme === "dark" ? "#101214" : "#f4f5f7");
+    themeColor?.setAttribute("content", resolvedTheme === "dark" ? "#101214" : "#ffffff");
   }, [direction, language, resolvedTheme, theme]);
 
   function setLanguage(nextLanguage) {

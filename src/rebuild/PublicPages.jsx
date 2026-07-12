@@ -30,13 +30,14 @@ import { getPostLoginPath } from "../lib/authRoles.js";
 import { getAuthPageCopy, getLocalizedRequestError } from "../lib/authPageCopy.js";
 import {
   forgotPasswordSendOtp,
+  forgotPasswordVerify,
   loginWithEmail,
   registerCompany,
   registerWithEmail,
   sendOtp,
   verifyOtp
 } from "../lib/api.js";
-import { clearPendingSignup, getPendingCompanyName, getPendingSignup, setPendingSignup } from "../lib/pendingRegistration.js";
+import { clearPendingSignup, getPendingCompanyName, getPendingSignup, markPendingOtpSent, setPendingSignup } from "../lib/pendingRegistration.js";
 import { usePreferences } from "../lib/PreferencesContext.jsx";
 import { PublicPreferenceControls } from "./WorkspaceShell.jsx";
 import { Button, Field } from "./ui.jsx";
@@ -242,7 +243,18 @@ function Capability({ icon: Icon, image, text, title }) {
 export function AuthPage({ mode }) {
   const { language } = usePreferences();
   const page = mode === "signup" ? "signUp" : mode === "reset" ? "reset" : mode === "otp" ? "otp" : mode === "onboarding" ? "onboarding" : "signIn";
-  const copy = getAuthPageCopy(language, page);
+  const baseCopy = getAuthPageCopy(language, page);
+  const isPasswordResetOtp = mode === "otp" && getPendingSignup()?.type === "forgot-password";
+  const copy = isPasswordResetOtp ? {
+    ...baseCopy,
+    eyebrow: baseCopy.resetEyebrow,
+    heroTitle: baseCopy.resetHeroTitle,
+    heroText: baseCopy.resetHeroText,
+    title: baseCopy.resetTitle,
+    subtitle: baseCopy.resetSubtitle,
+    submit: baseCopy.resetSubmit,
+    submitting: baseCopy.resetSubmitting
+  } : baseCopy;
   const image = mode === "signup" || mode === "onboarding" ? featureProjects : mode === "otp" ? featureMeetings : featureAssistant;
 
   return (
@@ -297,8 +309,9 @@ function SignInForm({ copy, language }) {
       window.location.hash = getPostLoginPath(user);
     } catch (error) {
       if (error.payload?.error_code === "EMAIL_NOT_VERIFIED") {
-        sessionStorage.setItem("teamoria_pending_signup", JSON.stringify({ email: form.email, type: "register" }));
-        window.location.hash = `/verify-otp?email=${encodeURIComponent(form.email)}&type=register`;
+        const email = form.email.trim();
+        setPendingSignup({ email, type: "register" });
+        window.location.hash = `/verify-otp?email=${encodeURIComponent(email)}&type=register`;
         return;
       }
       setStatus(language === "ar" ? copy.signInError : getLocalizedRequestError(error, language, copy.signInError));
@@ -392,8 +405,10 @@ function ResetForm({ copy, language }) {
     if (validateEmail(email, copy)) return;
     setLoading(true);
     try {
-      await forgotPasswordSendOtp({ email: email.trim() });
-      setStatus({ type: "success", message: copy.successMessage });
+      const normalizedEmail = email.trim();
+      await forgotPasswordSendOtp({ email: normalizedEmail });
+      setPendingSignup({ email: normalizedEmail, type: "forgot-password", otpSent: true });
+      window.location.hash = `/verify-otp?email=${encodeURIComponent(normalizedEmail)}&type=forgot-password`;
     } catch (requestError) {
       setStatus({ type: "error", message: getLocalizedRequestError(requestError, language, copy.error) });
     } finally {
@@ -415,30 +430,62 @@ function ResetForm({ copy, language }) {
 
 function OtpForm({ copy, language }) {
   const { login } = useAuth();
-  const [pending] = useState(getPendingSignup);
+  const [pending, setPending] = useState(getPendingSignup);
   const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [status, setStatus] = useState({ type: pending?.email ? "" : "error", message: pending?.email ? "" : copy.noPending });
+  const isPasswordReset = pending?.type === "forgot-password";
+  const passwordErrors = isPasswordReset && submitted ? {
+    newPassword: !newPassword ? copy.passwordRequired : newPassword.length < 8 ? copy.passwordShort : "",
+    confirmPassword: !confirmPassword ? copy.confirmPasswordRequired : confirmPassword !== newPassword ? copy.passwordMismatch : ""
+  } : {};
 
   useEffect(() => {
-    if (!pending?.email || pending.password) return;
+    if (!pending?.email || pending.password || pending.otpSent) return;
     setResending(true);
     sendOtp({ email: pending.email, type: pending.type || "register" })
-      .then(() => setStatus({ type: "success", message: copy.sent }))
+      .then(() => {
+        markPendingOtpSent();
+        setPending((current) => current ? { ...current, otpSent: true } : current);
+        setStatus({ type: "success", message: copy.sent });
+      })
       .catch((error) => setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.sendError) }))
       .finally(() => setResending(false));
   }, [copy.sendError, copy.sent, language, pending]);
 
   async function submit(event) {
     event.preventDefault();
+    setSubmitted(true);
+    if (!pending?.email) {
+      setStatus({ type: "error", message: isPasswordReset ? copy.resetNeedsEmail : copy.createFirst });
+      return;
+    }
     if (!/^\d{6}$/.test(code)) {
       setStatus({ type: "error", message: code ? copy.codeInvalid : copy.codeRequired });
+      return;
+    }
+    if (isPasswordReset && (!newPassword || newPassword.length < 8 || !confirmPassword || confirmPassword !== newPassword)) {
+      setStatus({ type: "error", message: copy.passwordValidationError });
       return;
     }
     setLoading(true);
     setStatus({ type: "", message: "" });
     try {
+      if (isPasswordReset) {
+        await forgotPasswordVerify({ email: pending.email, code, newPassword });
+        clearPendingSignup();
+        setStatus({ type: "success", message: copy.resetSuccess });
+        window.setTimeout(() => {
+          window.location.hash = "/signin";
+        }, 650);
+        return;
+      }
+
       await verifyOtp({ email: pending.email, code, type: pending.type || "register" });
       if (pending.password) {
         const { user } = await loginWithEmail({ email: pending.email, password: pending.password });
@@ -461,6 +508,9 @@ function OtpForm({ copy, language }) {
     setResending(true);
     try {
       await sendOtp({ email: pending.email, type: pending.type || "register" });
+      markPendingOtpSent();
+      setPending((current) => current ? { ...current, otpSent: true } : current);
+      setCode("");
       setStatus({ type: "success", message: copy.resent });
     } catch (error) {
       setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.sendError) });
@@ -474,10 +524,29 @@ function OtpForm({ copy, language }) {
       <form className="t2-auth-form" noValidate onSubmit={submit}>
         {pending?.email ? <div className="t2-otp-email"><FiMail /><bdi>{pending.email}</bdi></div> : null}
         {status.message ? <p className={`t2-form-alert is-${status.type}`} role={status.type === "error" ? "alert" : "status"}>{status.message}</p> : null}
-        <Field label={copy.code} required><input aria-label={copy.code} autoComplete="one-time-code" className="t2-otp-input" disabled={!pending?.email} inputMode="numeric" maxLength="6" pattern="[0-9]*" placeholder="000000" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} /></Field>
+        <Field label={copy.code} required><input aria-label={copy.code} autoComplete="one-time-code" className="t2-otp-input" disabled={!pending?.email} inputMode="numeric" maxLength="6" pattern="[0-9]*" placeholder="000000" value={code} onChange={(event) => {
+          setCode(event.target.value.replace(/\D/g, "").slice(0, 6));
+          setStatus((current) => current.type === "error" ? { type: "", message: "" } : current);
+        }} /></Field>
+        {isPasswordReset ? (
+          <>
+            <Field error={passwordErrors.newPassword} label={copy.newPassword} required>
+              <div className="t2-input"><FiLock aria-hidden="true" /><input autoComplete="new-password" placeholder={copy.newPasswordPlaceholder} type={showPassword ? "text" : "password"} value={newPassword} onChange={(event) => {
+                setNewPassword(event.target.value);
+                setStatus((current) => current.type === "error" ? { type: "", message: "" } : current);
+              }} /><button aria-label={showPassword ? copy.hidePassword : copy.showPassword} onClick={() => setShowPassword((value) => !value)} type="button">{showPassword ? <FiEyeOff /> : <FiEye />}</button></div>
+            </Field>
+            <Field error={passwordErrors.confirmPassword} label={copy.confirmPassword} required>
+              <div className="t2-input"><FiLock aria-hidden="true" /><input autoComplete="new-password" placeholder={copy.confirmPasswordPlaceholder} type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => {
+                setConfirmPassword(event.target.value);
+                setStatus((current) => current.type === "error" ? { type: "", message: "" } : current);
+              }} /><button aria-label={showPassword ? copy.hidePassword : copy.showPassword} onClick={() => setShowPassword((value) => !value)} type="button">{showPassword ? <FiEyeOff /> : <FiEye />}</button></div>
+            </Field>
+          </>
+        ) : null}
         <Button disabled={!pending?.email} loading={loading} loadingLabel={copy.submitting} type="submit">{copy.submit}</Button>
         <button className="t2-auth-link-button" disabled={resending || !pending?.email} onClick={resend} type="button">{resending ? copy.resending : copy.resend}</button>
-        <p className="t2-auth-switch"><a href="#/signup">{copy.backToSignup}</a></p>
+        <p className="t2-auth-switch"><a href={isPasswordReset ? "#/reset-password" : "#/signup"}>{isPasswordReset ? copy.backToReset : copy.backToSignup}</a></p>
       </form>
     </AuthFormHeader>
   );

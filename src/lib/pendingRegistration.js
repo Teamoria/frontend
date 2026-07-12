@@ -2,13 +2,30 @@ export const PENDING_SIGNUP_KEY = "teamoria_pending_signup";
 
 let pendingPassword = "";
 
-export function setPendingSignup({ email, companyName, password, type = "register" }) {
+function readStoredPending() {
+  try {
+    return JSON.parse(sessionStorage.getItem(PENDING_SIGNUP_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function storePending({ email, companyName = "", type = "register", otpSent = false }) {
+  try {
+    sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
+      email,
+      companyName,
+      type,
+      otpSent
+    }));
+  } catch {
+    // The email and flow type also travel in the URL, so private storage is optional.
+  }
+}
+
+export function setPendingSignup({ email, companyName, password, type = "register", otpSent = false }) {
   pendingPassword = password || "";
-  sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
-    email,
-    companyName,
-    type
-  }));
+  storePending({ email, companyName, type, otpSent });
 }
 
 export function getPendingSignup() {
@@ -16,38 +33,52 @@ export function getPendingSignup() {
   const params = new URLSearchParams(hashQuery);
   const email = params.get("email");
   const type = params.get("type");
+  const stored = readStoredPending();
 
   if (email) {
+    const matchingStored = stored?.email?.toLowerCase() === email.toLowerCase() ? stored : null;
     return {
+      ...(matchingStored || {}),
       email,
-      type: type || "register",
+      type: type || matchingStored?.type || "register",
       password: pendingPassword
     };
   }
 
-  try {
-    const stored = JSON.parse(sessionStorage.getItem(PENDING_SIGNUP_KEY) || "null");
-    return stored ? { ...stored, password: pendingPassword } : null;
-  } catch {
-    return null;
-  }
+  return stored ? { ...stored, password: pendingPassword } : null;
+}
+
+export function markPendingOtpSent() {
+  const pending = getPendingSignup();
+  if (!pending?.email) return;
+
+  storePending({
+    email: pending.email,
+    companyName: pending.companyName,
+    type: pending.type,
+    otpSent: true
+  });
 }
 
 export function clearPendingSignup({ keepCompany = false } = {}) {
   pendingPassword = "";
 
   if (!keepCompany) {
-    sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+    try {
+      sessionStorage.removeItem(PENDING_SIGNUP_KEY);
+    } catch {
+      // There is nothing else to clear when session storage is unavailable.
+    }
     return;
   }
 
   const pending = getPendingSignup();
   if (pending?.companyName || pending?.email) {
-    sessionStorage.setItem(PENDING_SIGNUP_KEY, JSON.stringify({
+    storePending({
       email: pending.email || "",
       companyName: pending.companyName || "",
       type: pending.type || "register"
-    }));
+    });
   }
 }
 
