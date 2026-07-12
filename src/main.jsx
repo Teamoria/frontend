@@ -4,14 +4,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./lib/AuthContext.jsx";
 import { PreferencesProvider } from "./lib/PreferencesContext.jsx";
 import { RealtimeProvider } from "./lib/RealtimeContext.jsx";
-import "./styles.css";
-import "./styles/legacy-shared.css";
-import "./styles/design-system.css";
-import "./styles/responsive-overrides.css";
-import "./styles/platform-colors.css";
+import "./styles/rebuild.css";
 import App from "./App.jsx";
-import "./styles/sidebar.css";
-import "./styles/teamoria-next.css";
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "missing-google-client-id";
 

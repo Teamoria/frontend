@@ -159,6 +159,9 @@ export function PreferencesProvider({ children }) {
     root.dataset.theme = resolvedTheme;
     root.dataset.themePreference = theme;
     root.style.colorScheme = resolvedTheme;
+
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    themeColor?.setAttribute("content", resolvedTheme === "dark" ? "#101214" : "#f4f5f7");
   }, [direction, language, resolvedTheme, theme]);
 
   function setLanguage(nextLanguage) {

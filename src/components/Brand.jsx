@@ -1,4 +1,4 @@
-import logoImage from "../assets/teamoria-logo.png";
+import logoImage from "../assets/teamoria-logo.webp";
 
 export default function Brand({
   compact = false,
