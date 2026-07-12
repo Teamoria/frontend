@@ -1,457 +1,373 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  FiActivity,
+  FiArrowLeft,
   FiArrowRight,
-  FiGithub,
-  FiGlobe,
-  FiGrid,
-  FiLinkedin,
+  FiCheck,
+  FiCheckCircle,
+  FiCpu,
+  FiFileText,
+  FiFolder,
+  FiLayers,
+  FiLock,
   FiMenu,
-  FiMoon,
+  FiMessageSquare,
   FiPlayCircle,
-  FiTwitter,
+  FiShield,
   FiUsers,
-  FiYoutube,
   FiX,
   FiZap
 } from "react-icons/fi";
-import logoImage from "../assets/teamoria-logo.png";
-import aiImage from "../assets/ai.jpg";
-import featureMeetingSummariesImage from "../assets/feature-meeting-summaries.png";
-import featureProjectManagementImage from "../assets/feature-project-management.png";
-import featureSmartAssistantImage from "../assets/feature-smart-assistant.png";
-import "../styles/landing.css";
+import Brand from "../components/Brand.jsx";
+import PreferenceControls from "../components/app/PreferenceControls.jsx";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
+import "../styles/landing-next.css";
 
-const landingImages = {
-  hero: aiImage,
-  assistant: featureSmartAssistantImage,
-  kanban: featureProjectManagementImage,
-  meetings: featureMeetingSummariesImage,
-  workflow: "https://lh3.googleusercontent.com/aida-public/AB6AXuBe3ALd40yLMQMKDT5nH-wbMcQ9S8oqJJu9HLuAsTVJmIbyWecrcAjGcnD2WPxE637n0ch8ag50UhoVTRnb9y0VaKMMQx7Tn6vBl3g9F63XOyOZWWb_lDG09kb3dxqUXlGEVIjZ1GMo9h3rZDkvmt8ct4P_vLsMKESiXVDdM-IJ6K5_cihP2UBn3P5O3pDqBKEHsDwxuLqxcNeOMFqndC4Bwz_S1kLfH82jMA_f2uC0ZCdGWwSgMAwukiKLXKRQJPEWn_FxsX8PgJCv"
-};
-
-const copy = {
-  en: {
-    dir: "ltr",
-    home: "Home",
-    features: "Features",
-    how: "How it Works",
-    pricing: "Pricing",
-    login: "Log In",
-    start: "Start for Free",
-    badge: "Enterprise AI is now available",
-    headlineA: "Teamoria:",
-    headlineB: "Smart Command Center",
-    headlineC: "for your Company",
-    heroText: "Manage projects, tasks, meetings, and files in one place with an AI assistant that understands every detail of your business.",
-    startNow: "Start Free Now",
-    demo: "Watch Live Demo",
-    trusted: "Trusted by leading companies worldwide",
-    featureTitle: "AI-Powered Productivity",
-    featureText: "We don't just automate tasks; we provide the mastermind that connects every corner of your organization.",
-    howTitle: "How Teamoria Transforms Your Workflow",
-    ctaTitle: "Ready for the Future of Project Management?",
-    ctaText: "Join over 500 companies that have already started increasing their productivity by 40% using Teamoria.",
-    trial: "Start Your Free Trial",
-    sales: "Contact Sales"
-  },
+const messages = {
   ar: {
-    dir: "rtl",
-    home: "الرئيسية",
-    features: "الميزات",
-    how: "كيف يعمل",
-    pricing: "الأسعار",
+    nav: { home: "الرئيسية", capabilities: "ما الذي يربطه؟", flow: "كيف يعمل؟", roles: "لكل دور" },
     login: "تسجيل الدخول",
-    start: "ابدأ مجاناً",
-    badge: "الذكاء الاصطناعي للمؤسسات أصبح متاحاً الآن",
-    headlineA: "Teamoria:",
-    headlineB: "مركز قيادة ذكي",
-    headlineC: "لشركتك",
-    heroText: "أدر المشاريع والمهام والاجتماعات والملفات في مكان واحد مع مساعد ذكاء اصطناعي يفهم كل تفاصيل عملك.",
-    startNow: "ابدأ مجاناً الآن",
-    demo: "شاهد العرض المباشر",
-    trusted: "تثق بنا الشركات الرائدة عالمياً",
-    featureTitle: "قوة الذكاء الاصطناعي في خدمة إنتاجيتك",
-    featureText: "نحن لا نقوم فقط بأتمتة المهام؛ بل نوفر العقل المدبر الذي يربط كل زاوية من مؤسستك.",
-    howTitle: "كيف يحول Teamoria طريقة عمل شركتك؟",
-    ctaTitle: "هل أنت مستعد لمستقبل إدارة المشاريع؟",
-    ctaText: "انضم إلى أكثر من 500 شركة بدأت بالفعل بزيادة إنتاجيتها بنسبة 40% باستخدام Teamoria.",
-    trial: "ابدأ تجربتك المجانية",
-    sales: "تواصل مع المبيعات"
-  }
-};
-
-const footerCopy = {
+    start: "أنشئ مساحة شركتك",
+    brandTagline: "نظام تشغيل الفريق",
+    badge: "من المعرفة إلى قرار قابل للتنفيذ",
+    headlineA: "كل ما يعرفه فريقك،",
+    headlineB: "يتحوّل إلى عمل واضح.",
+    heroText: "يجمع Teamoria المشاريع والمهام والاجتماعات والملفات في مساحة واحدة، ثم يمنح كل شخص إجابة موثّقة ورؤية تناسب صلاحياته.",
+    primaryCta: "ابدأ بمساحة شركتك",
+    demoCta: "استكشف مساحة تجريبية",
+    proof: ["إجابات مرتبطة بالمصادر", "صلاحيات حسب الدور", "تحديثات لحظية"],
+    canvasKicker: "نبض مساحة العمل",
+    canvasLive: "متصل الآن",
+    sourceLabel: "مصادر الفريق",
+    sources: ["خطة الإطلاق.pdf", "اجتماع التسليم", "مهام المشروع"],
+    analysisLabel: "تحليل Teamoria",
+    analysisTitle: "تعارض يهدد موعد التسليم",
+    analysisText: "مهمتان تعتمدان على مراجعة واحدة لم تُنجز بعد.",
+    confidence: "3 مصادر مرتبطة",
+    decisionLabel: "قرار مقترح",
+    decisionTitle: "أعد توزيع المراجعة قبل الخميس",
+    decisionAction: "مراجعة الإجراء",
+    signalTitle: "ليست لوحة أخرى لإدارة المهام.",
+    signalText: "إنها طبقة تصل ما يحدث، وما يعرفه الفريق، وما يجب فعله بعد ذلك.",
+    capabilitiesEyebrow: "نسيج قرار واحد",
+    capabilitiesTitle: "أربع مساحات تعمل كسياق واحد",
+    capabilitiesText: "لا ينتقل فريقك بين جزر منفصلة. كل مهمة تعرف مشروعها، وكل إجابة تُظهر مصدرها، وكل ملف يمكن أن يتحول إلى قرار أو إجراء.",
+    capabilities: [
+      { title: "العمل المنظم", text: "مشاريع ومهام وأعضاء وتبعيات وحالات تقدّم، ضمن حدود الشركة والصلاحية.", tag: "المشاريع + المهام" },
+      { title: "معرفة قابلة للسؤال", text: "ارفع مستندًا أو تسجيلًا، ودع Teamoria يحفظ الملخص والقرارات والسياق القابل للبحث.", tag: "الملفات + الاجتماعات" },
+      { title: "مساعد يذكر مصادره", text: "اسأل عن خطر أو قرار أو مهمة؛ تحصل على إجابة من سياق العمل الذي يحق لك رؤيته فقط.", tag: "RAG موثّق" },
+      { title: "رؤية تناسب المسؤولية", text: "المالك يرى المخاطر والقرارات، المدير يرى ما يهدد التسليم، والعضو يرى ما عليه اليوم.", tag: "صلاحيات ذكية" }
+    ],
+    flowEyebrow: "من الإشارة إلى الإجراء",
+    flowTitle: "مسار مفهوم يمكن للفريق تتبّعه",
+    flowText: "يبقى الإنسان صاحب القرار؛ يساعده Teamoria على الوصول إليه بسرعة وبسياق واضح.",
+    steps: [
+      { title: "اجمع السياق", text: "مشاريع، مهام، ملفات واجتماعات داخل مساحة الشركة." },
+      { title: "افهم الإشارة", text: "تحليل المحتوى وربطه بالمشروع والأشخاص والصلاحيات." },
+      { title: "راجع الدليل", text: "كل إجابة أو نتيجة مهمة تعود إلى مصدر يمكن فتحه." },
+      { title: "حوّلها إلى عمل", text: "أنشئ مهمة أو حدّث قرارًا بعد مراجعة بشرية واضحة." }
+    ],
+    rolesEyebrow: "واجهة تتبدّل حسب الدور",
+    rolesTitle: "المعلومة نفسها، بالزاوية المناسبة لكل شخص",
+    roles: [
+      { name: "مالك الشركة", question: "ما الذي يحتاج قراري الآن؟", details: ["المخاطر عبر المشاريع", "الفريق والصلاحيات", "صحة العمل والاشتراك"] },
+      { name: "مدير الشركة", question: "ما الذي يهدد التسليم؟", details: ["تقدم المشاريع والمهام", "تعارضات الفريق", "سياق الملفات والمساعد"] },
+      { name: "عضو الفريق", question: "ما الذي عليّ إنجازه اليوم؟", details: ["المهام المعيّنة", "الملفات المشتركة", "إجابات ضمن الصلاحية"] }
+    ],
+    trustEyebrow: "الثقة جزء من التجربة",
+    trustTitle: "السياق لا يتجاوز صلاحيات صاحبه.",
+    trustText: "تعزل Teamoria بيانات كل شركة، وتربط الوصول بدور المستخدم وعضويته في المشروع. المساعد يسترجع فقط ما تسمح به هذه الحدود.",
+    trustItems: ["مصادقة API آمنة", "قنوات خاصة للتحديث اللحظي", "إجابات مرتبطة بالمصادر"],
+    ctaEyebrow: "ابدأ من سياق فريقك الحقيقي",
+    ctaTitle: "امنح فريقك مساحة تعرف لماذا، لا ماذا فقط.",
+    ctaText: "أنشئ حساب مالك الشركة، فعّل بريدك، ثم جهّز مساحة العمل وأضف فريقك.",
+    ctaPrimary: "إنشاء حساب الشركة",
+    ctaSecondary: "لدي حساب بالفعل",
+    footerText: "منصة تشغيل مؤسسية تربط المعرفة بالقرار والعمل.",
+    footerProduct: "المنتج",
+    footerAccount: "الحساب",
+    footerRights: "© 2026 Teamoria. جميع الحقوق محفوظة.",
+    menu: "فتح القائمة",
+    close: "إغلاق القائمة"
+  },
   en: {
-    description: "The next generation of AI-powered project management systems for large enterprises.",
-    product: "Product",
-    resources: "Resources",
-    legal: "Legal",
-    copyright: "© 2026 Teamoria AI. All rights reserved."
-  },
-  ar: {
-    description: "الجيل الجديد من أنظمة إدارة المشاريع المدعومة بالذكاء الاصطناعي للمؤسسات الكبيرة.",
-    product: "المنتج",
-    resources: "الموارد",
-    legal: "القانونية",
-    copyright: "© 2026 Teamoria AI. جميع الحقوق محفوظة."
+    nav: { home: "Home", capabilities: "What it connects", flow: "How it works", roles: "For every role" },
+    login: "Sign in",
+    start: "Create your company space",
+    brandTagline: "Team operating system",
+    badge: "From knowledge to an executable decision",
+    headlineA: "Everything your team knows",
+    headlineB: "becomes clear work.",
+    heroText: "Teamoria brings projects, tasks, meetings, and files into one space, then gives each person cited answers and the view their permissions allow.",
+    primaryCta: "Create your workspace",
+    demoCta: "Explore a demo space",
+    proof: ["Source-linked answers", "Role-aware access", "Realtime updates"],
+    canvasKicker: "Workspace pulse",
+    canvasLive: "Connected now",
+    sourceLabel: "Team sources",
+    sources: ["Launch plan.pdf", "Delivery meeting", "Project tasks"],
+    analysisLabel: "Teamoria analysis",
+    analysisTitle: "A dependency threatens delivery",
+    analysisText: "Two tasks depend on the same review that is still pending.",
+    confidence: "3 linked sources",
+    decisionLabel: "Suggested decision",
+    decisionTitle: "Reassign the review before Thursday",
+    decisionAction: "Review action",
+    signalTitle: "Not another task dashboard.",
+    signalText: "It is the layer connecting what happens, what the team knows, and what should happen next.",
+    capabilitiesEyebrow: "One decision fabric",
+    capabilitiesTitle: "Four spaces working as one context",
+    capabilitiesText: "Your team does not move between isolated islands. Every task knows its project, every answer shows its source, and every file can become a decision or an action.",
+    capabilities: [
+      { title: "Structured work", text: "Projects, tasks, members, dependencies, and progress within company and permission boundaries.", tag: "Projects + tasks" },
+      { title: "Knowledge you can ask", text: "Upload a document or recording; Teamoria preserves its summary, decisions, and searchable context.", tag: "Files + meetings" },
+      { title: "An assistant that cites", text: "Ask about a risk, decision, or task and get an answer only from work context you are allowed to see.", tag: "Cited RAG" },
+      { title: "A view for each responsibility", text: "Owners see risks and decisions, managers see delivery threats, and members see what matters today.", tag: "Role-aware" }
+    ],
+    flowEyebrow: "From signal to action",
+    flowTitle: "A traceable path the team can understand",
+    flowText: "People remain in control; Teamoria helps them reach a decision faster with clear context.",
+    steps: [
+      { title: "Gather context", text: "Projects, tasks, files, and meetings inside the company space." },
+      { title: "Understand the signal", text: "Analyze content and connect it to projects, people, and permissions." },
+      { title: "Review the evidence", text: "Every important answer or result links back to a source you can open." },
+      { title: "Turn it into work", text: "Create a task or update a decision after a clear human review." }
+    ],
+    rolesEyebrow: "An interface shaped by role",
+    rolesTitle: "The same truth, at the right angle for each person",
+    roles: [
+      { name: "Company owner", question: "What needs my decision now?", details: ["Cross-project risks", "Team and permissions", "Workspace and subscription health"] },
+      { name: "Company manager", question: "What threatens delivery?", details: ["Project and task progress", "Team conflicts", "File and assistant context"] },
+      { name: "Team member", question: "What should I finish today?", details: ["Assigned tasks", "Shared files", "Permission-aware answers"] }
+    ],
+    trustEyebrow: "Trust is part of the experience",
+    trustTitle: "Context never exceeds its owner's access.",
+    trustText: "Teamoria isolates every company's data and binds access to user roles and project membership. The assistant retrieves only what those boundaries allow.",
+    trustItems: ["Secure API authentication", "Private realtime channels", "Source-linked answers"],
+    ctaEyebrow: "Start with your team's real context",
+    ctaTitle: "Give your team a space that knows why, not only what.",
+    ctaText: "Create a company-owner account, verify your email, then set up the workspace and invite your team.",
+    ctaPrimary: "Create company account",
+    ctaSecondary: "I already have an account",
+    footerText: "An enterprise operating platform connecting knowledge, decisions, and work.",
+    footerProduct: "Product",
+    footerAccount: "Account",
+    footerRights: "© 2026 Teamoria. All rights reserved.",
+    menu: "Open menu",
+    close: "Close menu"
   }
 };
 
-const footerColumns = [
-  {
-    title: "Product",
-    items: ["Features", "AI Assistant", "Project Management", "Meeting Intelligence", "Pricing"]
-  },
-  {
-    title: "Resources",
-    items: ["Documentation", "API", "Help Center", "Blog", "Changelog"]
-  },
-  {
-    title: "Company",
-    items: ["About", "Careers", "Contact", "Partners"]
-  },
-  {
-    title: "Legal",
-    items: ["Privacy Policy", "Terms", "Cookies", "Security", "GDPR"]
-  }
-];
-
-const socialLinks = [
-  { label: "LinkedIn", icon: FiLinkedin },
-  { label: "GitHub", icon: FiGithub },
-  { label: "X", icon: FiTwitter },
-  { label: "YouTube", icon: FiYoutube }
-];
-
-const logos = ["TECHCORP", "GLOBAL-X", "NEXUS AI", "STRATOS", "V-SHIFT"];
-
-const features = [
-  {
-    icon: FiZap,
-    title: { en: "Smart Assistant with Citations", ar: "مساعد ذكي مع مصادر موثقة" },
-    text: {
-      en: "Ask any question about your projects, and the assistant will analyze files and messages to give you a precise answer with direct links to sources.",
-      ar: "اسأل عن أي تفاصيل في مشاريعك، وسيحلل المساعد الملفات والرسائل ليعطيك إجابة دقيقة مع روابط مباشرة للمصادر."
-    },
-    image: landingImages.assistant,
-    imageAlt: "AI assistant interface scanning documents"
-  },
-  {
-    icon: FiGrid,
-    title: { en: "Flexible Project Management", ar: "إدارة مشاريع مرنة" },
-    text: {
-      en: "Advanced Kanban boards, timeline tracking, and intelligent delivery date predictions based on historical team performance.",
-      ar: "لوحات كانبان متقدمة، تتبع للجداول الزمنية، وتوقعات ذكية لمواعيد التسليم بناءً على أداء الفريق السابق."
-    },
-    image: landingImages.kanban,
-    imageAlt: "Advanced Kanban board and project management interface illustration"
-  },
-  {
-    icon: FiUsers,
-    title: { en: "Automated Meeting Summaries", ar: "ملخصات اجتماعات تلقائية" },
-    text: {
-      en: "No more manual note-taking. Teamoria summarizes meetings, extracts required tasks automatically, and distributes them.",
-      ar: "لا حاجة لتدوين الملاحظات يدوياً. يلخص Teamoria الاجتماعات، ويستخرج المهام المطلوبة تلقائياً، ويوزعها على الفريق."
-    },
-    image: landingImages.meetings,
-    imageAlt: "Automated meeting summary interface"
-  }
-];
-
-const steps = [
-  [
-    { en: "Smart Connectivity", ar: "ربط ذكي للبيانات" },
-    {
-      en: "Connect your data sources like Slack, Google Drive, and Jira. The system understands your work context immediately.",
-      ar: "اربط مصادر بياناتك مثل Slack وGoogle Drive وJira ليبدأ النظام بفهم سياق العمل فوراً."
-    }
-  ],
-  [
-    { en: "Gap Analysis", ar: "تحليل الفجوات" },
-    {
-      en: "AI detects missing tasks or potential timeline risks and alerts the responsible people before delivery slips.",
-      ar: "يكتشف الذكاء الاصطناعي المهام الناقصة أو مخاطر التأخير وينبه المسؤولين قبل أن يتأثر التسليم."
-    }
-  ],
-  [
-    { en: "Data-Driven Leadership", ar: "قيادة مبنية على البيانات" },
-    {
-      en: "Get periodic strategic reports that help leaders make decisions based on real business facts.",
-      ar: "احصل على تقارير استراتيجية دورية تساعد القادة على اتخاذ قرارات مبنية على حقائق العمل."
-    }
-  ]
-];
-
-const localize = (value, lang) => (typeof value === "string" ? value : value[lang] || value.en);
+const capabilityIcons = [FiLayers, FiFileText, FiCpu, FiShield];
+const roleIcons = [FiZap, FiActivity, FiCheckCircle];
 
 export default function LandingPage() {
-  const [lang, setLang] = useState("en");
+  const { direction, language } = usePreferences();
   const [navOpen, setNavOpen] = useState(false);
-  const navMenuRef = useRef(null);
-  const t = copy[lang];
+  const menuRef = useRef(null);
+  const copy = messages[language] || messages.en;
+  const ForwardIcon = direction === "rtl" ? FiArrowLeft : FiArrowRight;
 
   useEffect(() => {
-    document.documentElement.classList.add("public-landing-scroll");
-    document.body.classList.add("public-landing-scroll");
+    document.body.classList.add("tm-public-page");
+    return () => document.body.classList.remove("tm-public-page");
+  }, []);
 
+  useEffect(() => {
+    function closeOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) setNavOpen(false);
+    }
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setNavOpen(false);
+    }
+    document.addEventListener("mousedown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
     return () => {
-      document.documentElement.classList.remove("public-landing-scroll");
-      document.body.classList.remove("public-landing-scroll");
+      document.removeEventListener("mousedown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
     };
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (navMenuRef.current && !navMenuRef.current.contains(event.target)) {
-        setNavOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-
-    if (!hash || hash === "/") {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    }
-  }, []);
-
-  function goHome(event) {
-    event.preventDefault();
-    window.location.hash = "/";
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    });
-  }
-
   return (
-    <main className="teamoria-home" dir={t.dir}>
-      <header className="home-topbar">
-        <nav>
-          <a className="home-logo" href="#/" onClick={goHome}>
-            <span className="home-logo-mark" aria-hidden="true">
-              <img src={logoImage} alt="" />
-            </span>
-            <span className="home-logo-text">Teamoria</span>
-          </a>
+    <main className="tm-home" dir={direction} id="main-content" tabIndex="-1">
+      <header className="tm-home-header">
+        <nav className="tm-home-container tm-home-nav" aria-label={copy.nav.home}>
+          <Brand className="tm-home-brand" tagline={copy.brandTagline} />
 
-          <div className="home-links">
-            <a href="#/" onClick={goHome}>{t.home}</a>
-            <a href="#features">{t.features}</a>
-            <a href="#workflow">{t.how}</a>
-            <a href="#pricing">{t.pricing}</a>
+          <div className="tm-home-nav-links">
+            <a href="#home">{copy.nav.home}</a>
+            <a href="#capabilities">{copy.nav.capabilities}</a>
+            <a href="#flow">{copy.nav.flow}</a>
+            <a href="#roles">{copy.nav.roles}</a>
           </div>
 
-          <div className="home-actions">
-            <div className="home-lang-toggle" aria-label="Language">
-              <button className={lang === "ar" ? "active" : ""} type="button" onClick={() => setLang("ar")}>AR</button>
-              <button className={lang === "en" ? "active" : ""} type="button" onClick={() => setLang("en")}>EN</button>
-            </div>
-            <a className="home-login" href="#/signin">{t.login}</a>
-            <a className="home-start" href="#/signup">{t.start}</a>
+          <div className="tm-home-nav-actions" ref={menuRef}>
+            <PreferenceControls className="tm-home-preferences" />
+            <a className="tm-home-login" href="#/signin">{copy.login}</a>
+            <a className="tm-home-nav-cta" href="#/signup">{copy.start}</a>
+            <button
+              className="tm-home-menu-button"
+              type="button"
+              aria-label={navOpen ? copy.close : copy.menu}
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen((value) => !value)}
+            >
+              {navOpen ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
+            </button>
 
-            <div className="home-menu-wrap" ref={navMenuRef}>
-              <button
-                className="home-menu-toggle"
-                type="button"
-                aria-label="Menu"
-                aria-expanded={navOpen}
-                onClick={() => setNavOpen((v) => !v)}
-              >
-                {navOpen ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
-              </button>
-
-              {navOpen && (
-                <div className="home-menu-dropdown" role="menu">
-                  <a
-                    href="#/"
-                    role="menuitem"
-                    onClick={(e) => {
-                      goHome(e);
-                      setNavOpen(false);
-                    }}
-                  >
-                    {t.home}
-                  </a>
-
-                  <a href="#features" role="menuitem" onClick={() => setNavOpen(false)}>
-                    {t.features}
-                  </a>
-
-                  <a href="#workflow" role="menuitem" onClick={() => setNavOpen(false)}>
-                    {t.how}
-                  </a>
-
-                  <a href="#pricing" role="menuitem" onClick={() => setNavOpen(false)}>
-                    {t.pricing}
-                  </a>
-
-                  <hr className="home-menu-divider" />
-
-                  <a href="#/signin" role="menuitem" onClick={() => setNavOpen(false)}>
-                    {t.login}
-                  </a>
-
-                  <a href="#/signup" role="menuitem" onClick={() => setNavOpen(false)}>
-                    {t.start}
-                  </a>
-
-                  <div className="home-menu-lang">
-                    <button
-                      className={lang === "ar" ? "active" : ""}
-                      onClick={() => {
-                        setLang("ar");
-                        setNavOpen(false);
-                      }}
-                    >
-                      Arabic
-                    </button>
-
-                    <button
-                      className={lang === "en" ? "active" : ""}
-                      onClick={() => {
-                        setLang("en");
-                        setNavOpen(false);
-                      }}
-                    >
-                      English
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            {navOpen ? (
+              <div className="tm-home-mobile-menu">
+                {Object.entries(copy.nav).map(([key, value]) => (
+                  <a href={key === "home" ? "#home" : `#${key}`} key={key} onClick={() => setNavOpen(false)}>{value}</a>
+                ))}
+                <hr />
+                <a href="#/signin" onClick={() => setNavOpen(false)}>{copy.login}</a>
+                <a className="is-primary" href="#/signup" onClick={() => setNavOpen(false)}>{copy.start}</a>
+              </div>
+            ) : null}
           </div>
         </nav>
       </header>
 
-      <section className="home-hero landing-hero" id="home">
-        <div className="home-hero-inner hero-content">
-          <span className="home-pill"><FiZap aria-hidden="true" />{t.badge}</span>
-          <h1>
-            {t.headlineA} <span>{t.headlineB}</span> {t.headlineC}
-          </h1>
-          <p>{t.heroText}</p>
-          <div className="home-hero-actions">
-            <a className="home-primary-cta" href="#/signup">{t.startNow}<FiArrowRight aria-hidden="true" /></a>
-            <a className="home-secondary-cta" href="#/dashboard?role=admin"><FiPlayCircle aria-hidden="true" />{t.demo}</a>
-          </div>
-        </div>
-
-        <div className="home-product-preview hero-image">
-          <img
-            className="home-platform-image"
-            src={landingImages.hero}
-            alt="Teamoria AI Command Center"
-          />
-        </div>
-      </section>
-
-      <section className="home-trusted">
-        <p>{t.trusted}</p>
-        <div>
-          {logos.map((logo) => <span key={logo}>{logo}</span>)}
-        </div>
-      </section>
-
-      <section className="home-features" id="features">
-        <div className="home-section-head">
-          <h2>{t.featureTitle}</h2>
-          <p>{t.featureText}</p>
-        </div>
-        <div className="home-feature-grid">
-          {features.map(({ icon: Icon, title, text, image, imageAlt }) => (
-            <article key={localize(title, "en")}>
-              <span><Icon aria-hidden="true" /></span>
-              <h3>{localize(title, lang)}</h3>
-              <p>{localize(text, lang)}</p>
-              <img className="home-feature-image" src={image} alt={imageAlt} />
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="home-workflow" id="workflow">
-        <div className="home-workflow-copy">
-          <h2>{t.howTitle}</h2>
-          <div className="home-step-list">
-            {steps.map(([title, text], index) => (
-              <article key={localize(title, "en")}>
-                <span>{index + 1}</span>
-                <div>
-                  <h3>{localize(title, lang)}</h3>
-                  <p>{localize(text, lang)}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-        <div className="home-workflow-visual">
-          <img
-            src={landingImages.workflow}
-            alt="Teamoria workflow"
-          />
-        </div>
-      </section>
-
-      <section className="home-cta" id="pricing">
-        <div>
-          <h2>Ready to transform your workspace?</h2>
-          <p>Start managing projects, meetings and AI knowledge in one platform.</p>
-          <div>
-            <a className="home-primary-cta" href="#/signup">Start Free</a>
-            <a className="home-secondary-cta" href="mailto:sales@teamoria.ai">Book a Demo</a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="home-footer">
-        <div className="home-footer-grid">
-          <div className="home-footer-brand">
-            <a className="home-logo" href="#/" onClick={goHome}>
-              <span className="home-logo-mark" aria-hidden="true">
-                <img src={logoImage} alt="" />
-              </span>
-              <span className="home-logo-text">Teamoria</span>
-            </a>
-            <p>AI work orchestration for teams that run projects, meetings, files, and decisions in one trusted workspace.</p>
-            <div className="home-footer-socials" aria-label="Social links">
-              {socialLinks.map(({ icon: Icon, label }) => (
-                <a href="#/" aria-label={label} key={label}>
-                  <Icon aria-hidden="true" />
-                </a>
-              ))}
+      <section className="tm-home-hero" id="home">
+        <div className="tm-home-container tm-home-hero-grid">
+          <div className="tm-home-hero-copy">
+            <span className="tm-home-eyebrow"><FiZap aria-hidden="true" />{copy.badge}</span>
+            <h1><span>{copy.headlineA}</span> {copy.headlineB}</h1>
+            <p>{copy.heroText}</p>
+            <div className="tm-home-hero-actions">
+              <a className="tm-home-primary-button" href="#/signup">{copy.primaryCta}<ForwardIcon aria-hidden="true" /></a>
+              <a className="tm-home-secondary-button" href="#/dashboard?role=admin"><FiPlayCircle aria-hidden="true" />{copy.demoCta}</a>
+            </div>
+            <div className="tm-home-proof" aria-label="Product principles">
+              {copy.proof.map((item) => <span key={item}><FiCheck aria-hidden="true" />{item}</span>)}
             </div>
           </div>
-          {footerColumns.map((column) => (
-            <FooterColumn key={column.title} title={column.title} items={column.items} />
-          ))}
+
+          <DecisionCanvas copy={copy} />
         </div>
-        <div className="home-footer-bottom">
-          <p>© 2026 Teamoria AI</p>
-          <p>Made for modern AI workspaces.</p>
-          <div className="home-footer-controls">
-            <button type="button">
-              <FiGlobe aria-hidden="true" />
-              {lang === "ar" ? "Arabic" : "English"}
-            </button>
-            <button type="button" aria-label="Dark mode placeholder">
-              <FiMoon aria-hidden="true" />
-              Dark
-            </button>
+      </section>
+
+      <section className="tm-home-signal-band">
+        <div className="tm-home-container">
+          <span className="tm-home-signal-mark" aria-hidden="true"><i /><i /><i /><FiActivity /></span>
+          <div><h2>{copy.signalTitle}</h2><p>{copy.signalText}</p></div>
+        </div>
+      </section>
+
+      <section className="tm-home-section tm-home-capabilities" id="capabilities">
+        <div className="tm-home-container">
+          <SectionIntro eyebrow={copy.capabilitiesEyebrow} title={copy.capabilitiesTitle} text={copy.capabilitiesText} />
+          <div className="tm-capability-grid">
+            {copy.capabilities.map((item, index) => {
+              const Icon = capabilityIcons[index];
+              return (
+                <article className={`tm-capability-card tm-capability-card--${index + 1}`} key={item.title}>
+                  <div className="tm-capability-card-top"><span><Icon aria-hidden="true" /></span><small>{item.tag}</small></div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                  {index === 1 ? <MiniTrace direction={direction} /> : null}
+                </article>
+              );
+            })}
           </div>
         </div>
+      </section>
+
+      <section className="tm-home-section tm-home-flow" id="flow">
+        <div className="tm-home-container tm-flow-layout">
+          <SectionIntro eyebrow={copy.flowEyebrow} title={copy.flowTitle} text={copy.flowText} />
+          <ol className="tm-flow-steps">
+            {copy.steps.map((step, index) => (
+              <li key={step.title}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <div><h3>{step.title}</h3><p>{step.text}</p></div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="tm-home-section tm-home-roles" id="roles">
+        <div className="tm-home-container">
+          <SectionIntro eyebrow={copy.rolesEyebrow} title={copy.rolesTitle} />
+          <div className="tm-role-grid">
+            {copy.roles.map((role, index) => {
+              const Icon = roleIcons[index];
+              return (
+                <article className="tm-role-card" key={role.name}>
+                  <header><span><Icon aria-hidden="true" /></span><small>{role.name}</small></header>
+                  <h3>{role.question}</h3>
+                  <ul>{role.details.map((detail) => <li key={detail}><FiCheckCircle aria-hidden="true" />{detail}</li>)}</ul>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="tm-home-trust">
+        <div className="tm-home-container tm-trust-card">
+          <div className="tm-trust-icon"><FiLock aria-hidden="true" /></div>
+          <div><span className="tm-section-eyebrow">{copy.trustEyebrow}</span><h2>{copy.trustTitle}</h2><p>{copy.trustText}</p></div>
+          <ul>{copy.trustItems.map((item) => <li key={item}><FiShield aria-hidden="true" />{item}</li>)}</ul>
+        </div>
+      </section>
+
+      <section className="tm-home-cta">
+        <div className="tm-home-container tm-home-cta-card">
+          <div><span>{copy.ctaEyebrow}</span><h2>{copy.ctaTitle}</h2><p>{copy.ctaText}</p></div>
+          <div><a className="tm-home-primary-button" href="#/signup">{copy.ctaPrimary}<ForwardIcon aria-hidden="true" /></a><a href="#/signin">{copy.ctaSecondary}</a></div>
+        </div>
+      </section>
+
+      <footer className="tm-home-footer">
+        <div className="tm-home-container tm-home-footer-grid">
+          <div><Brand className="tm-home-footer-brand" tagline={copy.brandTagline} /><p>{copy.footerText}</p></div>
+          <div><b>{copy.footerProduct}</b><a href="#capabilities">{copy.nav.capabilities}</a><a href="#flow">{copy.nav.flow}</a><a href="#roles">{copy.nav.roles}</a></div>
+          <div><b>{copy.footerAccount}</b><a href="#/signin">{copy.login}</a><a href="#/signup">{copy.start}</a></div>
+        </div>
+        <div className="tm-home-container tm-home-footer-bottom"><span>{copy.footerRights}</span><span><FiActivity aria-hidden="true" />Decision Fabric</span></div>
       </footer>
     </main>
   );
 }
 
-function FooterColumn({ title, items }) {
+function DecisionCanvas({ copy }) {
   return (
-    <div>
-      <h3>{title}</h3>
-      {items.map((item) => <a href="#/" key={item}>{item}</a>)}
+    <div className="tm-decision-canvas" aria-label={copy.canvasKicker}>
+      <header><div><span className="tm-canvas-pulse"><i /></span><b>{copy.canvasKicker}</b></div><small>{copy.canvasLive}</small></header>
+      <div className="tm-canvas-body">
+        <section className="tm-canvas-sources">
+          <span>{copy.sourceLabel}</span>
+          {copy.sources.map((source, index) => {
+            const Icon = index === 0 ? FiFileText : index === 1 ? FiMessageSquare : FiFolder;
+            return <article key={source}><i><Icon aria-hidden="true" /></i><b>{source}</b><small>{index + 1}</small></article>;
+          })}
+        </section>
+        <div className="tm-canvas-trace" aria-hidden="true"><i /><i /><i /><span><FiCpu /></span><i /><i /></div>
+        <section className="tm-canvas-analysis">
+          <span>{copy.analysisLabel}</span><h3>{copy.analysisTitle}</h3><p>{copy.analysisText}</p><small><FiLayers aria-hidden="true" />{copy.confidence}</small>
+        </section>
+        <section className="tm-canvas-decision">
+          <span>{copy.decisionLabel}</span><h3>{copy.decisionTitle}</h3><button type="button">{copy.decisionAction}<FiArrowLeft aria-hidden="true" /></button>
+        </section>
+      </div>
     </div>
+  );
+}
+
+function MiniTrace({ direction }) {
+  const ForwardIcon = direction === "rtl" ? FiArrowLeft : FiArrowRight;
+  return (
+    <div className="tm-mini-trace" aria-hidden="true">
+      <span><FiFileText /></span><i /><span><FiCpu /></span><i /><span><ForwardIcon /></span>
+    </div>
+  );
+}
+
+function SectionIntro({ eyebrow, title, text }) {
+  return (
+    <div className="tm-section-intro"><span className="tm-section-eyebrow">{eyebrow}</span><h2>{title}</h2>{text ? <p>{text}</p> : null}</div>
   );
 }

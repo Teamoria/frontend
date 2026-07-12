@@ -1,19 +1,22 @@
 import { useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
-import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiMail } from "react-icons/fi";
 import { PrimaryButton, TextInput } from "../components/FormControls.jsx";
 import { forgotPasswordSendOtp } from "../lib/api.js";
+import { getAuthPageCopy, getLocalizedRequestError } from "../lib/authPageCopy.js";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
 import "../styles/reset-access.css";
 import "../styles/auth-unified.css";
 
 export default function ResetPasswordPage() {
+  const { language } = usePreferences();
+  const copy = getAuthPageCopy(language, "reset");
   const [email, setEmail] = useState("");
   const [touched, setTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const emailError = getEmailError(email, touched, submitted);
+  const emailError = getEmailError(email, touched, submitted, copy);
 
   function updateEmail(value) {
     setEmail(value);
@@ -28,7 +31,7 @@ export default function ResetPasswordPage() {
     setSubmitted(true);
     setStatus({ type: "", message: "" });
 
-    const nextError = getEmailError(email, true, true);
+    const nextError = getEmailError(email, true, true, copy);
     if (nextError) {
       setTouched(true);
       return;
@@ -40,10 +43,10 @@ export default function ResetPasswordPage() {
       await forgotPasswordSendOtp({ email: email.trim() });
       setStatus({
         type: "success",
-        message: "If an account exists for this email, we sent a password reset link."
+        message: copy.successMessage
       });
     } catch (error) {
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.error) });
     } finally {
       setIsSubmitting(false);
     }
@@ -53,21 +56,21 @@ export default function ResetPasswordPage() {
     <AuthLayout
       className="reset-access-shell"
       variant="analytics"
-      title="Restore Your Neural Access."
-      text="Forgot your encryption key? We will help you securely reconnect to your team and meeting archives."
-      visualContent={<ResetAccessVisual />}
+      eyebrow={copy.eyebrow}
+      title={copy.heroTitle}
+      text={copy.heroText}
     >
       <form className={`auth-form reset-password-form reset-access-form ${email ? "has-email" : ""}`} onSubmit={handleSendOtp} noValidate>
         <ResetMobileBrand />
         <header className="reset-access-header">
-          <h1>Reset password</h1>
-          <p>Enter your work email and we&rsquo;ll send you a secure reset link.</p>
+          <h1>{copy.title}</h1>
+          <p>{copy.subtitle}</p>
         </header>
         {status.type === "success" ? (
           <div className="success-card reset-success-card" role="status" aria-live="polite">
             <span aria-hidden="true" />
             <div>
-              <h2>Check your email</h2>
+              <h2>{copy.successTitle}</h2>
               <p>{status.message}</p>
             </div>
           </div>
@@ -78,7 +81,7 @@ export default function ResetPasswordPage() {
           </p>
         ) : null}
         <div className="form-stack">
-          <span className="label">Work Email</span>
+          <span className="label">{copy.email}</span>
           <TextInput
             autoComplete="email"
             error={emailError}
@@ -86,7 +89,7 @@ export default function ResetPasswordPage() {
             inputMode="email"
             name="email"
             type="email"
-            placeholder="name@company.com"
+            placeholder={copy.emailPlaceholder}
             required
             disabled={isSubmitting}
             value={email}
@@ -94,10 +97,10 @@ export default function ResetPasswordPage() {
             onChange={(event) => updateEmail(event.target.value)}
           />
         </div>
-        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Sending...">
-          Send Reset Link
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText={copy.submitting}>
+          {copy.submit}
         </PrimaryButton>
-        <p className="auth-switch">Remember your password? <a href="#/signin">Back to Login</a></p>
+        <p className="auth-switch">{copy.remember} <a href="#/signin">{copy.backToLogin}</a></p>
       </form>
     </AuthLayout>
   );
@@ -105,22 +108,18 @@ export default function ResetPasswordPage() {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function getEmailError(value, isTouched, isSubmitted) {
+function getEmailError(value, isTouched, isSubmitted, copy) {
   const email = String(value || "").trim();
-  if (!email && isSubmitted) return "Email is required";
-  if (email && isTouched && !emailPattern.test(email)) return "Please enter a valid email address";
+  if (!email && isSubmitted) return copy.emailRequired;
+  if (email && isTouched && !emailPattern.test(email)) return copy.emailInvalid;
   return "";
-}
-
-function ResetAccessVisual() {
-  return <AuthLegacyVisual className="reset-access-visual-content" />;
 }
 
 function ResetMobileBrand() {
   return (
     <div className="reset-access-mobile-brand">
       <span>Teamoria</span>
-      <small>Enterprise AI PM</small>
+      <small>Team operating system</small>
     </div>
   );
 }

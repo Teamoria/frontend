@@ -33,6 +33,8 @@ import {
   updateTaskStatus
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
+import { isDemoMode } from "../lib/demoMode.js";
 import "../styles/tasks.css";
 
 const statusColumns = [
@@ -45,6 +47,84 @@ const statusColumns = [
 ];
 
 const priorityOptions = ["low", "medium", "high", "emergency"];
+const tasksPageCopy = {
+  ar: {
+    title: "مهام المشاريع",
+    myTitle: "مهامي",
+    subtitle: "لوحة عمل مباشرة مرتبطة بمهام الشركة.",
+    mySubtitle: "حدّث حالة مهامك وأضف ملاحظات التقدّم.",
+    board: "اللوحة",
+    list: "القائمة",
+    newTask: "مهمة جديدة",
+    unavailableTitle: "لوحة المهام بانتظار واجهة المهام",
+    unavailableText: "يمكنك متابعة استخدام بقية مساحة العمل، ثم إعادة المحاولة بعد جاهزية خدمة المهام.",
+    retry: "إعادة المحاولة",
+    loading: "جارٍ تحميل المهام…",
+    noTasks: "لا توجد مهام.",
+    noTasksFound: "لم تُوجد مهام.",
+    addTask: "إضافة مهمة",
+    task: "المهمة",
+    stage: "المرحلة",
+    owner: "المسؤول",
+    due: "الموعد",
+    priority: "الأولوية",
+    noProject: "دون مشروع",
+    project: "المشروع",
+    allProjects: "كل المشاريع",
+    noProjects: "لم تُحمّل مشاريع بعد",
+    status: "الحالة",
+    allStatuses: "كل الحالات",
+    allPriorities: "كل الأولويات",
+    assignee: "المكلّف",
+    anyAssignee: "أي شخص",
+    dueFrom: "من تاريخ",
+    dueTo: "إلى تاريخ",
+    perPage: "في الصفحة",
+    archived: "المؤرشفة",
+    refresh: "تحديث",
+    total: (value) => `${value} مهمة إجمالًا`,
+    statuses: { todo: "للبدء", in_progress: "قيد التنفيذ", on_hold: "معلّقة", blocked: "متوقفة", review: "للمراجعة", done: "منجزة" },
+    priorities: { low: "منخفضة", medium: "متوسطة", high: "عالية", emergency: "طارئة" }
+  },
+  en: {
+    title: "Project Tasks",
+    myTitle: "My Tasks",
+    subtitle: "Live task board connected to the company tasks API.",
+    mySubtitle: "Update your assigned task status and add progress notes.",
+    board: "Board",
+    list: "List",
+    newTask: "New task",
+    unavailableTitle: "Task board is waiting for the task API",
+    unavailableText: "You can keep using the rest of the workspace and retry when the task service is ready.",
+    retry: "Retry task API",
+    loading: "Loading tasks…",
+    noTasks: "No tasks.",
+    noTasksFound: "No tasks found.",
+    addTask: "Add task",
+    task: "Task",
+    stage: "Stage",
+    owner: "Owner",
+    due: "Due",
+    priority: "Priority",
+    noProject: "No project",
+    project: "Project",
+    allProjects: "All projects",
+    noProjects: "No projects loaded",
+    status: "Status",
+    allStatuses: "All statuses",
+    allPriorities: "All priorities",
+    assignee: "Assignee",
+    anyAssignee: "Any assignee",
+    dueFrom: "Due from",
+    dueTo: "Due to",
+    perPage: "Per page",
+    archived: "Archived",
+    refresh: "Refresh",
+    total: (value) => `${value} tasks in total`,
+    statuses: Object.fromEntries(statusColumns.map((item) => [item.id, item.title])),
+    priorities: { low: "Low", medium: "Medium", high: "High", emergency: "Emergency" }
+  }
+};
 const emptyTask = {
   project_id: "",
   title: "",
@@ -58,6 +138,8 @@ const emptyTask = {
 
 export default function TasksPage() {
   const { normalizedRole, user } = useAuth();
+  const { language } = usePreferences();
+  const copy = tasksPageCopy[language] || tasksPageCopy.en;
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [people, setPeople] = useState([]);
@@ -95,18 +177,25 @@ export default function TasksPage() {
   const columns = useMemo(() => {
     return statusColumns.map((column) => ({
       ...column,
+      title: copy.statuses[column.id] || column.title,
       tasks: tasks.filter((task) => task.status === column.id)
     }));
-  }, [tasks]);
+  }, [copy.statuses, tasks]);
 
   const taskRows = useMemo(() => tasks.map((task) => ({
     ...task,
-    stage: formatLabel(task.status),
+    stage: copy.statuses[task.status] || formatLabel(task.status),
     stageTone: statusColumns.find((column) => column.id === task.status)?.tone || "neutral",
     done: task.status === "done"
-  })), [tasks]);
+  })), [copy.statuses, tasks]);
 
   async function loadReferenceData() {
+    if (isDemoMode()) {
+      setProjects([]);
+      setPeople([]);
+      return;
+    }
+
     if (isMember) {
       setProjects([]);
       setPeople([]);
@@ -139,6 +228,15 @@ export default function TasksPage() {
   }
 
   async function loadTasks({ force = false } = {}) {
+    if (isDemoMode()) {
+      setTasks([]);
+      setPagination({ current_page: 1, last_page: 1, per_page: filters.per_page, total: 0, has_more: false });
+      setTaskApiUnavailable(false);
+      setStatus({ type: "", message: "" });
+      setIsLoading(false);
+      return;
+    }
+
     if (taskApiUnavailable && !force) {
       setIsLoading(false);
       return;
@@ -332,17 +430,17 @@ export default function TasksPage() {
     <AppShell active={isMember ? "My Tasks" : "Tasks"} user={user?.name || "Teamoria User"} role={formatLabel(normalizedRole || "Company User")}>
       <AppPageLayout
         className="tasks-workspace"
-        title={isMember ? "My Tasks" : "Project Tasks"}
-        subtitle={isMember ? "Update your assigned task status and add progress notes." : `Live task board connected to the ${isAdmin ? "admin" : "company"} tasks API.`}
+        title={isMember ? copy.myTitle : copy.title}
+        subtitle={isMember ? copy.mySubtitle : copy.subtitle}
         actions={(
           <div className="tasks-head-actions">
-            <div className="tasks-view-toggle" aria-label="Task view">
-              <button className={viewMode === "board" ? "active" : ""} type="button" onClick={() => setViewMode("board")} aria-pressed={viewMode === "board"}><FiGrid aria-hidden="true" />Board</button>
-              <button className={viewMode === "list" ? "active" : ""} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}><FiList aria-hidden="true" />List</button>
+            <div className="tasks-view-toggle" aria-label={copy.board}>
+              <button className={viewMode === "board" ? "active" : ""} type="button" onClick={() => setViewMode("board")} aria-pressed={viewMode === "board"}><FiGrid aria-hidden="true" />{copy.board}</button>
+              <button className={viewMode === "list" ? "active" : ""} type="button" onClick={() => setViewMode("list")} aria-pressed={viewMode === "list"}><FiList aria-hidden="true" />{copy.list}</button>
             </div>
             {isMember || taskApiUnavailable ? null : (
               <button className="tasks-primary-button" type="button" onClick={() => setIsModalOpen(true)}>
-                <FiPlus aria-hidden="true" />New Task
+                <FiPlus aria-hidden="true" />{copy.newTask}
               </button>
             )}
           </div>
@@ -353,11 +451,11 @@ export default function TasksPage() {
         {taskApiUnavailable ? (
           <section className="tasks-api-unavailable" aria-label="Tasks API unavailable">
             <div>
-              <h2>Task board is waiting for the backend task API</h2>
-              <p>Projects, staff, uploads, and other ready workspace APIs can still be used. The task list endpoint is disabled here until the backend migration/schema is fixed.</p>
+              <h2>{copy.unavailableTitle}</h2>
+              <p>{copy.unavailableText}</p>
             </div>
             <button type="button" onClick={() => loadTasks({ force: true })}>
-              <FiRefreshCw aria-hidden="true" />Retry task API
+              <FiRefreshCw aria-hidden="true" />{copy.retry}
             </button>
           </section>
         ) : null}
@@ -365,6 +463,8 @@ export default function TasksPage() {
         <TaskFilters
           filters={filters}
           isMember={isMember}
+          copy={copy}
+          columns={columns}
           onChange={(field, value) => setFilters((current) => ({ ...current, [field]: value }))}
           onRefresh={() => loadTasks({ force: true })}
           people={people}
@@ -395,8 +495,8 @@ export default function TasksPage() {
                     }
                   }}
                 >
-                  {isLoading ? <p className="tasks-empty-state">Loading tasks...</p> : null}
-                  {!isLoading && column.tasks.length === 0 ? <p className="tasks-empty-state">No tasks.</p> : null}
+                  {isLoading ? <p className="tasks-empty-state">{copy.loading}</p> : null}
+                  {!isLoading && column.tasks.length === 0 ? <p className="tasks-empty-state">{copy.noTasks}</p> : null}
                   {column.tasks.map((task) => (
                     <TaskCard
                       key={task.id}
@@ -410,7 +510,7 @@ export default function TasksPage() {
                       updateDraft("status", column.id);
                       setIsModalOpen(true);
                     }}>
-                      <FiPlus aria-hidden="true" />Add Task
+                      <FiPlus aria-hidden="true" />{copy.addTask}
                     </button>
                   ) : null}
                 </div>
@@ -420,15 +520,15 @@ export default function TasksPage() {
         ) : (
           <section className="tasks-list-view" aria-label="Task list">
             <div className="tasks-list-head" aria-hidden="true">
-              <span>Task</span>
-              <span>Stage</span>
-              <span>Owner</span>
-              <span>Due</span>
-              <span>Priority</span>
+              <span>{copy.task}</span>
+              <span>{copy.stage}</span>
+              <span>{copy.owner}</span>
+              <span>{copy.due}</span>
+              <span>{copy.priority}</span>
             </div>
             <div className="tasks-list-rows">
-              {isLoading ? <p className="tasks-empty-state">Loading tasks...</p> : null}
-              {!isLoading && taskRows.length === 0 ? <p className="tasks-empty-state">No tasks found.</p> : null}
+              {isLoading ? <p className="tasks-empty-state">{copy.loading}</p> : null}
+              {!isLoading && taskRows.length === 0 ? <p className="tasks-empty-state">{copy.noTasksFound}</p> : null}
               {taskRows.map((task) => (
                 <article className={`tasks-list-row ${task.done ? "is-done" : ""}`} key={task.id} onClick={() => setSelectedTask(task)}>
                   <div className="tasks-list-main">
@@ -437,7 +537,7 @@ export default function TasksPage() {
                       <h3>{task.title}</h3>
                       {task.description ? <p>{task.description}</p> : null}
                       <div className="tasks-tag-row">
-                        <span>{task.projectName || "No project"}</span>
+                        <span>{task.projectName || copy.noProject}</span>
                         <span>{task.assigneeLabel}</span>
                       </div>
                     </div>
@@ -445,7 +545,7 @@ export default function TasksPage() {
                   <span className="tasks-list-stage">{task.stage}</span>
                   <span className="tasks-list-owner"><i>{initials(task.assigneeLabel)}</i>{task.assigneeLabel}</span>
                   <span className="tasks-date"><FiCalendar aria-hidden="true" />{formatDate(task.due_date)}</span>
-                  <span className={`tasks-priority tasks-priority--${getPriorityClass(task.priority)}`}>{formatLabel(task.priority)}</span>
+                  <span className={`tasks-priority tasks-priority--${getPriorityClass(task.priority)}`}>{copy.priorities[task.priority] || formatLabel(task.priority)}</span>
                 </article>
               ))}
             </div>
@@ -492,52 +592,52 @@ export default function TasksPage() {
   );
 }
 
-function TaskFilters({ filters, isMember, onChange, onRefresh, people, projects, total }) {
+function TaskFilters({ columns, copy, filters, isMember, onChange, onRefresh, people, projects, total }) {
   return (
     <div className="tasks-filter-bar tasks-filter-bar--form">
       {!isMember ? (
         <label>
-          <span>Project</span>
+          <span>{copy.project}</span>
             <select value={filters.project_id} onChange={(event) => onChange("project_id", event.target.value)}>
-              <option value="">All projects</option>
-              {projects.length === 0 ? <option value="" disabled>No UUID projects loaded</option> : null}
+              <option value="">{copy.allProjects}</option>
+              {projects.length === 0 ? <option value="" disabled>{copy.noProjects}</option> : null}
               {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
             </select>
         </label>
       ) : null}
       <label>
-        <span>Status</span>
+        <span>{copy.status}</span>
         <select value={filters.status} onChange={(event) => onChange("status", event.target.value)}>
-          <option value="">All statuses</option>
-          {statusColumns.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+          <option value="">{copy.allStatuses}</option>
+          {columns.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
         </select>
       </label>
       <label>
-        <span>Priority</span>
+        <span>{copy.priority}</span>
         <select value={filters.priority} onChange={(event) => onChange("priority", event.target.value)}>
-          <option value="">All priorities</option>
-          {priorityOptions.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
+          <option value="">{copy.allPriorities}</option>
+          {priorityOptions.map((item) => <option key={item} value={item}>{copy.priorities[item]}</option>)}
         </select>
       </label>
       {!isMember ? (
         <label>
-          <span>Assignee</span>
+          <span>{copy.assignee}</span>
           <select value={filters.assignee_id} onChange={(event) => onChange("assignee_id", event.target.value)}>
-            <option value="">Any assignee</option>
+            <option value="">{copy.anyAssignee}</option>
             {people.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}
           </select>
         </label>
       ) : null}
       <label>
-        <span>Due from</span>
+        <span>{copy.dueFrom}</span>
         <input type="date" value={filters.due_from} onChange={(event) => onChange("due_from", event.target.value)} />
       </label>
       <label>
-        <span>Due to</span>
+        <span>{copy.dueTo}</span>
         <input type="date" value={filters.due_to} onChange={(event) => onChange("due_to", event.target.value)} />
       </label>
       <label>
-        <span>Per page</span>
+        <span>{copy.perPage}</span>
         <select value={filters.per_page} onChange={(event) => onChange("per_page", event.target.value)}>
           <option value="10">10</option>
           <option value="20">20</option>
@@ -547,11 +647,11 @@ function TaskFilters({ filters, isMember, onChange, onRefresh, people, projects,
       {!isMember ? (
         <label className="tasks-check-filter">
           <input checked={filters.archived} type="checkbox" onChange={(event) => onChange("archived", event.target.checked)} />
-          <span>Archived</span>
+          <span>{copy.archived}</span>
         </label>
       ) : null}
-      <button type="button" onClick={onRefresh}><FiRefreshCw aria-hidden="true" />Refresh</button>
-      <span>{total} tasks in total</span>
+      <button type="button" onClick={onRefresh}><FiRefreshCw aria-hidden="true" />{copy.refresh}</button>
+      <span>{copy.total(total)}</span>
     </div>
   );
 }

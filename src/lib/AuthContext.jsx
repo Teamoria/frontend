@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { getCurrentUser, logoutUser, clearAccessToken, getAccessToken, getStoredUser, setStoredUser, isMissingCompanyError } from "./api.js";
 import { normalizeRole } from "./authRoles.js";
 import { clearDemoMode, getDemoUser, isDemoMode } from "./demoMode.js";
+import { disconnectEcho } from "./reverb.js";
 
 const AuthContext = createContext(null);
 
@@ -12,6 +13,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     function loadUser() {
       if (isDemoMode()) {
+        disconnectEcho();
         setUser(getDemoUser());
         setIsLoading(false);
         return;
@@ -19,6 +21,7 @@ export function AuthProvider({ children }) {
 
       const token = getAccessToken();
       if (!token) {
+        disconnectEcho();
         setUser(null);
         setIsLoading(false);
         return;
@@ -38,6 +41,7 @@ export function AuthProvider({ children }) {
             return;
           }
 
+          disconnectEcho();
           clearAccessToken();
           setUser(null);
         })
@@ -88,6 +92,8 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
+    disconnectEcho();
+
     if (isDemoMode()) {
       clearDemoMode();
       clearAccessToken();

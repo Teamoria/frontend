@@ -1,227 +1,195 @@
-# Design System Master File
+# Teamoria Design System — Decision Fabric
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+> Source of truth for Teamoria web UI. Last revised: 2026-07-11.
 
----
+## Product thesis
 
-**Project:** Teamoria
-**Generated:** 2026-07-03 13:53:34
-**Category:** Freelancer Platform
-**Design Dials:** Variance 7/10 (Balanced / Modern) | Motion 6/10 (Standard) | Density 8/10 (Dense / Dashboard)
+Teamoria is a multi-tenant B2B team operating system. It connects projects, tasks,
+meetings, files, people, and permission-aware AI knowledge.
 
----
+The interface has one job: turn scattered work signals into a clear, traceable
+decision that a person can review and act on.
 
-## Global Rules
+The core narrative is:
 
-### Color Palette
-
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#0F3FBF` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#0369A1` | `--color-secondary` |
-| Accent/CTA | `#1D4ED8` | `--color-accent` |
-| Background | `#F8FBFF` | `--color-background` |
-| Foreground | `#020617` | `--color-foreground` |
-| Muted | `#E8F1FF` | `--color-muted` |
-| Border | `#DCE6F5` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| Ring | `#0F3FBF` | `--color-ring` |
-
-**Color Notes:** Professional white and blue platform palette with navy text, soft blue surfaces, and accessible action states.
-
-### Typography
-
-- **Heading Font:** Plus Jakarta Sans
-- **Body Font:** Plus Jakarta Sans
-- **Mood:** enterprise, saas, b2b, professional, indigo, modern, approachable, legible, ios dynamic type, android scaling
-- **Google Fonts:** [Plus Jakarta Sans + Plus Jakarta Sans](https://fonts.google.com/share?selection.family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400)
-
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap');
+```text
+source → understanding → evidence → decision → action
 ```
 
-### Spacing Variables
+### Audience and role lens
 
-*Density: 8/10 — Dense / Dashboard*
+- Company owner: “What needs my decision now?”
+- Company manager: “What threatens delivery?”
+- Company member: “What should I finish today?”
+- Platform admin: “Is the platform, tenant base, and billing healthy?”
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `2px` / `0.125rem` | Tight gaps |
-| `--space-sm` | `4px` / `0.25rem` | Icon gaps, inline spacing |
-| `--space-md` | `8px` / `0.5rem` | Standard padding |
-| `--space-lg` | `12px` / `0.75rem` | Section padding |
-| `--space-xl` | `16px` / `1rem` | Large gaps |
-| `--space-2xl` | `24px` / `1.5rem` | Section margins |
-| `--space-3xl` | `32px` / `2rem` | Hero padding |
+Do not use the old Company Admin / General Manager / Project Manager / Employee
+labels as backend roles. API roles are `admin`, `company_owner`,
+`company_manager`, and `company_member`.
 
-### Shadow Depths
+## Visual direction
 
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+“Decision Fabric” is a calm operations room, not a glowing generic AI product.
+Surfaces are quiet and structural; cobalt identifies commands, teal identifies
+grounded intelligence, and amber identifies decisions that need attention.
 
----
+The signature element is the Trace Rail: a thin line with meaningful nodes that
+connects real sources, analysis, decisions, and actions. It appears only where a
+relationship exists (AI citations, file processing, task history, meeting
+decisions, or realtime state).
 
-## Component Specs
+### Palette
 
-### Buttons
+| Role | Light | Dark |
+|---|---:|---:|
+| Canvas | `#F3F6F7` | `#0A1317` |
+| Surface | `#FFFFFF` | `#111F25` |
+| Raised surface | `#EEF3F5` | `#182A32` |
+| Operational ink | `#102128` | `#E9F0F2` |
+| Secondary text | `#4C626B` | `#ACC0C7` |
+| Structural border | `#D7E1E4` | `#29404A` |
+| Command cobalt | `#3158C7` | `#91A8FF` |
+| Grounded-AI teal | `#0D7A73` | `#5CC7BE` |
+| Decision amber | `#A8610A` | `#F2B866` |
+| Danger | `#B33A45` | `#FF8F9A` |
+| Success | `#167553` | `#6BD2A8` |
 
-```css
-/* Primary Button */
-.btn-primary {
-  background: #0F3FBF;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+Colors must be consumed through semantic variables in
+`src/styles/teamoria-next.css`, never hardcoded in a new page component.
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
+## Typography
 
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #0F3FBF;
-  border: 2px solid #0F3FBF;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+- Display and headings: Alexandria, 500–700.
+- Arabic interface text: IBM Plex Sans Arabic, 400–700.
+- Latin interface text: IBM Plex Sans, 400–700.
+- IDs, dates, and tabular figures: IBM Plex Mono.
+
+Headings are confident but restrained. Body copy stays at 16px minimum on mobile
+and uses a 1.6–1.85 line height for Arabic.
+
+## Shape, depth, and spacing
+
+- 4px base spacing rhythm; common values: 8, 12, 16, 24, 32, 48.
+- Controls: 9px radius and at least 44px high.
+- Panels: 12px radius, 1px structural border, no default shadow.
+- Composed canvases and major callouts: up to 16px radius.
+- Shadows are reserved for floating menus, drawers, dialogs, and the marketing
+  product canvas.
+- Non-interactive cards do not lift on hover.
+
+## Application shell
+
+Desktop (≥1200px):
+
+```text
+┌───────────────────────────────────────────────┬──────────────┐
+│ sticky command header                         │              │
+├───────────────────────────────────────────────┤  role-aware  │
+│                                               │  navigation  │
+│ content / decisions / work                    │  + pulse     │
+│                                               │  rail        │
+└───────────────────────────────────────────────┴──────────────┘
 ```
 
-### Cards
+The sidebar follows inline-start: right in Arabic and left in English. On smaller
+screens it becomes a drawer opened by a visible 44px control. Page headers contain
+one clear title, one descriptive sentence, and one primary action.
 
-```css
-.card {
-  background: #FAF5FF;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
+## Localization and RTL
 
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
+- Arabic is the default, English remains available.
+- `PreferencesProvider` owns language, `dir`, and theme.
+- Use logical CSS properties (`inline`, `block`) for new code.
+- User-generated content gets `dir="auto"`; emails and identifiers use `bdi` or
+  isolated direction where needed.
+- Dates, relative times, and numbers use `Intl` with the selected locale.
+- Reverse directional arrows only; do not mirror neutral icons.
+- A page is not considered Arabic-ready if only the shell is translated.
 
-### Inputs
+## Theme behavior
 
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
+Supported preferences: `light`, `dark`, and `system`.
 
-.input:focus {
-  border-color: #0F3FBF;
-  outline: none;
-  box-shadow: 0 0 0 3px #0F3FBF20;
-}
-```
+Light and dark tokens are designed as a pair. Dark mode is not an inversion: it
+uses layered navy surfaces, lighter desaturated cobalt/teal, and separately tested
+text/border contrast. The preference is persisted and applied before React mounts
+to prevent a theme flash.
 
-### Modals
+## Interaction principles
 
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
+- One primary action per screen.
+- Touch targets are at least 44×44px with at least 8px separation.
+- Visible keyboard focus uses a 3px semantic ring.
+- Loading states preserve layout and explain what is being loaded.
+- Errors name the failed action and give the next recovery step.
+- Empty states explain what will appear and how to create the first item.
+- Destructive actions require confirmation or undo.
+- Motion is 150–300ms, communicates state, and uses transform/opacity.
+- `prefers-reduced-motion` disables non-essential motion.
 
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
+## Realtime UX
 
----
+Laravel Reverb has four visible states:
 
-## Style Guidelines
+- connected: restrained success state;
+- connecting: amber progress state;
+- disconnected/failed: clear degraded state;
+- not configured: neutral setup state.
 
-**Style:** Soft UI Evolution
+AI Chat subscribes to private `chat.<user_id>` and `.ai.message.received`. Polling
+is only a cancellable fallback, and stops immediately when the WebSocket event
+arrives. Never show a permanent green “live” indicator if no connection was
+actually established.
 
-**Keywords:** Evolved soft UI, better contrast, modern aesthetics, subtle depth, accessibility-focused, improved shadows, hybrid
+## AI and evidence
 
-**Best For:** Modern enterprise apps, SaaS platforms, health/wellness, modern business tools, professional, hybrid
+- AI answers distinguish assistant content from user content without excessive
+  visual effects.
+- Sources are first-class: titled, numbered, keyboard reachable, and shown near
+  the claim they support.
+- Any action proposed by AI is previewed and confirmed by a person before it
+  creates or mutates work.
+- Use teal for grounded context, not as a generic decorative accent.
 
-**Key Effects:** Improved shadows (softer than flat, clearer than neumorphism), modern (200-300ms), focus visible, WCAG AA/AAA
+## Content voice
 
-### Page Pattern
+Write from the user’s side of the screen with plain active verbs:
 
-**Pattern Name:** AI Personalization Landing
+- “إنشاء مهمة” / “Create task”, not “Submit”.
+- “تعذر تحميل المهام — أعد المحاولة”, not “Something went wrong”.
+- “لا توجد ملفات بعد — ارفع أول ملف”, not a blank panel.
 
-- **Conversion Strategy:** 20%+ conversion with personalization. Requires analytics integration. Fallback for new users.
-- **CTA Placement:** Context-aware placement based on user segment
-- **Section Order:** 1. Dynamic hero (personalized), 2. Relevant features, 3. Tailored testimonials, 4. Smart CTA
+Do not claim integrations, customer counts, productivity percentages, security
+certifications, or AI abilities that the current product cannot demonstrate.
 
----
+## Accessibility floor
 
-## Motion
+- WCAG AA: 4.5:1 for normal text, 3:1 for large text and UI graphics.
+- Semantic headings and landmarks; one `h1` per page.
+- All icon-only controls have an accessible name.
+- `aria-current="page"` marks active navigation.
+- Route changes update the document title and move focus to main content.
+- Dialogs have a label, Escape route, focus containment, and mobile sheet layout.
+- Color never carries status alone; pair it with text or an icon.
+- Tables retain readable headers and get intentional horizontal scrolling.
 
-**Page Transition** (Standard) — Trigger: route change | Duration: 400-600ms | Easing: `power2.inOut`
+## Anti-patterns
 
-```js
-const tl = gsap.timeline(); tl.to('.transition-overlay', { yPercent: 0, duration: 0.4, ease: 'power2.inOut' }).call(navigate).to('.transition-overlay', { yPercent: -100, duration: 0.4, ease: 'power2.inOut', delay: 0.1 });
-```
+- Purple/pink “AI glow” as the main visual language.
+- Glassmorphism on ordinary content cards.
+- Unverified marketing metrics or fake customer logos.
+- Emoji as structural icons.
+- Raw hex colors in page components.
+- Multiple shell variants with different information architecture.
+- `dir="ltr"` on the application shell.
+- Global `overflow-x: hidden` as a substitute for responsive layout.
+- Hover-only actions or controls smaller than 44px.
 
-**Framework notes:** Keep the overlay element mounted at the layout root (outside the page component) so it survives the route swap
+## Implementation sources
 
-- ✅ Show a lightweight loading indicator if the destination route's data fetch outlasts the overlay
-- ❌ Don't tie the overlay's reveal directly to data-fetch completion without a max-wait timeout; a slow API stalls the whole transition
-- ⚡ Prefer CSS transform (yPercent) over top/left to keep the overlay animation on the compositor thread
-
----
-
-## Anti-Patterns (Do NOT Use)
-
-- ❌ Poor profiles
-- ❌ No reviews
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
+- Foundations and compatibility layer: `src/styles/teamoria-next.css`
+- Marketing surface: `src/pages/LandingPage.jsx` + `landing-next.css`
+- Authentication surface: `src/components/AuthLayout.jsx` + `auth-next.css`
+- Preferences: `src/lib/PreferencesContext.jsx`
+- Realtime lifecycle: `src/lib/reverb.js` + `RealtimeContext.jsx`
+- Shared shell: `src/components/app/AppShell.jsx` + `AppHeader.jsx`

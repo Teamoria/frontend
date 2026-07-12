@@ -1,6 +1,8 @@
 import { addInternalHeaders, API_KEY, buildAiUrl, buildApiUrl, buildOriginUrl } from "./config.js";
 import { getAccessToken, clearAccessToken } from "./session.js";
 import { ApiError, assertApiKeyConfigured, getApiErrorMessage, getValidationErrors } from "./errors.js";
+import { disconnectEcho } from "../lib/reverb.js";
+import { isDemoMode } from "../lib/demoMode.js";
 
 function appendQueryParams(url, query) {
   if (!query) return;
@@ -78,7 +80,8 @@ export async function apiRequest(path, {
     const message = getApiErrorMessage(payload, `API request failed with status ${response.status}.`);
     const validationErrors = getValidationErrors(payload);
 
-    if (response.status === 401 && redirectOnUnauthorized) {
+    if (response.status === 401 && redirectOnUnauthorized && !isDemoMode()) {
+      disconnectEcho();
       clearAccessToken();
       window.location.hash = "/signin";
     }

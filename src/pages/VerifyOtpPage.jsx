@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import AuthLayout from "../components/AuthLayout.jsx";
-import AuthLegacyVisual from "../components/AuthLegacyVisual.jsx";
 import { FiMail } from "react-icons/fi";
 import { PrimaryButton } from "../components/FormControls.jsx";
 import { loginWithEmail, sendOtp, verifyOtp } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { getPostLoginPath } from "../lib/authRoles.js";
 import { clearPendingSignup, getPendingSignup, PENDING_SIGNUP_KEY } from "../lib/pendingRegistration.js";
+import { getAuthPageCopy, getLocalizedRequestError } from "../lib/authPageCopy.js";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
 import "../styles/reset-access.css";
 import "../styles/auth-unified.css";
 
 export default function VerifyOtpPage() {
   const { login } = useAuth();
+  const { language } = usePreferences();
+  const copy = getAuthPageCopy(language, "otp");
   const [pendingSignup, setPendingSignup] = useState(getPendingSignup);
   const [codeDigits, setCodeDigits] = useState(Array(6).fill(""));
   const [hasAutoSent, setHasAutoSent] = useState(false);
@@ -24,7 +27,7 @@ export default function VerifyOtpPage() {
     if (!pendingSignup?.email) {
       setStatus({
         type: "error",
-        message: "No pending signup email found. Please create an account first."
+        message: copy.noPending
       });
     }
   }, [pendingSignup]);
@@ -38,34 +41,34 @@ export default function VerifyOtpPage() {
       .then(() => {
         setStatus({
           type: "success",
-          message: "A verification code was sent to your email."
+          message: copy.sent
         });
       })
       .catch((error) => {
-        setStatus({ type: "error", message: error.message });
+        setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.sendError) });
       })
       .finally(() => {
         setIsResending(false);
       });
-  }, [hasAutoSent, pendingSignup]);
+  }, [copy.sendError, copy.sent, hasAutoSent, language, pendingSignup]);
 
   async function handleSubmit(event) {
     event.preventDefault();
 
     if (!pendingSignup?.email) {
-      setStatus({ type: "error", message: "Please create an account before verifying OTP." });
+      setStatus({ type: "error", message: copy.createFirst });
       return;
     }
 
     const code = codeDigits.join("");
     if (!code) {
-      setStatus({ type: "error", message: "Verification code is required." });
+      setStatus({ type: "error", message: copy.codeRequired });
       inputRefs.current[0]?.focus();
       return;
     }
 
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
-      setStatus({ type: "error", message: "Please enter the 6-digit verification code." });
+      setStatus({ type: "error", message: copy.codeInvalid });
       inputRefs.current[codeDigits.findIndex((digit) => !digit)]?.focus();
       return;
     }
@@ -80,7 +83,7 @@ export default function VerifyOtpPage() {
         type: pendingSignup.type || "register"
       });
 
-      setStatus({ type: "success", message: "Email verified. Redirecting..." });
+      setStatus({ type: "success", message: copy.verified });
 
       if (pendingSignup.password) {
         const { user } = await loginWithEmail({
@@ -101,7 +104,7 @@ export default function VerifyOtpPage() {
         window.location.hash = "/signin";
       }, 350);
     } catch (error) {
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.verifyError) });
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +112,7 @@ export default function VerifyOtpPage() {
 
   async function handleResend() {
     if (!pendingSignup?.email) {
-      setStatus({ type: "error", message: "Enter signup again so we know where to send the code." });
+      setStatus({ type: "error", message: copy.resendNeedsEmail });
       return;
     }
 
@@ -122,10 +125,10 @@ export default function VerifyOtpPage() {
       inputRefs.current[0]?.focus();
       setStatus({
         type: "success",
-        message: "A new verification code was sent."
+        message: copy.resent
       });
     } catch (error) {
-      setStatus({ type: "error", message: error.message });
+      setStatus({ type: "error", message: getLocalizedRequestError(error, language, copy.sendError) });
     } finally {
       setIsResending(false);
     }
@@ -172,18 +175,18 @@ export default function VerifyOtpPage() {
     <AuthLayout
       className="reset-access-shell verify-email-shell"
       variant="analytics"
-      title="Verify your workspace access"
-      text="Confirm your email so Teamoria can keep your workspace identity secure."
-      visualContent={<VerifyAccessVisual />}
+      eyebrow={copy.eyebrow}
+      title={copy.heroTitle}
+      text={copy.heroText}
     >
       <form className="auth-form reset-access-form otp-form" onSubmit={handleSubmit} noValidate>
         <div className="reset-access-mobile-brand">
           <span>Teamoria</span>
-          <small>Enterprise AI PM</small>
+          <small>{copy.eyebrow}</small>
         </div>
         <header className="reset-access-header">
-          <h1>Verify your email</h1>
-          <p>Enter the verification code sent to your email.</p>
+          <h1>{copy.title}</h1>
+          <p>{copy.subtitle}</p>
         </header>
 
         {pendingSignup?.email && (
@@ -196,11 +199,11 @@ export default function VerifyOtpPage() {
         {status.message && <p className={`auth-alert auth-alert--${status.type}`} role={status.type === "error" ? "alert" : "status"} aria-live="polite">{status.message}</p>}
 
         <div className="form-stack">
-          <span className="label">Verification code</span>
+          <span className="label">{copy.code}</span>
           <div className="otp-code-grid" onPaste={handleCodePaste}>
             {codeDigits.map((digit, index) => (
               <input
-                aria-label={`Verification code digit ${index + 1}`}
+                aria-label={copy.digitLabel.replace("{number}", index + 1)}
                 autoComplete={index === 0 ? "one-time-code" : "off"}
                 disabled={isSubmitting || !pendingSignup?.email}
                 inputMode="numeric"
@@ -219,24 +222,20 @@ export default function VerifyOtpPage() {
           </div>
         </div>
 
-        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Verifying..." disabled={isSubmitting || !pendingSignup?.email}>
-          Verify Email
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText={copy.submitting} disabled={isSubmitting || !pendingSignup?.email}>
+          {copy.submit}
         </PrimaryButton>
 
         <div className="otp-action-stack">
           <button className="otp-resend-button" disabled={isResending || !pendingSignup?.email} onClick={handleResend} type="button">
-            {isResending ? "Sending..." : "Send a new code"}
+            {isResending ? copy.resending : copy.resend}
           </button>
 
-          <a className="back-link" href="#/signup">Back to Sign Up</a>
+          <a className="back-link" href="#/signup">{copy.backToSignup}</a>
         </div>
       </form>
     </AuthLayout>
   );
-}
-
-function VerifyAccessVisual() {
-  return <AuthLegacyVisual className="reset-access-visual-content" />;
 }
 
 export { PENDING_SIGNUP_KEY };

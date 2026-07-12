@@ -46,7 +46,7 @@ function getNotificationType(rawType, data) {
   return "system";
 }
 
-export function formatNotificationTime(value) {
+export function formatNotificationTime(value, language = "en") {
   if (!value) return "";
 
   const date = new Date(value);
@@ -55,13 +55,16 @@ export function formatNotificationTime(value) {
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
 
-  if (diffMinutes < 1) return "Just now";
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  const locale = language === "ar" ? "ar" : "en";
+  const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  if (diffMinutes < 1) return language === "ar" ? "الآن" : "Just now";
+  if (diffMinutes < 60) return relative.format(-diffMinutes, "minute");
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffHours < 24) return relative.format(-diffHours, "hour");
 
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(date);
 }
 
 export function isNotificationsRouteUnavailable(error) {

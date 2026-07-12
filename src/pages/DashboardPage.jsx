@@ -39,6 +39,7 @@ import {
 } from "../lib/api.js";
 import { normalizeRole } from "../lib/authRoles.js";
 import { getDemoRole, getHashSearchParams, isDemoMode } from "../lib/demoMode.js";
+import { usePreferences } from "../lib/PreferencesContext.jsx";
 
 const roleProfiles = {
   owner: { label: "Company Owner", initials: "CO", dashboard: "owner" },
@@ -72,6 +73,255 @@ const overdueTasks = [
   ["Client Feedback Loop", "Emily T.", "1 Day"],
   ["Documentation V2", "System", "4 Hours"]
 ];
+
+const ownerDashboardCopy = {
+  ar: {
+    overview: (company) => `نظرة عامة على ${company}`,
+    subtitleLive: "إشارات مباشرة للمشاريع والمهام والملفات والفريق من واجهة لوحة الشركة.",
+    subtitleFallback: "مؤشرات مجمعة من خدمات مساحة العمل إلى حين توفر ملخص اللوحة.",
+    subtitlePreview: "بيانات تجريبية توضّح تجربة مالك الشركة.",
+    subtitleError: "تعذر الوصول إلى بيانات لوحة الشركة الآن.",
+    subtitleEmpty: "لم تصل بيانات لوحة الشركة بعد.",
+    view: (role) => `عرض ${role}`,
+    loading: "جارٍ تحميل مؤشرات الشركة…",
+    empty: "استجابت واجهة اللوحة، لكنها لم ترجع مؤشرات المشاريع أو المهام أو الملفات بعد.",
+    topTeams: "أبرز المشاريع أداءً",
+    viewUnits: "عرض كل المشاريع",
+    department: "المشروع",
+    velocity: "التقدّم",
+    health: "حالة المشروع",
+    ai: "تكامل المعرفة",
+    noProjects: "لا توجد مشاريع شركة بعد.",
+    aiHub: "مركز إشارات الشركة",
+    aiLive: "إشارات مباشرة مع توصيات مرتبطة بالسياق",
+    aiWaiting: "المؤشرات متاحة والتوصيات تنتظر بيانات الملخص",
+    aiPreview: "اقتراحات استراتيجية تجريبية",
+    aiEmpty: "بانتظار نشاط مساحة العمل",
+    recommendationsEmpty: "ستظهر التوصيات بعد وصول نشاط المشاريع والمهام.",
+    projection: "تصوّر مستقبلي",
+    staffing: "خطة توزيع الفريق",
+    projectionPreview: "نموذج تجريبي يوضح كيف ترتبط احتياجات الفريق بنشاط المشاريع والمهام.",
+    projectionLive: "يعتمد التصور على نشاط المشاريع والمهام الذي أعادته الواجهة.",
+    generateRoadmap: "إنشاء مسودة للخطة",
+    noProgress: "لا توجد بيانات تقدّم مشاريع بعد.",
+    noActivity: "لا توجد بيانات نشاط بعد.",
+    risks: [
+      { action: "فتح المهام", badge: "قادمة", title: "تركيز المهام القادمة", text: "لا توجد مهام قادمة في بيانات اللوحة." },
+      { action: "مراجعة المشاريع", badge: "API مباشر", title: "تغطية المشاريع", text: "تتزامن المشاريع الحديثة وحالاتها من واجهة لوحة الشركة." }
+    ]
+  },
+  en: {
+    overview: (company) => `${company} Overview`,
+    subtitleLive: "Live metrics are synced from the company dashboard API.",
+    subtitleFallback: "Live metrics are assembled from workspace APIs while the overview endpoint is unavailable.",
+    subtitlePreview: "Preview data illustrates the company-owner experience.",
+    subtitleError: "The company dashboard API is currently unavailable.",
+    subtitleEmpty: "No company dashboard data has been returned yet.",
+    view: (role) => `${role} View`,
+    loading: "Loading company signals…",
+    empty: "The dashboard API responded, but it did not include projects, tasks, or file signals yet.",
+    topTeams: "Top performing projects",
+    viewUnits: "View all projects",
+    department: "Project",
+    velocity: "Progress",
+    health: "Project health",
+    ai: "Knowledge integration",
+    noProjects: "No company projects yet.",
+    aiHub: "Company signal hub",
+    aiLive: "Live workspace signals with contextual recommendations",
+    aiWaiting: "Metrics are available; recommendations are waiting for overview data",
+    aiPreview: "Preview strategic suggestions",
+    aiEmpty: "Waiting for workspace activity",
+    recommendationsEmpty: "Recommendations appear after project and task activity arrives.",
+    projection: "Projection",
+    staffing: "Team allocation plan",
+    projectionPreview: "Preview model connecting team needs to project and task activity.",
+    projectionLive: "The projection is based on returned project and task activity.",
+    generateRoadmap: "Generate plan draft",
+    noProgress: "No project progress data yet.",
+    noActivity: "No activity data yet.",
+    risks: null
+  }
+};
+
+const executionDashboardCopy = {
+  ar: {
+    hub: "مركز ذكاء التنفيذ",
+    subtitle: (role) => `تحليل تشغيلي لحظي وإشارات استباقية لصحة المشاريع لعرض ${role}.`,
+    export: "تصدير التقرير",
+    sprint: "إدارة الدورة",
+    risks: "المخاطر الحرجة",
+    active: "3 نشطة",
+    riskRegister: "عرض سجل المخاطر",
+    strategic: "إشارات استراتيجية",
+    recommendations: "إجراءات مقترحة",
+    riskCards: [
+      { detail: "تكامل دورة العمل 24", level: "خطر مرتفع", progress: 85, text: "ارتفع احتمال التأخير 14٪ بسبب انتظار توثيق واجهات الربط من فريق الباك اند.", title: "احتمال تأخير: الواجهة", tone: "error" },
+      { detail: "إعادة هيكلة مسار البيانات", level: "متوسط", progress: 40, text: "توزيع العمل الحالي يتجاوز السعة المتاحة عبر ثلاثة مسارات متوازية عالية الأولوية.", title: "تعارض في الموارد", tone: "secondary" }
+    ],
+    insights: [
+      { eyebrow: "تحليل هيكلي", title: "عنق زجاجة في الموارد", text: "رُصد تباطؤ في دورة المراجعة ضمن مجموعة التسليم؛ المراجعة أبطأ من المتوسط وتحتاج إعادة توزيع.", variant: "flow" },
+      { eyebrow: "اتجاه سرعة الإنجاز", title: "تحسن الإنتاجية", text: "ارتفعت سرعة الإنجاز بمساعدة الذكاء الاصطناعي خلال آخر 30 يومًا مع فرصة لتقديم المحطة التالية مبكرًا.", variant: "bars" }
+    ],
+    recommendationCards: [
+      { action: "تطبيق الآن", detail: "أعد توزيع مهمتين فرعيتين لموازنة حمل الفريق.", secondaryAction: "التفاصيل", title: "إعادة إسناد مهمتين" },
+      { action: "إعادة الجدولة", detail: "انقل المهمة إلى الدورة التالية لاستيعاب التأخير الحالي.", secondaryAction: "تجاهل", title: "تأجيل الاختبار النهائي" },
+      { action: "جدولة تلقائية", detail: "رتّب لقاءً قصيرًا مع فريق التصميم لإزالة عائق الواجهة.", secondaryAction: "استبعاد", title: "اجتماع مزامنة مطلوب" }
+    ]
+  },
+  en: {
+    hub: "AI Intelligence Hub",
+    subtitle: (role) => `Real-time operational analysis and predictive project health indicators for ${role}.`,
+    export: "Export Report",
+    sprint: "Manage Sprint",
+    risks: "Critical Risks",
+    active: "3 Active",
+    riskRegister: "View Risk Register",
+    strategic: "Strategic Insights",
+    recommendations: "Actionable Recommendations",
+    riskCards: [
+      { detail: "Sprint 24 Integration", level: "HIGH RISK", progress: 85, text: "Probability of delay increased by 14% due to pending API documentation from backend team.", title: "Potential Delay: Frontend", tone: "error" },
+      { detail: "Data Pipeline Refactor", level: "MEDIUM", progress: 40, text: "Current allocation exceeds available capacity across three parallel high-priority streams.", title: "Resource Conflict", tone: "secondary" }
+    ],
+    insights: [
+      { eyebrow: "Structural Analytics", title: "Resource Bottleneck", text: "A delivery review cycle is 42% slower than average and needs rebalancing.", variant: "flow" },
+      { eyebrow: "Velocity Trends", title: "Productivity Uplift", text: "AI-assisted work improved velocity over the last 30 days, creating an early-delivery opportunity.", variant: "bars" }
+    ],
+    recommendationCards: [
+      { action: "Apply Now", detail: "Reassign two subtasks to balance team workload.", secondaryAction: "Details", title: "Reassign 2 Sub-tasks" },
+      { action: "Reschedule", detail: "Move the task to the next sprint to accommodate the current delay.", secondaryAction: "Ignore", title: "Shift Final QA" },
+      { action: "Auto-Schedule", detail: "Schedule a short huddle with Design to unblock the frontend.", secondaryAction: "Dismiss", title: "Sync Meeting Needed" }
+    ]
+  }
+};
+
+const employeeDashboardCopy = {
+  ar: {
+    workspace: "مساحة الموظف",
+    welcome: (name) => `مرحبًا بعودتك، ${name}.`,
+    previewSummary: "لديك أربع أولويات رئيسية اليوم، ومؤشر تركيزك يتحسن هذا الأسبوع.",
+    liveSummary: (count) => `لديك ${count} من المهام المعادة من مساحة الشركة.`,
+    waitingSummary: "مساحة الشركة جاهزة، وستظهر البيانات هنا فور أن تعيدها الواجهة.",
+    statusLabel: "حالة العمل اليوم",
+    onTrack: "المسار سليم",
+    productivityScore: "مؤشر التركيز",
+    taskCompletion: "إنجاز المهام",
+    loading: "جارٍ تحميل لوحة العمل…",
+    kpiLabel: "مؤشرات لوحة الموظف",
+    tasksToday: "مهامي لليوم",
+    remaining: (count) => `${count} متبقية`,
+    noTasks: "لا توجد مهام في مساحة الشركة الآن.",
+    viewAllTasks: "عرض كل المهام",
+    aiPreview: "أستطيع تلخيص ملفاتك أو تحليل سير عمل الفريق.",
+    aiLive: "اسأل عن الملفات والمهام بعد وصول بيانات مساحة الشركة.",
+    noAi: "لا توجد توصيات شخصية بعد.",
+    askAi: "اسأل Teamoria عن مهامك أو ملفاتك",
+    upcoming: "القادم",
+    today: "اليوم",
+    noMeetings: "لا توجد اجتماعات قادمة.",
+    recentFiles: "أحدث الملفات",
+    noFiles: "لا توجد ملفات حديثة في مساحة الشركة.",
+    openUploads: "فتح مركز الملفات",
+    productivity: "مؤشرات الإنتاجية",
+    weekly: "أسبوعي",
+    deepWork: "عمل مركّز",
+    taskFocus: "تركيز المهام",
+    reviewLoad: "عبء المراجعة",
+    items: "عناصر",
+    schedule: "جدول العمل",
+    noSchedule: "لم تصل بيانات الجدول",
+    day: "يوم",
+    week: "أسبوع",
+    month: "شهر",
+    createTask: "إنشاء مهمة",
+    moreFileActions: (name) => `إجراءات إضافية للملف ${name}`,
+    previewTasks: [
+      ["إنهاء مراجعة خارطة الربع", "قبل 2:00 م", "عالية", 82],
+      ["مزامنة نظام التصميم", "قبل 4:30 م", "فريق المنصة", 58],
+      ["مراجعة سرعة الدورة", "بلا موعد نهائي", "تشغيلية", 34]
+    ],
+    previewMeetings: [["10:00", "ص", "اللقاء الشهري", "قاعة الاجتماعات"], ["01:30", "م", "مراجعة التصميم", "اجتماع افتراضي"]],
+    previewFiles: [["Q3_Roadmap_Draft.pdf", "عُدّل قبل ساعتين", "doc"], ["Budget_Allocation_Final.xlsx", "عُدّل أمس", "sheet"], ["Team_Velocity_Q2.report", "عُدّل قبل 3 أيام", "report"]],
+    previewKpis: [
+      { label: "مهام اليوم", value: "4", detail: "3 أولويات مركّزة", icon: FiClock, progress: 72, tone: "primary" },
+      { label: "المهام المنجزة", value: "9", detail: "+2 عن أمس", icon: FiCheckCircle, progress: 68, tone: "success" },
+      { label: "مؤشر الإنتاجية", value: "88", detail: "+12٪ هذا الأسبوع", icon: FiTrendingUp, progress: 88, tone: "score" },
+      { label: "الاجتماعات القادمة", value: "2", detail: "التالي عند 10:00 ص", icon: FiCalendar, progress: 45, tone: "meeting" }
+    ]
+  },
+  en: {
+    workspace: "Employee workspace",
+    welcome: (name) => `Welcome back, ${name}.`,
+    previewSummary: "You have four primary priorities today, and your focus score is improving this week.",
+    liveSummary: (count) => `You have ${count} tasks returned from your company workspace.`,
+    waitingSummary: "Your company workspace is ready. Live data will appear when the API returns it.",
+    statusLabel: "Today's work status",
+    onTrack: "On track",
+    productivityScore: "Focus score",
+    taskCompletion: "Task completion",
+    loading: "Loading dashboard from API…",
+    kpiLabel: "Employee dashboard KPIs",
+    tasksToday: "My Tasks for Today",
+    remaining: (count) => `${count} Remaining`,
+    noTasks: "No tasks returned for your company workspace.",
+    viewAllTasks: "View all tasks",
+    aiPreview: "I can summarize your docs or analyze team velocity.",
+    aiLive: "Ask about files and tasks once your company workspace has data.",
+    noAi: "No personal AI recommendations returned yet.",
+    askAi: "Ask Teamoria AI about your tasks or files",
+    upcoming: "Upcoming",
+    today: "Today",
+    noMeetings: "No meetings returned yet.",
+    recentFiles: "Recent Files",
+    noFiles: "No recent files returned for your company workspace.",
+    openUploads: "Open Upload Center",
+    productivity: "Productivity Insights",
+    weekly: "Weekly",
+    deepWork: "Deep work",
+    taskFocus: "Task focus",
+    reviewLoad: "Review load",
+    items: "items",
+    schedule: "Work Schedule",
+    noSchedule: "No schedule returned",
+    day: "Day",
+    week: "Week",
+    month: "Month",
+    createTask: "Create task",
+    moreFileActions: (name) => `More actions for ${name}`,
+    previewTasks: [["Finalize Q3 roadmap review", "Due by 2:00 PM", "High", 82], ["Sync with Design System team", "Due by 4:30 PM", "Teamoria Alpha", 58], ["Review sprint velocity data", "No deadline", "Operational", 34]],
+    previewMeetings: [["10:00", "AM", "Stakeholder Monthly", "Main Conference Room"], ["01:30", "PM", "Design Review", "Virtual Link"]],
+    previewFiles: [["Q3_Roadmap_Draft.pdf", "Modified 2h ago", "doc"], ["Budget_Allocation_Final.xlsx", "Modified yesterday", "sheet"], ["Team_Velocity_Q2.report", "Modified 3d ago", "report"]],
+    previewKpis: [
+      { label: "Tasks Today", value: "4", detail: "3 focused priorities", icon: FiClock, progress: 72, tone: "primary" },
+      { label: "Completed Tasks", value: "9", detail: "+2 vs yesterday", icon: FiCheckCircle, progress: 68, tone: "success" },
+      { label: "Productivity Score", value: "88", detail: "+12% this week", icon: FiTrendingUp, progress: 88, tone: "score" },
+      { label: "Upcoming Meetings", value: "2", detail: "Next at 10:00 AM", icon: FiCalendar, progress: 45, tone: "meeting" }
+    ]
+  }
+};
+
+const dashboardArabicLabels = {
+  "Company Spend Utilization": "استخدام ميزانية الشركة",
+  "Company Project Health": "صحة مشاريع الشركة",
+  "Company Workforce": "أعضاء الشركة",
+  "AI Efficiency Estimate": "أثر المساعد المتوقع",
+  "Company Projects": "مشاريع الشركة",
+  "Project Health": "صحة المشاريع",
+  "Task Completion": "إنجاز المهام",
+  "Mock data": "بيانات تجريبية",
+  "No projects returned": "لا توجد مشاريع",
+  "No completed projects": "لا توجد مشاريع مكتملة",
+  "No users returned": "لا يوجد أعضاء بعد",
+  "No tasks returned": "لا توجد مهام",
+  "Todo": "للبدء",
+  "In progress": "قيد التنفيذ",
+  "Blocked": "متوقفة",
+  "Done": "منجزة",
+  "Elite": "ممتاز",
+  "Stable": "مستقر",
+  "Caution": "يحتاج انتباهًا",
+  "Company workspace": "مساحة الشركة"
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -109,18 +359,27 @@ export default function DashboardPage() {
   return <ExecutionDashboard isPreview={isPreview} roleId={roleId} profile={profile} onRoleChange={handleRoleChange} />;
 }
 function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
-  const isPreview = !authUser;
+  const { language, label } = usePreferences();
+  const copy = ownerDashboardCopy[language] || ownerDashboardCopy.en;
+  const isPreview = !authUser || isDemoMode();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [dashboard, setDashboard] = useState(null);
   const [dashboardStatus, setDashboardStatus] = useState({ loading: false, error: "" });
   const companyName = authUser?.company?.name || "Your Company";
   const hasLiveDashboard = hasDashboardData(dashboard);
-  const liveMetrics = hasLiveDashboard ? getOwnerMetricsFromDashboard(dashboard) : isPreview ? ownerMetrics : getEmptyOwnerMetrics();
-  const liveTeams = hasLiveDashboard ? getOwnerTeamsFromDashboard(dashboard) : isPreview ? ownerTeams : [];
-  const liveRisks = hasLiveDashboard ? getOwnerRisksFromDashboard(dashboard) : getOwnerRisksFromDashboard(null);
+  const liveMetrics = (hasLiveDashboard ? getOwnerMetricsFromDashboard(dashboard) : isPreview ? ownerMetrics : getEmptyOwnerMetrics())
+    .map((metric) => localizeDashboardMetric(metric, language));
+  const liveTeams = (hasLiveDashboard ? getOwnerTeamsFromDashboard(dashboard) : isPreview ? ownerTeams : [])
+    .map((team) => localizeDashboardTeam(team, language));
+  const liveRisks = language === "ar" && !hasLiveDashboard
+    ? copy.risks
+    : getOwnerRisksFromDashboard(hasLiveDashboard ? dashboard : null);
   const projectProgress = hasLiveDashboard ? getProjectProgressFromDashboard(dashboard) : isPreview ? dashboardCharts.projectProgress : [];
   const activityOverview = hasLiveDashboard ? getActivityOverviewFromDashboard(dashboard) : isPreview ? dashboardCharts.activityOverview : [];
-  const liveStatusSummary = getStatusSummaryFromDashboard(dashboard);
+  const liveStatusSummary = getStatusSummaryFromDashboard(dashboard).map((item) => ({
+    ...item,
+    label: localizeDashboardLabel(item.label, language)
+  }));
   const hasOverviewDashboard = hasLiveDashboard && dashboard?.source !== "fallback";
   const dashboardUnavailable = !isPreview && !dashboardStatus.loading && !hasLiveDashboard;
 
@@ -139,13 +398,13 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
       .catch((error) => {
         if (!isMounted) return;
         setDashboard(null);
-        setDashboardStatus({ loading: false, error: getDashboardErrorMessage(error) });
+        setDashboardStatus({ loading: false, error: getDashboardErrorMessage(error, language) });
       });
 
     return () => {
       isMounted = false;
     };
-  }, [isPreview]);
+  }, [isPreview, language]);
 
   return (
     <main className="owner-dashboard">
@@ -155,20 +414,20 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
 
         <AppPageLayout
           className="owner-page"
-          title={`${companyName} Overview`}
-          subtitle={`Company workspace overview for members, projects, tasks, uploads, and AI activity.${hasOverviewDashboard ? " Live metrics are synced from the company dashboard API." : hasLiveDashboard ? " Live metrics are assembled from workspace APIs while the overview endpoint is unavailable." : isPreview ? " Preview data is shown in demo mode." : dashboardStatus.error ? " The company dashboard API is currently unavailable." : " No company dashboard data has been returned yet."}`}
+          title={copy.overview(companyName)}
+          subtitle={hasOverviewDashboard ? copy.subtitleLive : hasLiveDashboard ? copy.subtitleFallback : isPreview ? copy.subtitlePreview : dashboardStatus.error ? copy.subtitleError : copy.subtitleEmpty}
           actions={(
             <div className="owner-period">
               <FiCalendar aria-hidden="true" />
-              <span>{profile.label} View</span>
+              <span>{copy.view(label(profile.label))}</span>
             </div>
           )}
         >
 
           {isPreview ? <RoleSwitcher activeRole={roleId} variant="owner" onRoleChange={onRoleChange} /> : null}
-          {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">Loading dashboard from API...</p> : null}
+          {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">{copy.loading}</p> : null}
           {!isPreview && dashboardStatus.error ? <p className="dashboard-api-state dashboard-api-state--error">{dashboardStatus.error}</p> : null}
-          {dashboardUnavailable && !dashboardStatus.error ? <p className="dashboard-api-state">The dashboard API responded, but it did not include company totals, projects, tasks, or uploads yet.</p> : null}
+          {dashboardUnavailable && !dashboardStatus.error ? <p className="dashboard-api-state">{copy.empty}</p> : null}
 
           <section className="owner-metrics-grid">
             {liveMetrics.map((metric, index) => (
@@ -180,24 +439,24 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
             <div className="owner-main-column">
               <section className="owner-panel owner-table-panel">
                 <div className="owner-panel-head">
-                  <h3><FiStar aria-hidden="true" />Top Performing Teams</h3>
-                  <a href="#/reports">View All Units</a>
+                  <h3><FiStar aria-hidden="true" />{copy.topTeams}</h3>
+                  <a href="#/reports">{copy.viewUnits}</a>
                 </div>
                 <div className="owner-table-wrap">
                   <div className="container--scroll-x">
                     <table>
                       <thead>
                         <tr>
-                          <th>Department</th>
-                          <th>Velocity</th>
-                          <th>Project Health</th>
-                          <th>AI Integration</th>
+                          <th>{copy.department}</th>
+                          <th>{copy.velocity}</th>
+                          <th>{copy.health}</th>
+                          <th>{copy.ai}</th>
                         </tr>
                       </thead>
                       <tbody>
                   {liveTeams.length === 0 ? (
                     <tr>
-                      <td colSpan="4">No company projects returned yet.</td>
+                      <td colSpan="4">{copy.noProjects}</td>
                     </tr>
                   ) : null}
                   {liveTeams.map(([code, name, office, velocity, health, tone, avatars, progress]) => (
@@ -261,8 +520,8 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                 <div className="owner-ai-head">
                   <span><FiZap aria-hidden="true" /></span>
                   <div>
-                  <h3>AI Company Hub</h3>
-                    <p>{hasOverviewDashboard ? "Live workspace signals with AI recommendations" : hasLiveDashboard ? "Workspace metrics are available; AI recommendations are waiting for overview data" : isPreview ? "Strategic suggestions" : "Waiting for company dashboard data"}</p>
+                  <h3>{copy.aiHub}</h3>
+                    <p>{hasOverviewDashboard ? copy.aiLive : hasLiveDashboard ? copy.aiWaiting : isPreview ? copy.aiPreview : copy.aiEmpty}</p>
                   </div>
                 </div>
                 <div className="owner-ai-status-strip" aria-label="Dashboard status summary">
@@ -276,20 +535,20 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
                 <div className="owner-ai-suggestions">
                   {(hasOverviewDashboard || isPreview) ? aiInsights.filter((insight) => insight.scope === "company").map((insight) => (
                     <AIInsightCard classNamePrefix="owner" insight={insight} key={insight.id} />
-                  )) : <p className="owner-live-empty">AI recommendations will appear after the company dashboard API returns workspace activity.</p>}
+                  )) : <p className="owner-live-empty">{copy.recommendationsEmpty}</p>}
                 </div>
                 {(hasOverviewDashboard || isPreview) ? (
                   <article className="owner-projection-card">
-                    <span>Projection</span>
-                    <h4>Staffing Plan</h4>
-                    <p>{isPreview ? "Mock model predicts hiring needs based on project and task activity." : "Model predictions are based on returned project and task activity."}</p>
-                    <button type="button">Generate HR Roadmap</button>
+                    <span>{copy.projection}</span>
+                    <h4>{copy.staffing}</h4>
+                    <p>{isPreview ? copy.projectionPreview : copy.projectionLive}</p>
+                    <button type="button">{copy.generateRoadmap}</button>
                   </article>
                 ) : null}
               </section>
               <section className="owner-dashboard-charts">
-                {projectProgress.length ? <ProjectProgressChart classNamePrefix="owner" data={projectProgress} /> : <p className="owner-live-empty">No project progress data returned yet.</p>}
-                {activityOverview.length ? <ActivityOverviewChart classNamePrefix="owner" data={activityOverview} /> : <p className="owner-live-empty">No activity chart data returned yet.</p>}
+                {projectProgress.length ? <ProjectProgressChart classNamePrefix="owner" data={projectProgress} /> : <p className="owner-live-empty">{copy.noProgress}</p>}
+                {activityOverview.length ? <ActivityOverviewChart classNamePrefix="owner" data={activityOverview} /> : <p className="owner-live-empty">{copy.noActivity}</p>}
               </section>
             </aside>
           </section>
@@ -307,6 +566,8 @@ function OwnerDashboard({ authUser, roleId, profile, onRoleChange }) {
 }
 
 function ExecutionDashboard({ isPreview, roleId, profile, onRoleChange }) {
+  const { language, label } = usePreferences();
+  const copy = executionDashboardCopy[language] || executionDashboardCopy.en;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -320,16 +581,16 @@ function ExecutionDashboard({ isPreview, roleId, profile, onRoleChange }) {
             <div className="manager-hub-title">
               <span><FiZap aria-hidden="true" /></span>
               <div>
-                <h2>AI Intelligence Hub</h2>
-                <p>Real-time operational analysis and predictive project health indicators for {profile.label}.</p>
+                <h2>{copy.hub}</h2>
+                <p>{copy.subtitle(label(profile.label))}</p>
               </div>
             </div>
             <div className="exec-page-actions">
               <button className="exec-secondary-button" type="button">
                 <FiDownload aria-hidden="true" />
-                <span>Export Report</span>
+                <span>{copy.export}</span>
               </button>
-              <button className="exec-primary-button" type="button">Manage Sprint</button>
+              <button className="exec-primary-button" type="button">{copy.sprint}</button>
             </div>
           </section>
 
@@ -338,76 +599,40 @@ function ExecutionDashboard({ isPreview, roleId, profile, onRoleChange }) {
           <section className="manager-intel-grid">
             <section className="manager-risks-column">
               <div className="manager-section-title">
-                <h3><FiAlertTriangle aria-hidden="true" />Critical Risks</h3>
-                <span>3 Active</span>
+                <h3><FiAlertTriangle aria-hidden="true" />{copy.risks}</h3>
+                <span>{copy.active}</span>
               </div>
-              <RiskSignalCard
-                detail="Sprint 24 Integration"
-                level="HIGH RISK"
-                progress={85}
-                text="Probability of delay increased by 14% due to pending API documentation from backend team."
-                title="Potential Delay: Frontend"
-                tone="error"
-              />
-              <RiskSignalCard
-                detail="Data Pipeline Refactor"
-                level="MEDIUM"
-                progress={40}
-                text="Sarah J. is over-allocated at 115% capacity across 3 parallel high-priority streams."
-                title="Resource Conflict"
-                tone="secondary"
-              />
-              <a className="manager-text-link" href="#/reports">View Risk Register -&gt;</a>
+              {copy.riskCards.map((risk) => <RiskSignalCard key={risk.title} {...risk} />)}
+              <a className="manager-text-link" href="#/reports">{copy.riskRegister} <FiArrowRight aria-hidden="true" /></a>
             </section>
 
             <section className="manager-strategic-column">
               <div className="manager-section-title manager-section-title--plain">
-                <h3><FiTrendingUp aria-hidden="true" />Strategic Insights</h3>
+                <h3><FiTrendingUp aria-hidden="true" />{copy.strategic}</h3>
               </div>
               <div className="manager-insight-grid">
-                <StrategicInsightCard
-                  eyebrow="Structural Analytics"
-                  icon={<FiBriefcase />}
-                  title="Resource Bottleneck"
-                  text="Detected in EMEA region delivery cluster for Project Odyssey. Review cycle is 42% slower than average."
-                  variant="flow"
-                />
-                <StrategicInsightCard
-                  eyebrow="Velocity Trends"
-                  icon={<FiTrendingUp />}
-                  title="Productivity Uplift"
-                  text="AI-assisted coding has improved velocity by 18% in the last 30 days. Estimated early delivery of Milestone B."
-                  variant="bars"
-                />
+                {copy.insights.map((insight, index) => (
+                  <StrategicInsightCard
+                    {...insight}
+                    icon={index === 0 ? <FiBriefcase /> : <FiTrendingUp />}
+                    key={insight.title}
+                  />
+                ))}
               </div>
             </section>
 
             <section className="manager-recommendations">
               <div className="manager-section-title manager-section-title--plain">
-                <h3><FiZap aria-hidden="true" />Actionable Recommendations</h3>
+                <h3><FiZap aria-hidden="true" />{copy.recommendations}</h3>
               </div>
               <div className="manager-recommendation-grid">
-                <RecommendationCard
-                  action="Apply Now"
-                  detail="Move CSS Refactor from Sarah J. to Marcus L. to balance workload."
-                  icon={<FiArrowRight />}
-                  secondaryAction="Details"
-                  title="Reassign 2 Sub-tasks"
-                />
-                <RecommendationCard
-                  action="Reschedule"
-                  detail="Move task to next sprint to accommodate current backend delays."
-                  icon={<FiCalendar />}
-                  secondaryAction="Ignore"
-                  title={'Shift "Final QA"'}
-                />
-                <RecommendationCard
-                  action="Auto-Schedule"
-                  detail="Schedule a 15m huddle with the Design Team to unblock Frontend."
-                  icon={<FiUsers />}
-                  secondaryAction="Dismiss"
-                  title="Sync Meeting Needed"
-                />
+                {copy.recommendationCards.map((recommendation, index) => (
+                  <RecommendationCard
+                    {...recommendation}
+                    icon={index === 0 ? <FiArrowRight /> : index === 1 ? <FiCalendar /> : <FiUsers />}
+                    key={recommendation.title}
+                  />
+                ))}
               </div>
             </section>
           </section>
@@ -489,35 +714,44 @@ function TrendBars() {
 }
 
 function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange }) {
-  const firstName = (authUser?.name || authUser?.email || "there").split(/\s|@/).filter(Boolean)[0];
+  const { language } = usePreferences();
+  const copy = employeeDashboardCopy[language] || employeeDashboardCopy.en;
+  const firstName = (authUser?.name || authUser?.email || (language === "ar" ? "زميلنا" : "there")).split(/\s|@/).filter(Boolean)[0];
   const shellUser = authUser?.name || authUser?.email || profile.label;
   const [dashboard, setDashboard] = useState(null);
   const [dashboardStatus, setDashboardStatus] = useState({ loading: false, error: "" });
-  const previewTaskItems = [
-    ["Finalize Q3 roadmap review", "Due by 2:00 PM", "High", 82],
-    ["Sync with Design System team", "Due by 4:30 PM", "Teamoria Alpha", 58],
-    ["Review sprint velocity data", "No deadline", "Operational", 34]
-  ];
-  const previewMeetingItems = [
-    ["10:00", "AM", "Stakeholder Monthly", "Main Conference Room"],
-    ["01:30", "PM", "Design Review", "Virtual Link"]
-  ];
-  const previewRecentFiles = [
-    ["Q3_Roadmap_Draft.pdf", "Modified 2h ago", "doc"],
-    ["Budget_Allocation_Final.xlsx", "Modified Yesterday", "sheet"],
-    ["Team_Velocity_Q2.report", "Modified 3d ago", "report"]
-  ];
-  const previewKpis = [
-    { label: "Tasks Today", value: "4", detail: "3 focused priorities", icon: FiClock, progress: 72, tone: "primary" },
-    { label: "Completed Tasks", value: "9", detail: "+2 vs yesterday", icon: FiCheckCircle, progress: 68, tone: "success" },
-    { label: "Productivity Score", value: "88", detail: "+12% this week", icon: FiTrendingUp, progress: 88, tone: "score" },
-    { label: "Upcoming Meetings", value: "2", detail: "Next at 10:00 AM", icon: FiCalendar, progress: 45, tone: "meeting" }
-  ];
-  const taskItems = isPreview ? previewTaskItems : getEmployeeTasksFromDashboard(dashboard);
-  const meetingItems = isPreview ? previewMeetingItems : [];
-  const recentFiles = isPreview ? previewRecentFiles : getEmployeeFilesFromDashboard(dashboard);
-  const kpis = isPreview ? previewKpis : getEmployeeKpisFromDashboard(dashboard);
+  const taskItems = isPreview ? copy.previewTasks : getEmployeeTasksFromDashboard(dashboard, language);
+  const meetingItems = isPreview ? copy.previewMeetings : [];
+  const recentFiles = isPreview ? copy.previewFiles : getEmployeeFilesFromDashboard(dashboard, language);
+  const kpis = isPreview ? copy.previewKpis : getEmployeeKpisFromDashboard(dashboard, language);
   const remainingTasks = taskItems.length;
+  const completionScore = getEmployeeCompletionScore(dashboard);
+  const summary = isPreview ? copy.previewSummary : dashboard ? copy.liveSummary(remainingTasks) : copy.waitingSummary;
+  const baseAiInsight = aiInsights.find((insight) => insight.id === "insight-employee-focus");
+  const aiInsight = language === "ar" && baseAiInsight
+    ? {
+      ...baseAiInsight,
+      actions: [{ href: "#/ai-chat", label: "افتح المساعد" }],
+      scope: "شخصي",
+      sources: [{ href: "#/tasks", label: "مهامك" }, { href: "#/uploads", label: "ملفاتك" }],
+      summary: "أفضل فرصة لإنهاء الأولويات الحالية هي تجميع المراجعات في نافذة عمل مركّز قبل نهاية اليوم.",
+      title: "نافذة تركيز مقترحة"
+    }
+    : baseAiInsight;
+  const insightRows = isPreview ? [
+    [copy.deepWork, language === "ar" ? "6.4س" : "6.4h", 74],
+    [copy.taskFocus, "88%", 88],
+    [copy.reviewLoad, language === "ar" ? "3 عناصر" : "3 items", 42]
+  ] : [
+    [copy.deepWork, "-", 0],
+    [copy.taskFocus, `${completionScore}%`, completionScore],
+    [copy.reviewLoad, `${taskItems.length} ${copy.items}`, clampPercent(taskItems.length * 10)]
+  ];
+  const scheduleRows = isPreview ? (
+    language === "ar"
+      ? [["8:00 ص", "الوقوف اليومي", "فريق Teamoria", "primary"], ["9:00 ص", "", "", ""], ["10:00 ص", "اللقاء الشهري", "", "secondary"], ["11:00 ص", "وقت تركيز", "", "focus"]]
+      : [["8:00 AM", "Daily Standup", "Teamoria Squad", "primary"], ["9:00 AM", "", "", ""], ["10:00 AM", "Stakeholder Monthly", "", "secondary"], ["11:00 AM", "Focus Block", "", "focus"]]
+  ) : [["", copy.noSchedule, "", "focus"]];
 
   useEffect(() => {
     if (isPreview || isDemoMode()) return;
@@ -534,13 +768,13 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
       .catch((error) => {
         if (!isMounted) return;
         setDashboard(null);
-        setDashboardStatus({ loading: false, error: getDashboardErrorMessage(error) });
+        setDashboardStatus({ loading: false, error: getDashboardErrorMessage(error, language) });
       });
 
     return () => {
       isMounted = false;
     };
-  }, [isPreview]);
+  }, [isPreview, language]);
 
   return (
     <AppShell active="Dashboard" user={shellUser} role={profile.label} roleId={roleId}>
@@ -548,22 +782,22 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
         <div className="employee-dashboard-content">
           <section className="employee-hero-card">
             <div>
-              <span className="employee-eyebrow">Employee workspace</span>
-              <h2>Welcome back, {firstName}.</h2>
-              <p>{isPreview ? "You have 4 primary tasks to tackle today. Your productivity score is up 12% this week." : dashboard ? `You have ${remainingTasks} task${remainingTasks === 1 ? "" : "s"} returned from your company workspace.` : "Your company workspace is ready. Live data will appear here when the API returns it."}</p>
+              <span className="employee-eyebrow">{copy.workspace}</span>
+              <h2>{copy.welcome(firstName)}</h2>
+              <p>{summary}</p>
             </div>
-            <div className="employee-hero-status" aria-label="Today's employee status">
-              <span><FiCheckCircle aria-hidden="true" /> On track</span>
-              <strong>{isPreview ? "88%" : `${getEmployeeCompletionScore(dashboard)}%`}</strong>
-              <small>{isPreview ? "Productivity score" : "Task completion"}</small>
+            <div className="employee-hero-status" aria-label={copy.statusLabel}>
+              <span><FiCheckCircle aria-hidden="true" /> {copy.onTrack}</span>
+              <strong>{isPreview ? "88%" : `${completionScore}%`}</strong>
+              <small>{isPreview ? copy.productivityScore : copy.taskCompletion}</small>
             </div>
           </section>
 
           {isPreview ? <RoleSwitcher activeRole={roleId} variant="employee" onRoleChange={onRoleChange} /> : null}
-          {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">Loading dashboard from API...</p> : null}
+          {!isPreview && dashboardStatus.loading ? <p className="dashboard-api-state">{copy.loading}</p> : null}
           {!isPreview && dashboardStatus.error ? <p className="dashboard-api-state dashboard-api-state--error">{dashboardStatus.error}</p> : null}
 
-          <section className="employee-kpi-grid" aria-label="Employee dashboard KPIs">
+          <section className="employee-kpi-grid" aria-label={copy.kpiLabel}>
             {kpis.map((item, index) => {
               const Icon = item.icon;
               return (
@@ -585,11 +819,11 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
           <section className="employee-bento-grid employee-analytics-grid">
             <article className="employee-panel employee-task-panel">
               <div className="employee-panel-head">
-                <h3><FiBriefcase aria-hidden="true" />My Tasks for Today</h3>
-                <span>{remainingTasks} Remaining</span>
+                <h3><FiBriefcase aria-hidden="true" />{copy.tasksToday}</h3>
+                <span>{copy.remaining(remainingTasks)}</span>
               </div>
               <div className="employee-task-list">
-                {!dashboardStatus.loading && taskItems.length === 0 ? <p className="tasks-empty-state">No tasks returned for your company workspace.</p> : null}
+                {!dashboardStatus.loading && taskItems.length === 0 ? <p className="tasks-empty-state">{copy.noTasks}</p> : null}
                 {taskItems.map(([title, due, status, progress]) => (
                   <label className="employee-task-item" key={title}>
                     <input type="checkbox" />
@@ -602,7 +836,7 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                   </label>
                 ))}
               </div>
-              <a className="employee-text-link" href="#/tasks">View all tasks <FiArrowRight aria-hidden="true" /></a>
+              <a className="employee-text-link" href="#/tasks">{copy.viewAllTasks} <FiArrowRight aria-hidden="true" /></a>
             </article>
 
             <article className="employee-ai-card">
@@ -610,21 +844,21 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                 <span><FiZap aria-hidden="true" /></span>
                 <div>
                   <h3>Teamoria AI</h3>
-                  <p>{isPreview ? "I can summarize your docs or analyze team velocity." : "Ask about files and tasks once your company workspace has data."}</p>
+                  <p>{isPreview ? copy.aiPreview : copy.aiLive}</p>
                 </div>
               </div>
               <div className="employee-ai-message">
                 {isPreview ? (
                   <AIInsightCard
                     classNamePrefix="employee"
-                    insight={aiInsights.find((insight) => insight.id === "insight-employee-focus")}
+                    insight={aiInsight}
                   />
                 ) : (
-                  <p className="tasks-empty-state">No personal AI recommendations returned yet.</p>
+                  <p className="tasks-empty-state">{copy.noAi}</p>
                 )}
               </div>
               <label className="employee-ai-input">
-                <input placeholder="Ask Teamoria AI about your tasks or files" />
+                <input placeholder={copy.askAi} />
                 <button type="button"><FiArrowRight aria-hidden="true" /></button>
               </label>
             </article>
@@ -632,11 +866,11 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
             <aside className="employee-side-column">
               <article className="employee-panel employee-upcoming-panel">
                 <div className="employee-panel-head">
-                  <h3><FiCalendar aria-hidden="true" />Upcoming</h3>
-                  <span>Today</span>
+                  <h3><FiCalendar aria-hidden="true" />{copy.upcoming}</h3>
+                  <span>{copy.today}</span>
                 </div>
                 <div className="employee-meeting-list">
-                  {!isPreview && meetingItems.length === 0 ? <p className="tasks-empty-state">No meetings returned yet.</p> : null}
+                  {!isPreview && meetingItems.length === 0 ? <p className="tasks-empty-state">{copy.noMeetings}</p> : null}
                   {meetingItems.map(([time, meridiem, title, place]) => (
                     <article key={title}>
                       <time><span>{time}</span><b>{meridiem}</b></time>
@@ -651,10 +885,10 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
 
               <article className="employee-panel employee-files-panel">
                 <div className="employee-panel-head">
-                  <h3><FiBookOpen aria-hidden="true" />Recent Files</h3>
+                  <h3><FiBookOpen aria-hidden="true" />{copy.recentFiles}</h3>
                 </div>
                 <div className="employee-file-list">
-                  {!isPreview && recentFiles.length === 0 ? <p className="tasks-empty-state">No recent files returned for your company workspace.</p> : null}
+                  {!isPreview && recentFiles.length === 0 ? <p className="tasks-empty-state">{copy.noFiles}</p> : null}
                   {recentFiles.map(([name, meta, type]) => (
                     <article className={`file-${type}`} key={name}>
                       <span><FiBookOpen aria-hidden="true" /></span>
@@ -662,29 +896,21 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
                         <b>{name}</b>
                         <small>{meta}</small>
                       </div>
-                      <button type="button" aria-label={`More actions for ${name}`}>...</button>
+                      <button type="button" aria-label={copy.moreFileActions(name)}>...</button>
                     </article>
                   ))}
                 </div>
-                <a className="employee-secondary-link" href="#/uploads">Open Upload Center</a>
+                <a className="employee-secondary-link" href="#/uploads">{copy.openUploads}</a>
               </article>
             </aside>
 
             <article className="employee-panel employee-insights-panel">
               <div className="employee-panel-head">
-                <h3><FiTrendingUp aria-hidden="true" />Productivity Insights</h3>
-                <span>Weekly</span>
+                <h3><FiTrendingUp aria-hidden="true" />{copy.productivity}</h3>
+                <span>{copy.weekly}</span>
               </div>
               <div className="employee-insight-grid">
-                {(isPreview ? [
-                  ["Deep work", "6.4h", 74],
-                  ["Task focus", "88%", 88],
-                  ["Review load", "3 items", 42]
-                ] : [
-                  ["Deep work", "-", 0],
-                  ["Task focus", `${getEmployeeCompletionScore(dashboard)}%`, getEmployeeCompletionScore(dashboard)],
-                  ["Review load", `${taskItems.length} items`, clampPercent(taskItems.length * 10)]
-                ]).map(([label, value, progress]) => (
+                {insightRows.map(([label, value, progress]) => (
                   <div className="employee-insight-row" key={label}>
                     <div>
                       <span>{label}</span>
@@ -699,26 +925,17 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
             <article className="employee-panel employee-schedule-panel">
               <div className="employee-schedule-head">
                 <div>
-                  <h3>Work Schedule</h3>
-                  <span>{isPreview ? "Friday, June 14" : "No schedule returned"}</span>
+                  <h3>{copy.schedule}</h3>
+                  <span>{isPreview ? (language === "ar" ? "الجمعة، 14 يونيو" : "Friday, June 14") : copy.noSchedule}</span>
                 </div>
                 <div>
-                  <button className="active" type="button">Day</button>
-                  <button type="button">Week</button>
-                  <button type="button">Month</button>
+                  <button className="active" type="button">{copy.day}</button>
+                  <button type="button">{copy.week}</button>
+                  <button type="button">{copy.month}</button>
                 </div>
               </div>
               <div className="employee-timeline">
-                {[
-                  ...(isPreview ? [
-                  ["8:00 AM", "Daily Standup", "Teamoria Squad", "primary"],
-                  ["9:00 AM", "", "", ""],
-                  ["10:00 AM", "Stakeholder Monthly", "", "secondary"],
-                  ["11:00 AM", "Focus Block", "", "focus"]
-                  ] : [
-                    ["", "No schedule items returned for this workspace.", "", "focus"]
-                  ])
-                ].map(([time, title, subtitle, tone]) => (
+                {scheduleRows.map(([time, title, subtitle, tone]) => (
                   <div className="employee-time-row" key={time}>
                     <span>{time}</span>
                     <div>
@@ -741,18 +958,23 @@ function EmployeeDashboard({ authUser, isPreview, roleId, profile, onRoleChange 
         </div>
 
         <AiHelper classNamePrefix="employee" />
-        <a className="employee-fab" href="#/tasks" aria-label="Create task"><FiPlus aria-hidden="true" /></a>
+        <a className="employee-fab" href="#/tasks" aria-label={copy.createTask}><FiPlus aria-hidden="true" /></a>
       </AppPageLayout>
     </AppShell>
   );
 }
 
 function RoleSwitcher({ activeRole, variant, onRoleChange }) {
+  const { label, language } = usePreferences();
+
   return (
-    <div className={`dashboard-role-switcher dashboard-role-switcher--${variant}`} aria-label="Preview dashboard role">
+    <div
+      className={`dashboard-role-switcher dashboard-role-switcher--${variant}`}
+      aria-label={language === "ar" ? "معاينة لوحة حسب الدور" : "Preview dashboard role"}
+    >
       {Object.entries(roleProfiles).map(([id, role]) => (
         <button className={activeRole === id ? "active" : ""} type="button" key={id} onClick={() => onRoleChange(id)}>
-          {role.label}
+          {label(role.label)}
         </button>
       ))}
     </div>
@@ -773,14 +995,14 @@ function RiskCard({ action, badge, classNamePrefix, icon, text, title, tone }) {
 }
 
 function AiHelper({ classNamePrefix }) {
+  const { language } = usePreferences();
+  const items = language === "ar"
+    ? [["المساعد", FiZap, true], ["المصادر", FiBookOpen, false], ["التوثيق", FiCheckCircle, false], ["السجل", FiClock, false]]
+    : [["AI Assistant", FiZap, true], ["Ask Source", FiBookOpen, false], ["Cite", FiCheckCircle, false], ["History", FiClock, false]];
+
   return (
-    <nav className={`${classNamePrefix}-ai-helper`} aria-label="AI helper navigation">
-      {[
-        ["AI Assistant", FiZap, true],
-        ["Ask Source", FiBookOpen, false],
-        ["Cite", FiCheckCircle, false],
-        ["History", FiClock, false]
-      ].map(([label, Icon, active]) => (
+    <nav className={`${classNamePrefix}-ai-helper`} aria-label={language === "ar" ? "تنقل مساعد الذكاء" : "AI helper navigation"}>
+      {items.map(([label, Icon, active]) => (
         <a className={active ? "active" : ""} href="#/ai-chat" key={label}>
           <Icon aria-hidden="true" />
           <span>{label}</span>
@@ -863,14 +1085,18 @@ function hasObjectValues(value) {
   return Boolean(value && typeof value === "object" && Object.values(value).some((item) => Number(item || 0) > 0));
 }
 
-function getDashboardErrorMessage(error) {
+function getDashboardErrorMessage(error, language = "en") {
   const message = error?.message || "";
 
   if (/unexpected error occurred/i.test(message)) {
+    if (language === "ar") {
+      return "أعادت واجهة لوحة الشركة خطأ من الخادم. المشاريع والمهام والملفات قد تعمل، لكن نقطة overview تحتاج بيانات أو إصلاحًا من الباك اند.";
+    }
+
     return "Company dashboard API returned a server error. Projects, tasks, and uploads may still work, but the overview endpoint needs backend data or a backend fix.";
   }
 
-  return message || "Unable to load dashboard data.";
+  return message || (language === "ar" ? "تعذر تحميل بيانات لوحة التحكم." : "Unable to load dashboard data.");
 }
 
 function getRowsFromSettledPayload(result, keys) {
@@ -908,6 +1134,27 @@ function isOverdueTask(task) {
   if (!task?.due_date || String(task.status || "") === "done") return false;
   const dueDate = new Date(task.due_date);
   return !Number.isNaN(dueDate.getTime()) && dueDate < new Date();
+}
+
+function localizeDashboardLabel(value, language) {
+  return language === "ar" ? dashboardArabicLabels[value] || value : value;
+}
+
+function localizeDashboardMetric(metric, language) {
+  if (language !== "ar") return metric;
+  return {
+    ...metric,
+    label: localizeDashboardLabel(metric.label, language),
+    detail: localizeDashboardLabel(metric.detail, language)
+  };
+}
+
+function localizeDashboardTeam(team, language) {
+  if (language !== "ar") return team;
+  const next = [...team];
+  next[2] = localizeDashboardLabel(next[2], language);
+  next[4] = localizeDashboardLabel(next[4], language);
+  return next;
 }
 
 function getOwnerMetricsFromDashboard(dashboard) {
@@ -969,40 +1216,43 @@ function getEmptyOwnerMetrics() {
   ];
 }
 
-function getEmployeeKpisFromDashboard(dashboard) {
+function getEmployeeKpisFromDashboard(dashboard, language = "en") {
   const totals = dashboard?.totals || {};
   const taskStatuses = dashboard?.task_statuses || {};
   const totalTasks = Number(totals.tasks || 0);
   const doneTasks = Number(taskStatuses.done || 0);
   const upcomingTasks = normalizeCollection(dashboard?.upcoming_tasks);
   const completion = getEmployeeCompletionScore(dashboard);
+  const ar = language === "ar";
 
   return [
-    { label: "Tasks Today", value: formatNumber(upcomingTasks.length), detail: "From company dashboard", icon: FiClock, progress: clampPercent(upcomingTasks.length * 12), tone: "primary" },
-    { label: "Completed Tasks", value: formatNumber(doneTasks), detail: "Done tasks", icon: FiCheckCircle, progress: completion, tone: "success" },
-    { label: "Task Completion", value: `${completion}%`, detail: `${formatNumber(totalTasks)} total tasks`, icon: FiTrendingUp, progress: completion, tone: "score" },
-    { label: "Upcoming Meetings", value: "0", detail: "No meetings API returned", icon: FiCalendar, progress: 0, tone: "meeting" }
+    { label: ar ? "مهام اليوم" : "Tasks Today", value: formatNumber(upcomingTasks.length), detail: ar ? "من لوحة الشركة" : "From company dashboard", icon: FiClock, progress: clampPercent(upcomingTasks.length * 12), tone: "primary" },
+    { label: ar ? "المهام المنجزة" : "Completed Tasks", value: formatNumber(doneTasks), detail: ar ? "مهام مكتملة" : "Done tasks", icon: FiCheckCircle, progress: completion, tone: "success" },
+    { label: ar ? "إنجاز المهام" : "Task Completion", value: `${completion}%`, detail: ar ? `${formatNumber(totalTasks)} إجمالي المهام` : `${formatNumber(totalTasks)} total tasks`, icon: FiTrendingUp, progress: completion, tone: "score" },
+    { label: ar ? "الاجتماعات القادمة" : "Upcoming Meetings", value: "0", detail: ar ? "لم تصل واجهة الاجتماعات" : "No meetings API returned", icon: FiCalendar, progress: 0, tone: "meeting" }
   ];
 }
 
-function getEmployeeTasksFromDashboard(dashboard) {
+function getEmployeeTasksFromDashboard(dashboard, language = "en") {
   return normalizeCollection(dashboard?.upcoming_tasks).slice(0, 5).map((task) => {
-    const status = formatTaskStatus(task.status || task.priority || "todo");
+    const status = formatTaskStatus(task.status || task.priority || "todo", language);
     return [
-      task.title || "Untitled task",
-      task.due_date ? `Due ${formatDate(task.due_date)}` : "No deadline",
+      task.title || (language === "ar" ? "مهمة بدون عنوان" : "Untitled task"),
+      task.due_date ? `${language === "ar" ? "الموعد" : "Due"} ${formatDate(task.due_date)}` : (language === "ar" ? "بلا موعد نهائي" : "No deadline"),
       status,
       getTaskProgress(task)
     ];
   });
 }
 
-function getEmployeeFilesFromDashboard(dashboard) {
+function getEmployeeFilesFromDashboard(dashboard, language = "en") {
   const files = normalizeCollection(dashboard?.recent_uploads || dashboard?.uploads || dashboard?.recent_files);
 
   return files.slice(0, 5).map((file) => [
-    file.original_name || file.file_name || file.name || "Untitled file",
-    file.updated_at || file.created_at ? `Modified ${formatDate(file.updated_at || file.created_at)}` : "No modified date",
+    file.original_name || file.file_name || file.name || (language === "ar" ? "ملف بدون اسم" : "Untitled file"),
+    file.updated_at || file.created_at
+      ? `${language === "ar" ? "عُدّل" : "Modified"} ${formatDate(file.updated_at || file.created_at)}`
+      : (language === "ar" ? "لا يوجد تاريخ تعديل" : "No modified date"),
     getFileTone(file)
   ]);
 }
@@ -1145,8 +1395,24 @@ function formatProjectHealth(status, progress) {
   return "Caution";
 }
 
-function formatTaskStatus(status) {
-  return String(status || "todo")
+function formatTaskStatus(status, language = "en") {
+  const normalized = String(status || "todo");
+  const arabicStatuses = {
+    active: "نشطة",
+    blocked: "متوقفة",
+    completed: "مكتملة",
+    done: "منجزة",
+    high: "عالية",
+    in_progress: "قيد التنفيذ",
+    low: "منخفضة",
+    medium: "متوسطة",
+    review: "مراجعة",
+    todo: "للبدء"
+  };
+
+  if (language === "ar" && arabicStatuses[normalized]) return arabicStatuses[normalized];
+
+  return normalized
     .replace(/_/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
@@ -1199,5 +1465,3 @@ function mapApiRoleToDashboardRole(role) {
   if (normalizedRole === "company_member") return "employee";
   return "";
 }
-
-

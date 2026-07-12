@@ -1,273 +1,208 @@
 import { useEffect, useMemo, useState } from "react";
-import LandingPage from "./pages/LandingPage.jsx";
-import SignInPage from "./pages/SignInPage.jsx";
-import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
-import SignUpPage from "./pages/SignUpPage.jsx";
-import VerifyOtpPage from "./pages/VerifyOtpPage.jsx";
-import CompanyOnboardingPage from "./pages/CompanyOnboardingPage.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx";
-import ProjectsPage from "./pages/ProjectsPage.jsx";
-import TasksPage from "./pages/TasksPage.jsx";
-import MeetingsPage from "./pages/MeetingsPage.jsx";
-import WorkspaceDetailsPage from "./pages/WorkspaceDetailsPage.jsx";
-import UploadCenterPage from "./pages/UploadCenterPage.jsx";
-import AiChatPage from "./pages/AiChatPage.jsx";
-import AgentRunsPage from "./pages/AgentRunsPage.jsx";
-import AgentRunDetailsPage from "./pages/AgentRunDetailsPage.jsx";
-import WorkspaceGraphPage from "./pages/WorkspaceGraphPage.jsx";
-import EmployeesPage from "./pages/EmployeesPage.jsx";
-import ReportsPage from "./pages/ReportsPage.jsx";
-import TeamPerformanceOversightPage from "./pages/TeamPerformanceOversightPage.jsx";
-import OwnerProjectsPage from "./pages/OwnerProjectsPage.jsx";
-import OwnerUploadCenterPage from "./pages/OwnerUploadCenterPage.jsx";
-import OwnerUploadedFilesPage from "./pages/OwnerUploadedFilesPage.jsx";
-import ProfilePage from "./pages/ProfilePage.jsx";
-import NotificationsPage from "./pages/NotificationsPage.jsx";
-import SuperAdminConsolePage from "./pages/SuperAdminConsolePage.jsx";
-import SuperAdminCompaniesPage from "./pages/SuperAdminCompaniesPage.jsx";
-import SuperAdminUsersPage from "./pages/SuperAdminUsersPage.jsx";
-import SuperAdminPaymentsPage from "./pages/SuperAdminPaymentsPage.jsx";
-import SuperAdminProfilePage from "./pages/SuperAdminProfilePage.jsx";
+import { FiAlertCircle, FiLoader } from "react-icons/fi";
 import { useAuth } from "./lib/AuthContext.jsx";
-import { getDemoUser, isDemoMode } from "./lib/demoMode.js";
 import { normalizeRole } from "./lib/authRoles.js";
+import { getDemoUser, isDemoMode } from "./lib/demoMode.js";
+import { usePreferences } from "./lib/PreferencesContext.jsx";
+import { AuthPage, LandingPage } from "./rebuild/PublicPages.jsx";
+import WorkspaceShell from "./rebuild/WorkspaceShell.jsx";
+import { AiChatPage, DashboardPage, ProfilePage, ResourcePage, SpecialPage } from "./rebuild/WorkspacePages.jsx";
+import { Button } from "./rebuild/ui.jsx";
 
-const adminRoutes = new Set([
-  "/super-admin",
-  "/super-admin/companies",
-  "/super-admin/users",
-  "/super-admin/payments",
-  "/super-admin/profile",
-  "/super-admin/notifications"
-]);
-
-const guestRoutes = new Set([
-  "/signin",
-  "/login",
-  "/signup",
-  "/register",
-  "/reset-password",
-  "/forgot-password"
-]);
-
-const companyOnboardingRoutes = new Set([
-  "/company/register",
-  "/onboarding/company"
-]);
-
-const workspaceRoutes = new Set([
-  "/dashboard",
-  "/projects",
-  "/tasks",
-  "/meetings",
-  "/workspace",
-  "/uploads",
-  "/ai-chat",
-  "/agent-runs",
-  "/agent-run-details",
-  "/workspace-graph",
-  "/employees",
-  "/owner/projects",
-  "/owner/uploads",
-  "/owner/uploads/files",
-  "/team-performance",
-  "/owner/team-performance",
-  "/ower/team-performance",
-  "/ower /team-performance",
-  "/reports",
-  "/profile",
-  "/notifications"
-]);
-
-const companyOwnerRoutes = new Set([
-  "/dashboard",
-  "/tasks",
-  "/employees",
-  "/owner/projects",
-  "/owner/uploads",
-  "/owner/uploads/files",
-  "/ai-chat",
-  "/profile",
-  "/notifications"
-]);
-
-const companyManagerRoutes = new Set([
-  "/dashboard",
-  "/projects",
-  "/tasks",
-  "/uploads",
-  "/ai-chat",
-  "/profile",
-  "/notifications"
-]);
-
-const companyMemberRoutes = new Set([
-  "/dashboard",
-  "/tasks",
-  "/uploads",
-  "/ai-chat",
-  "/profile",
-  "/notifications"
-]);
-
-const routes = {
-  "/": LandingPage,
-  "/signin": SignInPage,
-  "/login": SignInPage,
-  "/reset-password": ResetPasswordPage,
-  "/forgot-password": ResetPasswordPage,
-  "/signup": SignUpPage,
-  "/register": SignUpPage,
-  "/verify-otp": VerifyOtpPage,
-  "/company/register": CompanyOnboardingPage,
-  "/onboarding/company": CompanyOnboardingPage,
-  "/dashboard": DashboardPage,
-  "/projects": ProjectsPage,
-  "/tasks": TasksPage,
-  "/meetings": MeetingsPage,
-  "/workspace": WorkspaceDetailsPage,
-  "/uploads": UploadCenterPage,
-  "/ai-chat": AiChatPage,
-  "/agent-runs": AgentRunsPage,
-  "/agent-run-details": AgentRunDetailsPage,
-  "/workspace-graph": WorkspaceGraphPage,
-  "/employees": EmployeesPage,
-  "/owner/projects": OwnerProjectsPage,
-  "/owner/uploads": OwnerUploadCenterPage,
-  "/owner/uploads/files": OwnerUploadedFilesPage,
-  "/team-performance": TeamPerformanceOversightPage,
-  "/owner/team-performance": TeamPerformanceOversightPage,
-  "/ower/team-performance": TeamPerformanceOversightPage,
-  "/ower /team-performance": TeamPerformanceOversightPage,
-  "/reports": ReportsPage,
-  "/profile": ProfilePage,
-  "/notifications": NotificationsPage,
-  "/super-admin": SuperAdminConsolePage,
-  "/super-admin/companies": SuperAdminCompaniesPage,
-  "/super-admin/users": SuperAdminUsersPage,
-  "/super-admin/payments": SuperAdminPaymentsPage,
-  "/super-admin/profile": SuperAdminProfilePage,
-  "/super-admin/notifications": NotificationsPage
+const routeTitles = {
+  "/": { ar: "Teamoria — نظام تشغيل الفريق", en: "Teamoria — Team operating system" },
+  "/signin": { ar: "تسجيل الدخول", en: "Sign in" },
+  "/login": { ar: "تسجيل الدخول", en: "Sign in" },
+  "/reset-password": { ar: "استعادة كلمة المرور", en: "Reset password" },
+  "/forgot-password": { ar: "استعادة كلمة المرور", en: "Reset password" },
+  "/signup": { ar: "إنشاء حساب", en: "Create account" },
+  "/register": { ar: "إنشاء حساب", en: "Create account" },
+  "/verify-otp": { ar: "تأكيد البريد", en: "Verify email" },
+  "/company/register": { ar: "إعداد الشركة", en: "Set up company" },
+  "/onboarding/company": { ar: "إعداد الشركة", en: "Set up company" },
+  "/dashboard": { ar: "مركز العمل", en: "Work center" },
+  "/projects": { ar: "المشاريع", en: "Projects" },
+  "/owner/projects": { ar: "المشاريع", en: "Projects" },
+  "/tasks": { ar: "المهام", en: "Tasks" },
+  "/meetings": { ar: "الاجتماعات", en: "Meetings" },
+  "/workspace": { ar: "مساحة العمل", en: "Workspace" },
+  "/uploads": { ar: "مركز الملفات", en: "File center" },
+  "/owner/uploads": { ar: "مركز الملفات", en: "File center" },
+  "/owner/uploads/files": { ar: "الملفات المرفوعة", en: "Uploaded files" },
+  "/ai-chat": { ar: "مساعد Teamoria", en: "Teamoria assistant" },
+  "/agent-runs": { ar: "عمليات الوكلاء", en: "Agent runs" },
+  "/agent-run-details": { ar: "تفاصيل العملية", en: "Run details" },
+  "/workspace-graph": { ar: "خريطة المعرفة", en: "Knowledge graph" },
+  "/employees": { ar: "الفريق والصلاحيات", en: "Team and access" },
+  "/team-performance": { ar: "أداء الفريق", en: "Team performance" },
+  "/owner/team-performance": { ar: "أداء الفريق", en: "Team performance" },
+  "/reports": { ar: "التقارير", en: "Reports" },
+  "/profile": { ar: "الملف الشخصي", en: "Profile" },
+  "/notifications": { ar: "الإشعارات", en: "Notifications" },
+  "/super-admin": { ar: "حالة المنصة", en: "Platform health" },
+  "/super-admin/companies": { ar: "الشركات", en: "Companies" },
+  "/super-admin/users": { ar: "المستخدمون", en: "Users" },
+  "/super-admin/payments": { ar: "المدفوعات", en: "Payments" },
+  "/super-admin/profile": { ar: "الملف الشخصي", en: "Profile" },
+  "/super-admin/notifications": { ar: "إشعارات المنصة", en: "Platform notifications" }
 };
 
-function getPath() {
-  if (window.location.pathname !== "/" && routes[window.location.pathname]) {
-    const nextHash = `${window.location.pathname}${window.location.search || ""}`;
+const publicRoutes = new Set(["/", "/signin", "/login", "/reset-password", "/forgot-password", "/signup", "/register", "/verify-otp"]);
+const onboardingRoutes = new Set(["/company/register", "/onboarding/company"]);
+const adminRoutes = new Set(["/super-admin", "/super-admin/companies", "/super-admin/users", "/super-admin/payments", "/super-admin/profile", "/super-admin/notifications"]);
+const workspaceRoutes = new Set([
+  "/dashboard", "/projects", "/owner/projects", "/tasks", "/meetings", "/workspace", "/uploads", "/owner/uploads", "/owner/uploads/files",
+  "/ai-chat", "/agent-runs", "/agent-run-details", "/workspace-graph", "/employees", "/team-performance", "/owner/team-performance", "/reports", "/profile", "/notifications"
+]);
+
+const ownerRoutes = new Set(["/dashboard", "/tasks", "/employees", "/owner/projects", "/owner/uploads", "/owner/uploads/files", "/ai-chat", "/profile", "/notifications"]);
+const managerRoutes = new Set(["/dashboard", "/projects", "/tasks", "/uploads", "/ai-chat", "/profile", "/notifications"]);
+const memberRoutes = new Set(["/dashboard", "/tasks", "/uploads", "/ai-chat", "/profile", "/notifications"]);
+
+function normalizePath(path) {
+  try {
+    const decoded = decodeURIComponent(path || "/");
+    if (decoded === "/ower/team-performance" || decoded === "/ower /team-performance") return "/owner/team-performance";
+    return decoded;
+  } catch {
+    return path || "/";
+  }
+}
+
+function readPath() {
+  const direct = normalizePath(window.location.pathname);
+  if (direct !== "/" && routeTitles[direct]) {
+    const nextHash = `${direct}${window.location.search || ""}`;
     window.history.replaceState(null, "", `${window.location.origin}/#${nextHash}`);
   }
-
-  const hash = window.location.hash.replace("#", "");
-  const path = hash.split("?")[0];
-  return routes[path] ? path : "/";
+  const hash = window.location.hash.replace(/^#/, "");
+  const path = normalizePath((hash.split("?")[0] || "/").replace(/\/$/, "") || "/");
+  return routeTitles[path] ? path : "/";
 }
 
-export default function App() {
-  const [path, setPath] = useState(getPath);
-  const auth = useAuth();
-  const demoUser = isDemoMode() ? getDemoUser() : null;
-  const user = auth.user || demoUser;
-  const normalizedRole = normalizeRole(user?.role);
-  const isAdmin = normalizedRole === "admin";
-  const isCompanyUser = ["company_owner", "company_manager", "company_member"].includes(normalizedRole);
-  const isLoading = auth.isLoading && !demoUser;
-  const requiresCompany = Boolean(user?.requires_company);
-
-  useEffect(() => {
-    const onHashChange = () => setPath(getPath());
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  const Page = useMemo(() => routes[path] || LandingPage, [path]);
-
-  if (guestRoutes.has(path) && !isLoading && user && !requiresCompany) {
-    window.location.hash = isAdmin ? "/super-admin" : "/dashboard";
-    return null;
-  }
-
-  if (companyOnboardingRoutes.has(path)) {
-    if (isLoading) {
-      return <AccessMessage title="Loading..." message="Checking your account setup." />;
-    }
-
-    if (!user) {
-      window.location.hash = "/signin";
-      return null;
-    }
-
-    if (isAdmin) {
-      window.location.hash = "/super-admin";
-      return null;
-    }
-
-    if (!requiresCompany) {
-      window.location.hash = "/dashboard";
-      return null;
-    }
-
-    return <Page />;
-  }
-
-  if (workspaceRoutes.has(path)) {
-    if (isLoading) {
-      return <AccessMessage title="Loading..." message="Checking your permissions." />;
-    }
-
-    if (isAdmin) {
-      window.location.hash = path === "/profile" ? "/super-admin/profile" : "/super-admin";
-      return null;
-    }
-
-    if (!user) {
-      window.location.hash = "/signin";
-      return null;
-    }
-
-    if (requiresCompany) {
-      window.location.hash = "/company/register";
-      return null;
-    }
-
-    const allowedRoutes = getAllowedWorkspaceRoutes(normalizedRole);
-    if (isCompanyUser && allowedRoutes && !allowedRoutes.has(path)) {
-      window.location.hash = "/dashboard";
-      return null;
-    }
-  }
-
-  if (adminRoutes.has(path)) {
-    if (isLoading) {
-      return <AccessMessage title="Loading..." message="Checking your permissions." />;
-    }
-
-    if (!user) {
-      window.location.hash = "/signin";
-      return null;
-    }
-
-    if (!isAdmin) {
-      return <AccessMessage title="You are not authorized" message="Admin pages are only available for admin users." />;
-    }
-  }
-
-  return <Page />;
-}
-
-function getAllowedWorkspaceRoutes(role) {
-  if (role === "company_owner") return companyOwnerRoutes;
-  if (role === "company_manager") return companyManagerRoutes;
-  if (role === "company_member") return companyMemberRoutes;
+function allowedRoutesFor(role) {
+  if (role === "company_owner") return ownerRoutes;
+  if (role === "company_manager") return managerRoutes;
+  if (role === "company_member") return memberRoutes;
   return null;
 }
 
-function AccessMessage({ title, message }) {
+export default function App() {
+  const [path, setPath] = useState(readPath);
+  const auth = useAuth();
+  const { language } = usePreferences();
+  const demoUser = isDemoMode() ? getDemoUser() : null;
+  const user = auth.user || demoUser;
+  const role = normalizeRole(user?.role);
+  const isAdmin = role === "admin";
+  const isCompanyUser = ["company_owner", "company_manager", "company_member"].includes(role);
+  const loading = auth.isLoading && !demoUser;
+  const requiresCompany = Boolean(user?.requires_company);
+
+  useEffect(() => {
+    const onRouteChange = () => setPath(readPath());
+    window.addEventListener("hashchange", onRouteChange);
+    window.addEventListener("popstate", onRouteChange);
+    return () => {
+      window.removeEventListener("hashchange", onRouteChange);
+      window.removeEventListener("popstate", onRouteChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const title = routeTitles[path] || routeTitles["/"];
+    document.title = path === "/" ? title[language] : `${title[language]} — Teamoria`;
+  }, [language, path]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const main = document.getElementById("main-content") || document.querySelector("main");
+      if (main instanceof HTMLElement) {
+        if (!main.hasAttribute("tabindex")) main.tabIndex = -1;
+        main.focus({ preventScroll: true });
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [path]);
+
+  const redirect = useMemo(() => {
+    if (["/signin", "/login", "/signup", "/register", "/reset-password", "/forgot-password"].includes(path) && !loading && user && !requiresCompany) {
+      return isAdmin ? "/super-admin" : "/dashboard";
+    }
+    if (onboardingRoutes.has(path)) {
+      if (loading) return null;
+      if (!user) return "/signin";
+      if (isAdmin) return "/super-admin";
+      if (!requiresCompany) return "/dashboard";
+    }
+    if (workspaceRoutes.has(path)) {
+      if (loading) return null;
+      if (isAdmin) return path === "/profile" ? "/super-admin/profile" : "/super-admin";
+      if (!user) return "/signin";
+      if (requiresCompany) return "/company/register";
+      const allowed = allowedRoutesFor(role);
+      if (isCompanyUser && allowed && !allowed.has(path)) return "/dashboard";
+    }
+    if (adminRoutes.has(path)) {
+      if (loading) return null;
+      if (!user) return "/signin";
+      if (!isAdmin) return "/dashboard";
+    }
+    return "";
+  }, [isAdmin, isCompanyUser, loading, path, requiresCompany, role, user]);
+
+  if (redirect) return <Navigate to={redirect} />;
+  if (loading && (workspaceRoutes.has(path) || adminRoutes.has(path) || onboardingRoutes.has(path))) return <FullPageLoading language={language} />;
+
+  if (path === "/") return <LandingPage />;
+  if (path === "/signin" || path === "/login") return <AuthPage mode="signin" />;
+  if (path === "/signup" || path === "/register") return <AuthPage mode="signup" />;
+  if (path === "/reset-password" || path === "/forgot-password") return <AuthPage mode="reset" />;
+  if (path === "/verify-otp") return <AuthPage mode="otp" />;
+  if (onboardingRoutes.has(path)) return <AuthPage mode="onboarding" />;
+
   return (
-    <main className="access-message-page">
-      <section>
-        <h1>{title}</h1>
-        <p>{message}</p>
-        <a href="#/dashboard">Back to dashboard</a>
-      </section>
+    <WorkspaceShell activePath={path}>
+      <WorkspacePage path={path} />
+    </WorkspaceShell>
+  );
+}
+
+function WorkspacePage({ path }) {
+  if (path === "/dashboard") return <DashboardPage />;
+  if (path === "/super-admin") return <DashboardPage admin />;
+  if (path === "/ai-chat") return <AiChatPage />;
+  if (path === "/profile") return <ProfilePage />;
+  if (path === "/super-admin/profile") return <ProfilePage admin />;
+  if (["/workspace-graph", "/agent-run-details"].includes(path)) return <SpecialPage path={path} />;
+  return <ResourcePage path={path} />;
+}
+
+function Navigate({ to }) {
+  useEffect(() => {
+    const currentHash = window.location.hash.replace(/^#/, "").split("?")[0] || "/";
+    if (currentHash !== to) window.location.hash = to;
+  }, [to]);
+  return <FullPageLoading />;
+}
+
+function FullPageLoading({ language = "ar" }) {
+  return (
+    <main className="t2-full-state" id="main-content" tabIndex="-1">
+      <FiLoader className="t2-spin" aria-hidden="true" />
+      <h1>{language === "ar" ? "جارٍ تجهيز مساحة العمل" : "Preparing your workspace"}</h1>
+      <p>{language === "ar" ? "نتحقق من الحساب والصلاحيات." : "Checking your account and permissions."}</p>
+    </main>
+  );
+}
+
+export function AccessMessage({ message, title }) {
+  return (
+    <main className="t2-full-state" id="main-content" tabIndex="-1">
+      <FiAlertCircle aria-hidden="true" />
+      <h1>{title}</h1>
+      <p>{message}</p>
+      <Button onClick={() => { window.location.hash = "/dashboard"; }}>Back to dashboard</Button>
     </main>
   );
 }
