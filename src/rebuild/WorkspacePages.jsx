@@ -50,7 +50,6 @@ import {
   listChatSessionMessages,
   listChatSessions,
   listCompanies,
-  listNotifications,
   listUsers,
   sendChatMessage,
   updateProfile
@@ -61,6 +60,8 @@ import ProjectsResourcePage from "./pages/ProjectsResourcePage.jsx";
 import TasksResourcePage from "./pages/TasksResourcePage.jsx";
 import EmployeesResourcePage from "./pages/EmployeesResourcePage.jsx";
 import UploadsResourcePage from "./pages/UploadsResourcePage.jsx";
+import NotificationsResourcePage from "./pages/NotificationsResourcePage.jsx";
+import AiChatResourcePage from "./pages/AiChatResourcePage.jsx";
 import {
   appCopy,
   demoRows,
@@ -242,8 +243,7 @@ const pageCopy = {
 const dataKeys = {
   companies: ["companies"],
   users: ["users"],
-  payments: ["payments", "subscriptions"],
-  notifications: ["notifications"]
+  payments: ["payments", "subscriptions"]
 };
 
 function dataFallback(key) {
@@ -259,7 +259,6 @@ async function loadRows(key, role) {
   if (key === "companies") return listCompanies();
   if (key === "users") return listUsers();
   if (key === "payments") return listAdminPayments();
-  if (key === "notifications") return listNotifications({ per_page: 40 });
   return null;
 }
 
@@ -448,6 +447,7 @@ export function ResourcePage({ path }) {
   if (routeMeta[path]?.key === "tasks") return <TasksResourcePage path={path} />;
   if (routeMeta[path]?.key === "employees") return <EmployeesResourcePage path={path} />;
   if (routeMeta[path]?.key === "uploads") return <UploadsResourcePage path={path} />;
+  if (routeMeta[path]?.key === "notifications") return <NotificationsResourcePage path={path} />;
 
   const { normalizedRole } = useAuth();
   const { language } = usePreferences();
@@ -693,6 +693,8 @@ function ResourceDetails({ copy, keyName, language, row }) {
 }
 
 export function AiChatPage() {
+  return <AiChatResourcePage />;
+  /*
   const { language, direction } = usePreferences();
   const copy = appCopy[language] || appCopy.en;
   const local = pageCopy[language] || pageCopy.en;
@@ -803,6 +805,7 @@ export function AiChatPage() {
       </div>
     </div>
   );
+  */
 }
 
 function ChatMessage({ language, local, message }) {

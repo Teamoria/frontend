@@ -21,8 +21,11 @@ import {
   listStaff,
   listTasks,
   listUploads,
+  deleteUpload,
+  deleteUploadPermission,
   downloadUpload,
   previewUpload,
+  updateUploadPermissions,
   uploadFiles
 } from "../../lib/api.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
@@ -62,7 +65,7 @@ const taskDataKeys = ["tasks"];
 const staffDataKeys = ["staff", "users", "employees"];
 const validScopes = ["personal", "company", "project", "task"];
 const validVisibility = ["private", "members", "selected"];
-const validAccessLevels = ["view", "download"];
+const validAccessLevels = ["view", "manage"];
 
 const uploadPageCopy = {
   ar: {
@@ -85,6 +88,35 @@ const uploadPageCopy = {
     previewUnsupported: "Preview is not supported for this file type. Download is available when the server allows it.",
     processingStatus: "Processing status",
     refreshStatus: "Refresh status",
+    deleteButton: "Delete file",
+    deleteConfirm: "Delete",
+    deleteConfirmButton: "Delete file",
+    deleteSuccess: "The file was deleted.",
+    deleteText: "Remove this upload from the workspace. This action may be permanent.",
+    deleteTitle: "Delete upload",
+    aiChunk: "Chunk",
+    aiChunks: "Chunks",
+    aiDecisions: "Decisions",
+    aiEmpty: "Processing completed, but no AI result is available for this file.",
+    aiFailed: "AI processing failed",
+    aiOverview: "Overview",
+    aiProcessing: "AI processing is still running",
+    aiResults: "AI results",
+    aiResultsText: "Read-only results returned with this upload.",
+    aiSummary: "Summary",
+    aiTasks: "Tasks",
+    aiTranscript: "Transcript",
+    permissionsCurrent: "Current access",
+    permissionsEmpty: "No selected-user permissions are attached to this file.",
+    permissionsInvalidAccess: "Choose a documented access level.",
+    permissionsNoStaff: "No staff members are available.",
+    permissionsRemoved: "Permission removed.",
+    permissionsSave: "Save permissions",
+    permissionsSaved: "Permissions updated.",
+    permissionsSelectUser: "Choose at least one user.",
+    permissionsText: "Grant selected company users documented access to this upload.",
+    permissionsTitle: "Permissions",
+    remove: "Remove",
     private: "Private",
     projectId: "Project",
     records: "records",
@@ -114,6 +146,35 @@ const uploadPageCopy = {
     previewUnsupported: "Preview is not supported for this file type. Download is available when the server allows it.",
     processingStatus: "Processing status",
     refreshStatus: "Refresh status",
+    deleteButton: "Delete file",
+    deleteConfirm: "Delete",
+    deleteConfirmButton: "Delete file",
+    deleteSuccess: "The file was deleted.",
+    deleteText: "Remove this upload from the workspace. This action may be permanent.",
+    deleteTitle: "Delete upload",
+    aiChunk: "Chunk",
+    aiChunks: "Chunks",
+    aiDecisions: "Decisions",
+    aiEmpty: "Processing completed, but no AI result is available for this file.",
+    aiFailed: "AI processing failed",
+    aiOverview: "Overview",
+    aiProcessing: "AI processing is still running",
+    aiResults: "AI results",
+    aiResultsText: "Read-only results returned with this upload.",
+    aiSummary: "Summary",
+    aiTasks: "Tasks",
+    aiTranscript: "Transcript",
+    permissionsCurrent: "Current access",
+    permissionsEmpty: "No selected-user permissions are attached to this file.",
+    permissionsInvalidAccess: "Choose a documented access level.",
+    permissionsNoStaff: "No staff members are available.",
+    permissionsRemoved: "Permission removed.",
+    permissionsSave: "Save permissions",
+    permissionsSaved: "Permissions updated.",
+    permissionsSelectUser: "Choose at least one user.",
+    permissionsText: "Grant selected company users documented access to this upload.",
+    permissionsTitle: "Permissions",
+    remove: "Remove",
     private: "Private",
     projectId: "Project",
     records: "records",
@@ -278,6 +339,23 @@ export default function UploadsResourcePage({ path }) {
     uploads.setRows((current) => current.map((item) => String(getUploadId(item)) === String(getUploadId(row)) ? { ...item, ...row } : item));
   }
 
+  function handleUploadDeleted(row) {
+    const deletedId = getUploadId(row);
+    setSelected(null);
+    setToast(local.deleteSuccess);
+    window.setTimeout(() => setToast(""), 3500);
+    if (deletedId) {
+      uploads.setRows((current) => current.filter((item) => String(getUploadId(item)) !== String(deletedId)));
+    }
+    if (!isDemoMode()) {
+      if (uploads.rows.length <= 1 && page > 1) {
+        setPage((current) => Math.max(1, current - 1));
+      } else {
+        uploads.reload();
+      }
+    }
+  }
+
   return (
     <div className="t2-page">
       <PageHeader
@@ -350,10 +428,13 @@ export default function UploadsResourcePage({ path }) {
             local={local}
             onDownload={downloadUpload}
             onLoadPreview={previewUpload}
+            onDeleted={handleUploadDeleted}
             onRefreshList={uploads.reload}
             onUpdated={handleUploadUpdated}
             row={selected}
-            services={{ getUpload, getUploadStatus }}
+            canManage={normalizedRole === "company_owner"}
+            staff={options.staff}
+            services={{ deleteUpload, deleteUploadPermission, getUpload, getUploadStatus, updateUploadPermissions }}
           />
         ) : null}
       </Modal>

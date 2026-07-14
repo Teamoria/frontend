@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { FiDownload, FiFileText, FiRefreshCw } from "react-icons/fi";
+import { isDemoMode } from "../../../lib/demoMode.js";
 import { Button, ErrorState, LoadingState, StatusBadge } from "../../ui.jsx";
+import UploadAiResults from "./UploadAiResults.jsx";
+import UploadDeleteAction from "./UploadDeleteAction.jsx";
+import UploadPermissions from "./UploadPermissions.jsx";
 import UploadPreview from "./UploadPreview.jsx";
 import {
   formatUploadSize,
@@ -43,14 +47,17 @@ function taskName(upload) {
 }
 
 export default function UploadDetails({
+  canManage = false,
   copy,
   language,
   local,
+  onDeleted,
   onDownload,
   onLoadPreview,
   onRefreshList,
   onUpdated,
   row,
+  staff = [],
   services
 }) {
   const uploadId = getUploadId(row);
@@ -130,6 +137,42 @@ export default function UploadDetails({
     }
   }
 
+  async function savePermissions(body) {
+    if (!uploadId) return;
+    if (!isDemoMode()) {
+      await services.updateUploadPermissions(uploadId, body);
+      await loadDetails();
+    } else {
+      const nextUsers = staff.filter((user) => body.user_ids?.includes(String(user.id))).map((user) => ({ ...user, access_level: body.access_level }));
+      const nextUpload = { ...upload, shared_with: nextUsers };
+      setUpload(nextUpload);
+      onUpdated?.(nextUpload);
+    }
+  }
+
+  async function removePermission(userId) {
+    if (!uploadId || !userId) return;
+    if (!isDemoMode()) {
+      await services.deleteUploadPermission(uploadId, userId);
+      await loadDetails();
+    } else {
+      const nextUpload = {
+        ...upload,
+        shared_with: (upload?.shared_with || []).filter((user) => String(user.id || user.user_id) !== String(userId))
+      };
+      setUpload(nextUpload);
+      onUpdated?.(nextUpload);
+    }
+  }
+
+  async function deleteCurrentUpload() {
+    if (!uploadId) return;
+    if (!isDemoMode()) {
+      await services.deleteUpload(uploadId);
+    }
+    onDeleted?.(upload);
+  }
+
   useEffect(() => {
     setUpload(row);
     loadDetails();
@@ -165,6 +208,24 @@ export default function UploadDetails({
       </div>
 
       <UploadPreview copy={copy} local={local} onLoadPreview={onLoadPreview} upload={upload} />
+
+      <UploadAiResults local={local} upload={upload} />
+
+      {canManage ? (
+        <>
+          <UploadPermissions
+            copy={copy}
+            language={language}
+            local={local}
+            onRefresh={loadDetails}
+            onRemovePermission={removePermission}
+            onSavePermissions={savePermissions}
+            staff={staff}
+            upload={upload}
+          />
+          <UploadDeleteAction copy={copy} local={local} onDelete={deleteCurrentUpload} uploadName={getUploadName(upload)} />
+        </>
+      ) : null}
     </div>
   );
 }

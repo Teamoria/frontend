@@ -32,3 +32,285 @@
   font-size: 9px;
   grid-column: 2;
 }
+
+.t2-modal:has(.project-create-modal) {
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 780px);
+  max-width: 680px;
+  overflow: hidden;
+  width: min(680px, 96vw);
+}
+
+.t2-modal:has(.project-create-modal) .t2-modal__header {
+  align-items: center;
+  border-bottom: 1px solid var(--t2-border);
+  flex-shrink: 0;
+  gap: 14px;
+  padding: 18px 20px 16px;
+}
+
+.t2-modal:has(.project-create-modal) .t2-modal__header > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.t2-modal:has(.project-create-modal) .t2-modal__header h2 {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.t2-modal:has(.project-create-modal) .t2-modal__header p {
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.t2-modal:has(.project-create-modal) .t2-modal__header .t2-icon-button {
+  border-radius: 10px;
+  flex: 0 0 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+  width: 38px;
+}
+
+.t2-modal:has(.project-create-modal) .t2-modal__body {
+  min-height: 0;
+  overflow: auto;
+  padding: 0;
+}
+
+.project-create-modal {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--t2-primary) 7%, transparent), transparent 148px),
+    var(--t2-surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.project-create-modal > .t2-form-alert {
+  margin: 16px 20px 0;
+}
+
+.project-create-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 18px 20px 16px;
+}
+
+.project-create-field {
+  color: var(--t2-text);
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.project-create-field--description,
+.project-create-field--progress {
+  grid-column: 1 / -1;
+}
+
+.project-create-field__label {
+  align-items: center;
+  color: var(--t2-text);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 7px;
+  line-height: 1.4;
+}
+
+.project-create-field__label svg {
+  color: var(--t2-primary);
+  flex: 0 0 auto;
+  height: 15px;
+  width: 15px;
+}
+
+.project-create-field__label b {
+  color: var(--t2-danger);
+  margin-inline-start: 3px;
+}
+
+.project-create-field input,
+.project-create-field select,
+.project-create-field textarea {
+  background: var(--t2-surface);
+  border: 1px solid var(--t2-border);
+  border-radius: 11px;
+  color: var(--t2-text);
+  font: inherit;
+  min-height: 44px;
+  outline: 0;
+  padding: 10px 12px;
+  text-align: start;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  width: 100%;
+}
+
+.project-create-field textarea {
+  line-height: 1.55;
+  min-height: 96px;
+  resize: vertical;
+}
+
+.project-create-field input:focus,
+.project-create-field select:focus,
+.project-create-field textarea:focus {
+  border-color: var(--t2-primary);
+  box-shadow: 0 0 0 3px var(--t2-ring);
+}
+
+.project-create-field input:disabled,
+.project-create-field select:disabled,
+.project-create-field textarea:disabled {
+  background: var(--t2-surface-subtle);
+  color: var(--t2-text-faint);
+  cursor: not-allowed;
+}
+
+.project-create-field.is-invalid input,
+.project-create-field.is-invalid select,
+.project-create-field.is-invalid textarea {
+  border-color: var(--t2-danger);
+}
+
+.project-create-field.is-invalid input:focus,
+.project-create-field.is-invalid select:focus,
+.project-create-field.is-invalid textarea:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+.project-create-field--name {
+  background: color-mix(in srgb, var(--t2-primary) 8%, var(--t2-surface));
+  border: 1px solid color-mix(in srgb, var(--t2-primary) 24%, var(--t2-border));
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.project-create-field--name input {
+  border-color: color-mix(in srgb, var(--t2-primary) 30%, var(--t2-border));
+}
+
+.project-create-field__error {
+  color: var(--t2-danger);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.project-create-progress {
+  align-items: center;
+  background: color-mix(in srgb, var(--t2-primary) 5%, var(--t2-surface));
+  border: 1px solid color-mix(in srgb, var(--t2-primary) 16%, var(--t2-border));
+  border-radius: 14px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 52px;
+  padding: 10px 12px;
+}
+
+.project-create-progress input[type="range"] {
+  accent-color: var(--t2-primary);
+  border: 0;
+  box-shadow: none;
+  min-height: 28px;
+  padding: 0;
+}
+
+.project-create-progress output {
+  background: var(--t2-surface);
+  border: 1px solid var(--t2-border);
+  border-radius: 999px;
+  color: var(--t2-text);
+  font-size: 12px;
+  font-weight: 900;
+  min-width: 54px;
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.project-create-footer {
+  align-items: center;
+  background: color-mix(in srgb, var(--t2-surface) 94%, white);
+  border-top: 1px solid var(--t2-border);
+  bottom: 0;
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  justify-content: flex-start;
+  padding: 14px 20px;
+  position: sticky;
+  z-index: 3;
+}
+
+.project-create-footer .t2-button {
+  border-radius: 11px;
+  min-height: 46px;
+  padding-inline: 18px;
+}
+
+.project-create-footer .t2-button--primary {
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--t2-primary) 22%, transparent);
+  min-width: 154px;
+}
+
+@media (max-width: 680px) {
+  .t2-modal-backdrop:has(.project-create-modal) {
+    padding: 12px;
+  }
+
+  .t2-modal:has(.project-create-modal) {
+    max-height: 90vh;
+    width: 96vw;
+  }
+
+  .t2-modal:has(.project-create-modal) .t2-modal__header {
+    padding: 16px;
+  }
+
+  .t2-modal:has(.project-create-modal) .t2-modal__header h2 {
+    font-size: 18px;
+  }
+
+  .project-create-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .project-create-field--description,
+  .project-create-field--progress {
+    grid-column: auto;
+  }
+
+  .project-create-footer {
+    align-items: center;
+    flex-direction: row;
+    padding: 12px 16px 16px;
+  }
+
+  .project-create-footer .t2-button {
+    justify-content: center;
+    width: auto;
+  }
+
+  .project-create-footer .t2-button--primary {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .project-create-footer .t2-button--secondary {
+    flex: 0 0 112px;
+  }
+
+  .project-create-field textarea {
+    min-height: 84px;
+  }
+}
