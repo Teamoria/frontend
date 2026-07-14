@@ -1,0 +1,1 @@
+﻿AI results visual verification upload. Extract summary, tasks, and knowledge chunks.

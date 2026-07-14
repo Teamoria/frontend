@@ -43,9 +43,6 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../lib/AuthContext.jsx";
 import {
-  createCompanyProject,
-  createStaffMember,
-  createTask,
   extractRows,
   getAdminDashboard,
   getCompanyDashboard,
@@ -54,10 +51,7 @@ import {
   listChatSessionMessages,
   listChatSessions,
   listCompanies,
-  listCompanyProjects,
   listNotifications,
-  listStaff,
-  listTasks,
   listUploads,
   listUsers,
   sendChatMessage,
@@ -66,11 +60,13 @@ import {
 } from "../lib/api.js";
 import { isDemoMode } from "../lib/demoMode.js";
 import { usePreferences } from "../lib/PreferencesContext.jsx";
+import ProjectsResourcePage from "./pages/ProjectsResourcePage.jsx";
+import TasksResourcePage from "./pages/TasksResourcePage.jsx";
+import EmployeesResourcePage from "./pages/EmployeesResourcePage.jsx";
 import {
   appCopy,
   demoRows,
   formatDate,
-  localizedStatus,
   ownerName,
   routeMeta,
   rowName,
@@ -246,10 +242,7 @@ const pageCopy = {
 };
 
 const dataKeys = {
-  projects: ["projects"],
-  tasks: ["tasks"],
   uploads: ["uploads", "files", "documents"],
-  employees: ["staff", "users", "employees"],
   companies: ["companies"],
   users: ["users"],
   payments: ["payments", "subscriptions"],
@@ -266,10 +259,7 @@ function dataFallback(key) {
 }
 
 async function loadRows(key, role) {
-  if (key === "projects") return listCompanyProjects();
-  if (key === "tasks") return listTasks({ role });
   if (key === "uploads") return listUploads();
-  if (key === "employees") return listStaff();
   if (key === "companies") return listCompanies();
   if (key === "users") return listUsers();
   if (key === "payments") return listAdminPayments();
@@ -458,6 +448,10 @@ function DecisionItem({ action, icon: Icon, text, time, title, tone }) {
 }
 
 export function ResourcePage({ path }) {
+  if (routeMeta[path]?.key === "projects") return <ProjectsResourcePage path={path} />;
+  if (routeMeta[path]?.key === "tasks") return <TasksResourcePage path={path} />;
+  if (routeMeta[path]?.key === "employees") return <EmployeesResourcePage path={path} />;
+
   const { normalizedRole } = useAuth();
   const { language } = usePreferences();
   const copy = appCopy[language] || appCopy.en;
@@ -577,16 +571,13 @@ function ResourceGrid({ copy, keyName, language, onSelect, rows }) {
 }
 
 function columnsFor(key, copy) {
-  if (key === "projects" || key === "workspace" || key === "reports") return [
+  if (key === "workspace" || key === "reports") return [
     { key: "name", label: copy.name }, { key: "owner", label: copy.owner }, { key: "status", label: copy.status }, { key: "progress", label: copy.progress }, { key: "updated", label: copy.updated }
-  ];
-  if (key === "tasks") return [
-    { key: "name", label: copy.title }, { key: "owner", label: copy.owner }, { key: "priority", label: copy.priority }, { key: "status", label: copy.status }, { key: "date", label: copy.date }
   ];
   if (key === "uploads") return [
     { key: "name", label: copy.name }, { key: "type", label: copy.type }, { key: "size", label: copy.size }, { key: "status", label: copy.status }, { key: "updated", label: copy.updated }
   ];
-  if (key === "employees" || key === "users") return [
+  if (key === "users") return [
     { key: "name", label: copy.name }, { key: "email", label: copy.email }, { key: "role", label: copy.role }, { key: "status", label: copy.status }, { key: "updated", label: copy.updated }
   ];
   if (key === "companies") return [
@@ -623,10 +614,8 @@ function renderCell(key, row, language, copy) {
 }
 
 function iconForKey(key) {
-  if (key === "projects") return FiFolder;
-  if (key === "tasks") return FiCheckCircle;
   if (key === "uploads") return FiFileText;
-  if (key === "employees" || key === "users") return FiUsers;
+  if (key === "users") return FiUsers;
   if (key === "companies") return FiBriefcase;
   if (key === "payments") return FiBarChart2;
   if (key === "notifications") return FiBell;
@@ -645,7 +634,16 @@ function roleText(role, language) {
 }
 
 function CreateResourceForm({ copy, keyName, language, local, onCancel, onSaved, role }) {
-  const [form, setForm] = useState({ name: "", title: "", description: "", email: "", password: "", role: "company_member", status: "active", priority: "medium" });
+  const [form, setForm] = useState({
+    name: "",
+    title: "",
+    description: "",
+    email: "",
+    password: "",
+    role: "company_member",
+    status: "active",
+    priority: "medium"
+  });
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -664,10 +662,7 @@ function CreateResourceForm({ copy, keyName, language, local, onCancel, onSaved,
     setLoading(true);
     try {
       let payload;
-      if (keyName === "projects") payload = await createCompanyProject({ name: form.name, description: form.description, status: form.status, progress: 0 });
-      else if (keyName === "tasks") payload = await createTask({ title: form.title, description: form.description, status: "todo", priority: form.priority }, { role });
-      else if (keyName === "employees") payload = await createStaffMember({ name: form.name, email: form.email, password: form.password, role: form.role, status: form.status });
-      else if (keyName === "uploads") payload = await uploadFiles({ files: [file], scope: "company", visibility: "company" });
+      if (keyName === "uploads") payload = await uploadFiles({ files: [file], scope: "company", visibility: "company" });
       else payload = { data: { id: `local-${Date.now()}`, ...form } };
 
       const data = getPayloadData(payload);
@@ -693,17 +688,8 @@ function CreateResourceForm({ copy, keyName, language, local, onCancel, onSaved,
         </Field>
       ) : (
         <>
-          <Field label={keyName === "tasks" ? copy.title : copy.name} required><input value={keyName === "tasks" ? form.title : form.name} onChange={(event) => setForm({ ...form, [keyName === "tasks" ? "title" : "name"]: event.target.value })} /></Field>
-          {keyName === "employees" ? (
-            <>
-              <Field label={copy.email} required><input autoComplete="email" inputMode="email" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></Field>
-              <Field label={copy.password} required><input autoComplete="new-password" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></Field>
-              <Field label={copy.role}><select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}><option value="company_member">{roleText("company_member", language)}</option><option value="company_manager">{roleText("company_manager", language)}</option></select></Field>
-            </>
-          ) : (
-            <Field label={copy.description}><textarea rows="4" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
-          )}
-          {keyName === "tasks" ? <Field label={copy.priority}><select value={form.priority} onChange={(event) => setForm({ ...form, priority: event.target.value })}><option value="low">{copy.low}</option><option value="medium">{copy.medium}</option><option value="high">{copy.high}</option></select></Field> : null}
+          <Field label={copy.name} required><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+          <Field label={copy.description}><textarea rows="4" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
         </>
       )}
       <div className="t2-modal-actions"><Button onClick={onCancel} tone="secondary">{copy.cancel}</Button><Button loading={loading} loadingLabel={copy.loading} type="submit">{copy.create}</Button></div>
