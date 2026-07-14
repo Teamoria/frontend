@@ -15,6 +15,7 @@ export function uploadFiles({
   project_id,
   task_id,
   shared_with_user_ids,
+  access_level,
   document_type,
   job_description,
   category,
@@ -31,6 +32,7 @@ export function uploadFiles({
   if (company_id) formData.append("company_id", company_id);
   if (project_id) formData.append("project_id", project_id);
   if (task_id) formData.append("task_id", task_id);
+  if (access_level) formData.append("access_level", access_level);
   if (document_type && document_type !== "auto") formData.append("document_type", document_type);
   if (job_description) formData.append("job_description", job_description);
   if (category) formData.append("category", category);
