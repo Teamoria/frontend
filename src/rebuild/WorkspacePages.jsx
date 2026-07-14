@@ -36,7 +36,6 @@ import {
   FiShield,
   FiSliders,
   FiTrendingUp,
-  FiUploadCloud,
   FiUser,
   FiUsers,
   FiZap
@@ -52,17 +51,16 @@ import {
   listChatSessions,
   listCompanies,
   listNotifications,
-  listUploads,
   listUsers,
   sendChatMessage,
-  updateProfile,
-  uploadFiles
+  updateProfile
 } from "../lib/api.js";
 import { isDemoMode } from "../lib/demoMode.js";
 import { usePreferences } from "../lib/PreferencesContext.jsx";
 import ProjectsResourcePage from "./pages/ProjectsResourcePage.jsx";
 import TasksResourcePage from "./pages/TasksResourcePage.jsx";
 import EmployeesResourcePage from "./pages/EmployeesResourcePage.jsx";
+import UploadsResourcePage from "./pages/UploadsResourcePage.jsx";
 import {
   appCopy,
   demoRows,
@@ -242,7 +240,6 @@ const pageCopy = {
 };
 
 const dataKeys = {
-  uploads: ["uploads", "files", "documents"],
   companies: ["companies"],
   users: ["users"],
   payments: ["payments", "subscriptions"],
@@ -259,7 +256,6 @@ function dataFallback(key) {
 }
 
 async function loadRows(key, role) {
-  if (key === "uploads") return listUploads();
   if (key === "companies") return listCompanies();
   if (key === "users") return listUsers();
   if (key === "payments") return listAdminPayments();
@@ -451,6 +447,7 @@ export function ResourcePage({ path }) {
   if (routeMeta[path]?.key === "projects") return <ProjectsResourcePage path={path} />;
   if (routeMeta[path]?.key === "tasks") return <TasksResourcePage path={path} />;
   if (routeMeta[path]?.key === "employees") return <EmployeesResourcePage path={path} />;
+  if (routeMeta[path]?.key === "uploads") return <UploadsResourcePage path={path} />;
 
   const { normalizedRole } = useAuth();
   const { language } = usePreferences();
@@ -574,9 +571,6 @@ function columnsFor(key, copy) {
   if (key === "workspace" || key === "reports") return [
     { key: "name", label: copy.name }, { key: "owner", label: copy.owner }, { key: "status", label: copy.status }, { key: "progress", label: copy.progress }, { key: "updated", label: copy.updated }
   ];
-  if (key === "uploads") return [
-    { key: "name", label: copy.name }, { key: "type", label: copy.type }, { key: "size", label: copy.size }, { key: "status", label: copy.status }, { key: "updated", label: copy.updated }
-  ];
   if (key === "users") return [
     { key: "name", label: copy.name }, { key: "email", label: copy.email }, { key: "role", label: copy.role }, { key: "status", label: copy.status }, { key: "updated", label: copy.updated }
   ];
@@ -614,7 +608,6 @@ function renderCell(key, row, language, copy) {
 }
 
 function iconForKey(key) {
-  if (key === "uploads") return FiFileText;
   if (key === "users") return FiUsers;
   if (key === "companies") return FiBriefcase;
   if (key === "payments") return FiBarChart2;
@@ -644,26 +637,19 @@ function CreateResourceForm({ copy, keyName, language, local, onCancel, onSaved,
     status: "active",
     priority: "medium"
   });
-  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function submit(event) {
     event.preventDefault();
     setError("");
-    if (keyName === "uploads" && !file) {
-      setError(local.fileDrop);
-      return;
-    }
-    if (!["uploads"].includes(keyName) && !(form.name || form.title).trim()) {
+    if (!(form.name || form.title).trim()) {
       setError(copy.name);
       return;
     }
     setLoading(true);
     try {
-      let payload;
-      if (keyName === "uploads") payload = await uploadFiles({ files: [file], scope: "company", visibility: "company" });
-      else payload = { data: { id: `local-${Date.now()}`, ...form } };
+      const payload = { data: { id: `local-${Date.now()}`, ...form } };
 
       const data = getPayloadData(payload);
       const created = data?.project || data?.task || data?.staff || data?.user || data?.upload || data?.file || data;
@@ -682,16 +668,8 @@ function CreateResourceForm({ copy, keyName, language, local, onCancel, onSaved,
   return (
     <form className="t2-create-form" onSubmit={submit}>
       {error ? <p className="t2-form-alert is-error" role="alert">{error}</p> : null}
-      {keyName === "uploads" ? (
-        <Field hint={local.fileDropHint} label={local.fileDrop} required>
-          <label className="t2-file-input"><FiUploadCloud aria-hidden="true" /><span>{file?.name || local.fileDrop}</span><input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" onChange={(event) => setFile(event.target.files?.[0] || null)} type="file" /></label>
-        </Field>
-      ) : (
-        <>
-          <Field label={copy.name} required><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
-          <Field label={copy.description}><textarea rows="4" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
-        </>
-      )}
+      <Field label={copy.name} required><input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+      <Field label={copy.description}><textarea rows="4" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
       <div className="t2-modal-actions"><Button onClick={onCancel} tone="secondary">{copy.cancel}</Button><Button loading={loading} loadingLabel={copy.loading} type="submit">{copy.create}</Button></div>
     </form>
   );
