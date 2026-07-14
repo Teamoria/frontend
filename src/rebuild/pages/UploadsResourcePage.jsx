@@ -15,10 +15,14 @@ import {
   extractPagination,
   extractRows,
   getPayloadData,
+  getUpload,
+  getUploadStatus,
   listCompanyProjects,
   listStaff,
   listTasks,
   listUploads,
+  downloadUpload,
+  previewUpload,
   uploadFiles
 } from "../../lib/api.js";
 import { useAuth } from "../../lib/AuthContext.jsx";
@@ -47,6 +51,10 @@ import {
   SkeletonTable,
   StatusBadge
 } from "../ui.jsx";
+import UploadDetails from "./uploads/UploadDetails.jsx";
+import UploadProgress from "./uploads/UploadProgress.jsx";
+import { formatUploadSize, getProcessingStatus, getUploadId, uploadStatusTone } from "./uploads/uploadStatus.js";
+import "./uploads/uploads.css";
 
 const uploadDataKeys = ["uploads", "files", "documents"];
 const projectDataKeys = ["projects"];
@@ -66,11 +74,17 @@ const uploadPageCopy = {
     detailTitle: "File details",
     fileDrop: "Choose files from your device",
     fileDropHint: "PDF, DOCX, XLSX, CSV, or TXT within the server file limit.",
+    createdAt: "Created",
+    download: "Download",
     invalidAccess: "Choose a valid access level.",
     invalidScope: "Choose a valid scope.",
     invalidVisibility: "Choose a valid visibility.",
     localSearch: "Search this page",
     noSelectedUsers: "Choose at least one user.",
+    preview: "Preview",
+    previewUnsupported: "Preview is not supported for this file type. Download is available when the server allows it.",
+    processingStatus: "Processing status",
+    refreshStatus: "Refresh status",
     private: "Private",
     projectId: "Project",
     records: "records",
@@ -89,11 +103,17 @@ const uploadPageCopy = {
     detailTitle: "File details",
     fileDrop: "Choose files from your device",
     fileDropHint: "PDF, DOCX, XLSX, CSV, or TXT within the server file limit.",
+    createdAt: "Created",
+    download: "Download",
     invalidAccess: "Choose a valid access level.",
     invalidScope: "Choose a valid scope.",
     invalidVisibility: "Choose a valid visibility.",
     localSearch: "Search this page",
     noSelectedUsers: "Choose at least one user.",
+    preview: "Preview",
+    previewUnsupported: "Preview is not supported for this file type. Download is available when the server allows it.",
+    processingStatus: "Processing status",
+    refreshStatus: "Refresh status",
     private: "Private",
     projectId: "Project",
     records: "records",
@@ -253,6 +273,11 @@ export default function UploadsResourcePage({ path }) {
     if (!isDemoMode()) uploads.reload();
   }
 
+  function handleUploadUpdated(row) {
+    if (!row || !getUploadId(row)) return;
+    uploads.setRows((current) => current.map((item) => String(getUploadId(item)) === String(getUploadId(row)) ? { ...item, ...row } : item));
+  }
+
   return (
     <div className="t2-page">
       <PageHeader
@@ -318,7 +343,19 @@ export default function UploadsResourcePage({ path }) {
       </Modal>
 
       <Modal onClose={() => setSelected(null)} open={Boolean(selected)} title={local.detailTitle || copy.details}>
-        {selected ? <UploadDetails copy={copy} language={language} row={selected} /> : null}
+        {selected ? (
+          <UploadDetails
+            copy={copy}
+            language={language}
+            local={local}
+            onDownload={downloadUpload}
+            onLoadPreview={previewUpload}
+            onRefreshList={uploads.reload}
+            onUpdated={handleUploadUpdated}
+            row={selected}
+            services={{ getUpload, getUploadStatus }}
+          />
+        ) : null}
       </Modal>
     </div>
   );
@@ -357,7 +394,7 @@ function UploadsGrid({ copy, language, onSelect, rows }) {
     <div className="t2-resource-grid">
       {rows.map((row) => (
         <article className="t2-resource-card" key={uploadKey(row, language)}>
-          <header><span><FiFileText aria-hidden="true" /></span><StatusBadge value={row.processing_status || row.status} /></header>
+          <header><span><FiFileText aria-hidden="true" /></span><span className={`upload-status upload-status--${uploadStatusTone(row)}`}><StatusBadge value={getProcessingStatus(row) || row.status} /></span></header>
           <h2>{rowName(row, language)}</h2>
           <p>{[row.scope, row.visibility, row.type || row.mime_type || row.category || row.size || row.file_size].filter(Boolean).join(" - ")}</p>
           <footer><small>{formatDate(row.updated_at || row.created_at, language)}</small><Button onClick={() => onSelect(row)} tone="ghost">{copy.details}</Button></footer>
@@ -380,6 +417,7 @@ function UploadCreateForm({ copy, local, onCancel, onSaved, options }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [uploadProgress, setUploadProgress] = useState({ status: "idle", percent: 0, error: "" });
 
   function setFormValue(key, value) {
     setForm((current) => sanitizeUploadForm({ ...current, [key]: value }));
@@ -406,17 +444,26 @@ function UploadCreateForm({ copy, local, onCancel, onSaved, options }) {
     if (Object.keys(nextErrors).length) return;
 
     setLoading(true);
+    setUploadProgress({ status: "uploading", percent: 0, error: "" });
     try {
-      const payload = await uploadFiles(buildUploadPayload(form, files));
+      const payload = await uploadFiles({
+        ...buildUploadPayload(form, files),
+        onUploadProgress: (progress) => {
+          setUploadProgress({ status: "uploading", percent: progress.percent ?? 0, error: "" });
+        }
+      });
       const data = getPayloadData(payload);
       const created = Array.isArray(data?.files) ? data.files[0] : data?.upload || data?.file || data;
+      setUploadProgress({ status: "completed", percent: 100, error: "" });
       onSaved(created && typeof created === "object" ? created : null);
     } catch (requestError) {
       if (isDemoMode()) {
+        setUploadProgress({ status: "completed", percent: 100, error: "" });
         onSaved({ id: `demo-${Date.now()}`, name: files[0]?.name, type: files[0]?.type || "File", size: files[0]?.size, scope: form.scope, visibility: form.visibility, status: "pending", updated_at: new Date().toISOString() });
       } else {
         setFieldErrors(mapValidationErrors(requestError?.validationErrors));
         setError(requestError?.message || copy.failedSave);
+        setUploadProgress({ status: "failed", percent: 0, error: requestError?.message || copy.failedSave });
       }
     } finally {
       setLoading(false);
@@ -430,9 +477,10 @@ function UploadCreateForm({ copy, local, onCancel, onSaved, options }) {
         <label className="t2-file-input">
           <FiUploadCloud aria-hidden="true" />
           <span>{files.length ? files.map((file) => file.name).join(", ") : local.fileDrop}</span>
-          <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" multiple onChange={(event) => { setFiles(Array.from(event.target.files || [])); setFieldErrors((current) => ({ ...current, files: "" })); }} type="file" />
+          <input accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" multiple onChange={(event) => { setFiles(Array.from(event.target.files || [])); setFieldErrors((current) => ({ ...current, files: "" })); setUploadProgress({ status: "idle", percent: 0, error: "" }); }} type="file" />
         </label>
       </Field>
+      <UploadProgress files={files} state={uploadProgress} />
       <Field error={fieldErrors.scope} label={local.scope} required>
         <select value={form.scope} onChange={(event) => setFormValue("scope", event.target.value)}>
           {validScopes.map((scope) => <option key={scope} value={scope}>{scope}</option>)}
@@ -480,23 +528,6 @@ function UploadCreateForm({ copy, local, onCancel, onSaved, options }) {
       ) : null}
       <div className="t2-modal-actions"><Button onClick={onCancel} tone="secondary">{copy.cancel}</Button><Button disabled={loading} loading={loading} loadingLabel={copy.loading} type="submit">{copy.create}</Button></div>
     </form>
-  );
-}
-
-function UploadDetails({ copy, language, row }) {
-  return (
-    <div className="t2-resource-details">
-      <span className="t2-resource-details__icon"><FiFileText aria-hidden="true" /></span>
-      <div><small>{copy.name}</small><h3>{rowName(row, language)}</h3></div>
-      <dl>
-        <div><dt>{copy.status}</dt><dd><StatusBadge value={row.processing_status || row.status} /></dd></div>
-        <div><dt>Scope</dt><dd>{row.scope || "-"}</dd></div>
-        <div><dt>Visibility</dt><dd>{row.visibility || "-"}</dd></div>
-        <div><dt>{copy.size}</dt><dd>{row.size || row.file_size || "-"}</dd></div>
-        <div><dt>{copy.updated}</dt><dd>{formatDate(row.updated_at || row.created_at, language)}</dd></div>
-      </dl>
-      {row.description ? <p>{row.description}</p> : null}
-    </div>
   );
 }
 
@@ -577,10 +608,11 @@ function visibilityLabel(value, local) {
 
 function renderUploadCell(key, row, language) {
   if (key === "name") return <span className="t2-table-name"><b>{rowName(row, language)}</b>{row.description ? <small>{row.description}</small> : null}</span>;
-  if (key === "status") return <StatusBadge value={row.processing_status || row.status} />;
+  if (key === "status") return <span className={`upload-status upload-status--${uploadStatusTone(row)}`}><StatusBadge value={getProcessingStatus(row) || row.status} /></span>;
   if (key === "updated") return formatDate(row.updated_at || row.created_at, language);
   if (key === "scope") return row.scope || "-";
   if (key === "visibility") return row.visibility || "-";
+  if (key === "size") return formatUploadSize(row.file_size || row.size);
   return row[key] || "-";
 }
 

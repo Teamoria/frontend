@@ -1,0 +1,119 @@
+.upload-progress-list {
+  display: grid;
+  gap: 10px;
+}
+
+.upload-progress-row {
+  align-items: center;
+  border: 1px solid var(--t2-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
+.upload-progress-row__icon {
+  align-items: center;
+  background: var(--t2-surface-raised);
+  border-radius: 999px;
+  color: var(--t2-text-soft);
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.upload-progress-row b,
+.upload-progress-row small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.upload-progress-row small {
+  color: var(--t2-text-soft);
+  margin: 2px 0 8px;
+}
+
+.upload-progress-row strong {
+  color: var(--t2-text);
+  font-size: 0.86rem;
+}
+
+.upload-progress-row.is-uploading .upload-progress-row__icon {
+  color: var(--t2-primary);
+}
+
+.upload-progress-row.is-completed .upload-progress-row__icon,
+.upload-status--processed {
+  color: var(--t2-success);
+}
+
+.upload-progress-row.is-failed .upload-progress-row__icon,
+.upload-status--failed {
+  color: var(--t2-danger);
+}
+
+.upload-status--queued {
+  color: var(--t2-amber);
+}
+
+.upload-status--processing {
+  color: var(--t2-primary);
+}
+
+.upload-details {
+  display: grid;
+  gap: 18px;
+}
+
+.upload-preview {
+  border: 1px solid var(--t2-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.upload-preview header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.upload-preview h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.upload-preview img,
+.upload-preview iframe,
+.upload-preview pre {
+  background: var(--t2-surface-raised);
+  border: 1px solid var(--t2-border);
+  border-radius: 8px;
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+  width: 100%;
+}
+
+.upload-preview img {
+  display: block;
+  object-fit: contain;
+}
+
+.upload-preview iframe {
+  aspect-ratio: 4 / 3;
+}
+
+.upload-preview pre {
+  padding: 14px;
+  white-space: pre-wrap;
+}
+
+.upload-preview__empty {
+  color: var(--t2-text-soft);
+  margin: 0;
+}
