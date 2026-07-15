@@ -1681,25 +1681,8 @@ html[lang="ar"] .t2-nav__group h2 {
   padding: clamp(20px, 2.6vw, 38px);
 }
 
-.t2-shell:has(.t2-dashboard-page) {
-  height: 100dvh;
-  min-height: 100dvh;
-  overflow: hidden;
-}
-
-.t2-shell:has(.t2-dashboard-page) .t2-shell__body {
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .t2-main:has(.t2-dashboard-page) {
   background: var(--t2-bg);
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 0;
-  overflow: auto;
 }
 
 /* Workspace pages */
@@ -1711,17 +1694,7 @@ html[lang="ar"] .t2-nav__group h2 {
 }
 
 .t2-dashboard-page {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
   min-height: 100%;
-}
-
-.t2-dashboard-page > .t2-page-header,
-.t2-dashboard-page > .t2-inline-alert,
-.t2-dashboard-page > .t2-focus-band,
-.t2-dashboard-page > .t2-metric-grid {
-  flex: 0 0 auto;
 }
 
 .t2-page-header {
@@ -1978,30 +1951,6 @@ html[lang="ar"] .t2-nav__group h2 {
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
-}
-
-.t2-dashboard-page > .t2-dashboard-grid {
-  align-items: stretch;
-  align-content: stretch;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.t2-dashboard-page > .t2-dashboard-grid > .t2-panel,
-.t2-dashboard-page > .t2-trace-panel:last-child {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.t2-dashboard-page > .t2-trace-panel:last-child {
-  flex: 1 1 auto;
-}
-
-.t2-dashboard-page .t2-priority-list,
-.t2-dashboard-page .t2-activity-list,
-.t2-dashboard-page .t2-trace-rail {
-  flex: 1 1 auto;
 }
 
 .t2-priority-panel {
@@ -3907,21 +3856,6 @@ html[lang="ar"] .t2-nav__group h2 {
 
   .t2-main {
     padding: 20px 14px calc(24px + env(safe-area-inset-bottom));
-  }
-
-  .t2-shell:has(.t2-dashboard-page) {
-    height: auto;
-    min-height: 100dvh;
-    overflow: visible;
-  }
-
-  .t2-shell:has(.t2-dashboard-page) .t2-shell__body {
-    overflow: visible;
-  }
-
-  .t2-main:has(.t2-dashboard-page) {
-    display: block;
-    overflow: visible;
   }
 
   .t2-dashboard-page {
