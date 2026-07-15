@@ -475,7 +475,7 @@ function AdminDashboardContent({ company, copy, language, local }) {
   ];
 
   return (
-    <div className="t2-page">
+    <div className="t2-page t2-dashboard-page t2-dashboard-page--admin">
       <PageHeader
         eyebrow={copy.platform}
         title={textFor(language, routeMeta["/super-admin"].title)}
@@ -571,7 +571,7 @@ function RoleDashboardShell({ company, copy, language, loadingLabel, role, roleC
   const primaryAction = role === "owner" ? "#/owner/projects" : role === "manager" ? "#/projects" : "#/tasks";
 
   return (
-    <div className="t2-page">
+    <div className={`t2-page t2-dashboard-page t2-dashboard-page--${role}`}>
       <PageHeader
         eyebrow={company}
         title={title}
