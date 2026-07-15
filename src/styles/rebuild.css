@@ -1697,6 +1697,20 @@ html[lang="ar"] .t2-nav__group h2 {
   min-height: 100%;
 }
 
+@media (min-width: 921px) {
+  .t2-dashboard-page--owner .t2-dashboard-grid,
+  .t2-dashboard-page--manager .t2-dashboard-grid,
+  .t2-dashboard-page--member .t2-dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .t2-dashboard-page--owner .t2-priority-panel,
+  .t2-dashboard-page--manager .t2-priority-panel,
+  .t2-dashboard-page--member .t2-priority-panel {
+    grid-column: auto;
+  }
+}
+
 .t2-page-header {
   align-items: flex-start;
   display: flex;
