@@ -36,7 +36,7 @@
   color: var(--ai-text);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 0;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -49,7 +49,7 @@
 }
 
 .ai-chat-resource-page .t2-page-header {
-  flex: 0 0 auto;
+  display: none;
 }
 
 .ai-chat-command {
@@ -57,19 +57,61 @@
   border: 1px solid var(--ai-border);
   border-radius: 14px;
   box-shadow: var(--ai-shadow);
-  display: grid;
+  display: block;
   flex: 1 1 auto;
-  grid-template-columns: 320px minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  position: relative;
+}
+
+.ai-session-scrim {
+  background: var(--t2-scrim, var(--tm-next-scrim, rgba(0, 0, 0, 0.58)));
+  border: 0;
+  cursor: default;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 240ms ease;
+  z-index: 8;
+}
+
+.ai-chat-command.is-history-open .ai-session-scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ai-session-drawer {
+  height: 100%;
+  inset-block: 0;
+  inset-inline-start: 0;
+  max-width: min(380px, calc(100vw - 28px));
+  min-width: 0;
+  position: absolute;
+  transform: translateX(-104%);
+  transition: transform 240ms ease;
+  width: 360px;
+  z-index: 9;
+}
+
+[dir="rtl"] .ai-session-drawer {
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  transform: translateX(104%);
+}
+
+.ai-chat-command.is-history-open .ai-session-drawer {
+  transform: translateX(0);
 }
 
 .ai-session-panel {
   background: var(--ai-surface-soft);
   border-inline-end: 1px solid var(--ai-border);
+  box-shadow: var(--ai-shadow);
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-width: 0;
   overflow: hidden;
 }
@@ -107,8 +149,14 @@
   gap: 8px;
 }
 
+.ai-session-panel header > div:last-child {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .ai-session-panel button,
 .ai-chat-header-actions button,
+.ai-history-toggle,
 .ai-load-more,
 .ai-send-retry button,
 .ai-project-selector button,
@@ -136,7 +184,9 @@
 }
 
 .ai-session-panel header button:first-child,
+.ai-session-panel header button.ai-session-close,
 .ai-chat-header-actions button,
+.ai-history-toggle,
 .ai-load-more,
 .ai-project-selector button,
 .ai-send-retry button {
@@ -146,6 +196,7 @@
 
 .ai-session-panel button:hover,
 .ai-chat-header-actions button:hover,
+.ai-history-toggle:hover,
 .ai-load-more:hover,
 .ai-project-selector button:hover,
 .ai-send-retry button:hover,
@@ -168,6 +219,40 @@
   min-height: 0;
   overflow-y: auto;
   padding: 12px;
+}
+
+.ai-session-search {
+  align-items: center;
+  background: var(--ai-surface);
+  border: 1px solid var(--ai-border);
+  border-radius: 12px;
+  color: var(--ai-text-faint);
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  margin: 12px 12px 0;
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.ai-session-search input {
+  background: transparent;
+  border: 0;
+  color: var(--ai-text);
+  flex: 1 1 auto;
+  font: inherit;
+  min-width: 0;
+  outline: 0;
+}
+
+.ai-session-search input::placeholder {
+  color: var(--ai-text-faint);
+  opacity: 1;
+}
+
+.ai-session-search:focus-within {
+  border-color: var(--ai-primary);
+  box-shadow: 0 0 0 4px var(--ai-ring);
 }
 
 .ai-session-list > button {
@@ -226,6 +311,7 @@
   background: var(--ai-surface);
   display: flex;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
@@ -240,6 +326,23 @@
   gap: 16px;
   justify-content: space-between;
   padding: 15px 20px;
+}
+
+.ai-chat-title-row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ai-chat-title-row > div {
+  min-width: 0;
+}
+
+.ai-history-toggle {
+  flex: 0 0 auto;
+  min-height: 36px;
+  white-space: nowrap;
 }
 
 .ai-chat-thread-head h2 {
@@ -322,6 +425,7 @@
 .ai-project-selector select:focus-visible,
 .ai-session-panel button:focus-visible,
 .ai-chat-header-actions button:focus-visible,
+.ai-history-toggle:focus-visible,
 .ai-load-more:focus-visible,
 .ai-send-retry button:focus-visible,
 .ai-project-selector button:focus-visible,
@@ -547,8 +651,7 @@
   flex: 0 0 auto;
   gap: 10px;
   padding: 14px 20px 16px;
-  position: sticky;
-  bottom: 0;
+  position: relative;
   z-index: 2;
 }
 
@@ -746,26 +849,25 @@
 }
 
 @media (max-width: 1024px) {
-  .ai-chat-command {
-    grid-template-columns: 280px minmax(0, 1fr);
+  .ai-session-drawer {
+    width: 330px;
   }
 }
 
 @media (max-width: 900px) {
-  .ai-chat-command {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(150px, 28dvh) minmax(0, 1fr);
+  .ai-session-drawer {
+    width: min(340px, 88vw);
   }
 
   .ai-session-panel {
-    border-bottom: 1px solid var(--ai-border);
-    border-inline-end: 0;
     min-height: 0;
   }
 }
 
 @media (max-width: 640px) {
   .t2-main:has(.ai-chat-resource-page) {
+    height: calc(100dvh - 113px);
+    max-height: calc(100dvh - 113px);
     padding: 12px;
   }
 
@@ -773,14 +875,47 @@
     border-radius: 12px;
   }
 
-  .ai-session-panel > header,
-  .ai-chat-thread-head {
+  .ai-session-panel > header {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  .ai-chat-thread-head {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .ai-session-drawer {
+    max-width: none;
+    width: 100%;
+  }
+
+  .ai-chat-title-row {
+    flex: 1 1 auto;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .ai-history-toggle {
+    min-width: 42px;
+    padding: 0 10px;
+    width: auto;
+  }
+
+  .ai-history-toggle span,
+  .ai-realtime-pill {
+    display: none;
+  }
+
+  .ai-chat-header-actions {
+    flex: 0 0 auto;
+  }
+
   .ai-project-selector {
     grid-template-columns: 1fr;
+    padding: 12px;
   }
 
   .ai-project-selector small {
@@ -791,23 +926,37 @@
     max-width: 94%;
   }
 
+  .ai-message-window {
+    padding: 18px 14px;
+  }
+
+  .ai-composer-panel {
+    padding: 10px 12px 12px;
+  }
+
   .ai-composer-row {
-    align-items: stretch;
-    flex-wrap: wrap;
+    align-items: flex-end;
+    flex-wrap: nowrap;
   }
 
   .ai-composer-row textarea {
-    flex-basis: 100%;
+    flex-basis: auto;
   }
 
   .ai-send-button {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    min-width: 42px;
+  }
+
+  .ai-send-button span {
+    display: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ai-session-panel button,
   .ai-chat-header-actions button,
+  .ai-history-toggle,
   .ai-load-more,
   .ai-send-retry button,
   .ai-project-selector button,

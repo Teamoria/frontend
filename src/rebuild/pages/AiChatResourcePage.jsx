@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { FiPlus, FiRefreshCw, FiWifi, FiWifiOff } from "react-icons/fi";
+import { FiMessageSquare, FiPlus, FiRefreshCw, FiWifi, FiWifiOff } from "react-icons/fi";
 import { useAuth } from "../../lib/AuthContext.jsx";
 import { usePreferences } from "../../lib/PreferencesContext.jsx";
 import { useRealtimePrivateChannel } from "../../lib/RealtimeContext.jsx";
@@ -142,6 +142,7 @@ export default function AiChatResourcePage() {
   const [messageCursorBySession, setMessageCursorBySession] = useState({});
   const [draft, setDraft] = useState("");
   const [failedSend, setFailedSend] = useState(null);
+  const [isHistoryOpen, setHistoryOpen] = useState(false);
   const [pendingBySession, setPendingBySession] = useState({});
   const [status, setStatus] = useState({
     sessions: "loading",
@@ -154,6 +155,7 @@ export default function AiChatResourcePage() {
   const pollingRef = useRef({});
   const messagesWindowRef = useRef(null);
   const preserveScrollRef = useRef(null);
+  const composerInputRef = useRef(null);
   const userId = user?.id || user?.user_id || "";
 
   const activeSession = useMemo(
@@ -185,6 +187,15 @@ export default function AiChatResourcePage() {
     loadSessions();
     return () => stopAllPolling();
   }, []);
+
+  useEffect(() => {
+    if (!isHistoryOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setHistoryOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isHistoryOpen]);
 
   useEffect(() => {
     activeSessionRef.current = activeSessionId;
@@ -297,6 +308,8 @@ export default function AiChatResourcePage() {
     setDraft("");
     setScope("general");
     setSelectedProjectId("");
+    setHistoryOpen(false);
+    focusComposer();
   }
 
   function selectSession(sessionId) {
@@ -309,6 +322,7 @@ export default function AiChatResourcePage() {
       setSelectedProjectId("");
     }
     setActiveSessionId(sessionId);
+    setHistoryOpen(false);
   }
 
   function changeScope(nextScope) {
@@ -350,6 +364,7 @@ export default function AiChatResourcePage() {
       [localSessionKey]: [...(current[localSessionKey] || []), userMessage, processingMessage]
     }));
     setDraft("");
+    focusComposer();
 
     try {
       const payload = await sendChatMessage({
@@ -386,6 +401,7 @@ export default function AiChatResourcePage() {
       const pollingSessionId = nextSessionId || existingSessionId;
       setPendingBySession((current) => ({ ...current, [pollingSessionId]: { submittedAt, message } }));
       setStatus((current) => ({ ...current, sending: false }));
+      focusComposer();
       loadSessions();
       startPolling(pollingSessionId, submittedAt);
     } catch (error) {
@@ -396,6 +412,7 @@ export default function AiChatResourcePage() {
         [localSessionKey]: (current[localSessionKey] || []).filter((item) => item.id !== userMessage.id && item.id !== processingMessage.id)
       }));
       setStatus((current) => ({ ...current, sending: false, error: safeErrorMessage(error, copy.sendFailed) }));
+      focusComposer();
     }
   }
 
@@ -468,6 +485,10 @@ export default function AiChatResourcePage() {
     });
   }
 
+  function focusComposer() {
+    window.requestAnimationFrame(() => composerInputRef.current?.focus());
+  }
+
   return (
     <div className="t2-page ai-chat-resource-page" dir={direction}>
       <PageHeader
@@ -477,24 +498,45 @@ export default function AiChatResourcePage() {
         title={copy.title}
       />
 
-      <section className="ai-chat-command" data-chat-page="resource">
-        <ChatSessionList
-          activeSessionId={activeSessionId}
-          copy={copy}
-          language={language}
-          loading={status.sessions === "loading"}
-          onNewChat={startNewChat}
-          onRefresh={loadSessions}
-          onSelect={selectSession}
-          sessions={sessions}
-          status={status.sessions}
+      <section className={`ai-chat-command ${isHistoryOpen ? "is-history-open" : ""}`} data-chat-page="resource">
+        <button
+          aria-label={copy.closeSessions || copy.sessions}
+          className="ai-session-scrim"
+          onClick={() => setHistoryOpen(false)}
+          type="button"
         />
+
+        <div className="ai-session-drawer" aria-label={copy.sessions} aria-modal={isHistoryOpen ? "true" : undefined} role="dialog">
+          <ChatSessionList
+            activeSessionId={activeSessionId}
+            copy={copy}
+            language={language}
+            loading={status.sessions === "loading"}
+            onClose={() => setHistoryOpen(false)}
+            onNewChat={startNewChat}
+            onRefresh={loadSessions}
+            onSelect={selectSession}
+            sessions={sessions}
+            status={status.sessions}
+          />
+        </div>
 
         <main className="ai-chat-surface">
           <header className="ai-chat-thread-head">
-            <div>
-              <h2>{activeSession?.title || titleForScope(scope, copy)}</h2>
-              <span>{copy.sourcesLimitation}</span>
+            <div className="ai-chat-title-row">
+              <button
+                aria-expanded={isHistoryOpen}
+                className="ai-history-toggle"
+                onClick={() => setHistoryOpen((current) => !current)}
+                type="button"
+              >
+                <FiMessageSquare aria-hidden="true" />
+                <span>{copy.sessions}</span>
+              </button>
+              <div>
+                <h2>{activeSession?.title || titleForScope(scope, copy)}</h2>
+                <span>{copy.sourcesLimitation}</span>
+              </div>
             </div>
             <div className="ai-chat-header-actions">
               <span className={`ai-realtime-pill ${realtime.isReady ? "is-connected" : "is-fallback"}`}>
@@ -540,6 +582,7 @@ export default function AiChatResourcePage() {
             disabledReason={disabledReason}
             draft={draft}
             failedSend={failedSend}
+            inputRef={composerInputRef}
             onChange={setDraft}
             onRetrySend={() => failedSend?.message && submitMessage(null, failedSend.message)}
             onSubmit={submitMessage}

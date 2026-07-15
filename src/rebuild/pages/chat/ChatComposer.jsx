@@ -5,6 +5,7 @@ export default function ChatComposer({
   disabledReason,
   draft,
   failedSend,
+  inputRef,
   onChange,
   onRetrySend,
   onSubmit,
@@ -26,10 +27,12 @@ export default function ChatComposer({
       <div className="ai-composer-row">
         <textarea
           aria-label={copy.placeholder}
+          ref={inputRef}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
+              if (disabled) return;
               event.currentTarget.form.requestSubmit();
             }
           }}
