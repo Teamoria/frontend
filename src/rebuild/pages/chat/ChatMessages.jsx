@@ -7,13 +7,13 @@ export default function ChatMessages({
   language,
   loading,
   messages,
-  messagesEndRef,
+  messagesWindowRef,
   onLoadMore,
   onRetry,
   status
 }) {
   return (
-    <section className="ai-message-window" aria-label={copy.messages} aria-live="polite">
+    <section className="ai-message-window" aria-label={copy.messages} aria-live="polite" ref={messagesWindowRef}>
       {status === "loading" ? <MessageSkeleton /> : null}
       {status === "error" ? (
         <div className="ai-chat-state is-error">
@@ -35,7 +35,6 @@ export default function ChatMessages({
         </div>
       ) : null}
       {status !== "loading" ? messages.map((message) => <ChatMessage copy={copy} key={message.id} language={language} message={message} />) : null}
-      <div ref={messagesEndRef} />
     </section>
   );
 }

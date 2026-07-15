@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FiPlus, FiRefreshCw, FiWifi, FiWifiOff } from "react-icons/fi";
 import { useAuth } from "../../lib/AuthContext.jsx";
 import { usePreferences } from "../../lib/PreferencesContext.jsx";
@@ -32,27 +32,33 @@ import "./chat/chat.css";
 const copyMap = {
   ar: {
     title: "مساعد Teamoria",
-    subtitle: "اسأل داخل مشروع محدد فقط. هذا القيد حماية من الواجهة حتى يدعم الباك اند نطاقًا إلزاميًا.",
+    subtitle: "اسأل على مستوى الشركة أو داخل مشروع محدد مع الحفاظ على سياق المحادثة.",
     eyebrow: "AI CHAT",
     newChat: "محادثة جديدة",
     sessions: "المحادثات",
     sessionCount: (count) => `${count} محادثة`,
     noSessions: "لا توجد محادثات بعد",
-    noSessionsText: "اختر مشروعًا ثم ابدأ سؤالًا جديدًا.",
+    noSessionsText: "ابدأ محادثة على مستوى الشركة أو اختر مشروعًا محددًا.",
     sessionsError: "تعذر تحميل المحادثات.",
     messages: "رسائل المحادثة",
     messagesError: "تعذر تحميل الرسائل.",
-    emptyTitle: "ابدأ بسؤال عن مشروعك",
-    emptyText: "اختر مشروعًا قبل أول رسالة. بعد بدء الجلسة يبقى المشروع مقفلاً.",
+    emptyTitle: "ابدأ بسؤال جديد",
+    emptyText: "اختر نطاق المحادثة ثم اكتب سؤالك. محادثات المشروع تبقى مرتبطة بالمشروع المختار.",
     assistantName: "Teamoria AI",
-    projectScope: "نطاق المشروع",
+    chatScope: "نطاق المحادثة",
+    companyScope: "مساحة الشركة",
+    projectScope: "مشروع محدد",
+    companyScopeDetail: "محادثة عامة على مستوى الشركة بدون إرسال project_id.",
+    projectScopeDetail: "محادثة مرتبطة بالمشروع المختار فقط.",
+    companySession: "محادثة الشركة",
+    companySessionDetail: "نطاق الشركة",
+    projectSessionDetail: "نطاق المشروع",
     chooseProject: "اختر مشروعًا",
     loadingProjects: "تحميل المشاريع...",
     retryProjects: "إعادة تحميل المشاريع",
     projectUnavailable: "مشروع غير متوفر",
     unknownProject: "مشروع محفوظ",
-    frontendSafeguard: "حماية من الواجهة فقط: لا يتم إرسال محادثة جديدة دون project_id.",
-    placeholder: "اكتب سؤالك عن هذا المشروع...",
+    placeholder: "اكتب سؤالك هنا...",
     send: "إرسال",
     processing: "جاري المعالجة",
     retry: "إعادة المحاولة",
@@ -60,36 +66,42 @@ const copyMap = {
     retrySend: "إعادة الإرسال",
     sendFailed: "فشل إرسال الرسالة. بقي النص محفوظًا.",
     loadMore: "تحميل المزيد",
-    selectProjectFirst: "اختر مشروعًا قبل بدء محادثة جديدة.",
+    selectProjectFirst: "اختر مشروعًا قبل بدء محادثة مشروع جديدة.",
     noProjects: "لا توجد مشاريع متاحة لهذا الحساب.",
     realtimeConnected: "متصل لحظيًا",
     realtimeFallback: "تحديث بالاستعلام",
-    sourcesLimitation: "المصادر غير معروضة لأن العقد الحالي لا يرجع مصادر منظمة.",
+    sourcesLimitation: "قد تظهر الإجابات من سياق الشركة أو المشروع حسب نطاق المحادثة.",
     refresh: "تحديث"
   },
   en: {
     title: "Teamoria assistant",
-    subtitle: "Ask inside one selected project. This is a frontend safeguard until the backend requires project scope.",
+    subtitle: "Ask across the company workspace or inside a selected project while keeping each chat scoped.",
     eyebrow: "AI CHAT",
     newChat: "New chat",
     sessions: "Sessions",
     sessionCount: (count) => `${count} sessions`,
     noSessions: "No sessions yet",
-    noSessionsText: "Choose a project, then start with a question.",
+    noSessionsText: "Start a company chat or choose a specific project.",
     sessionsError: "Unable to load sessions.",
     messages: "Chat messages",
     messagesError: "Unable to load messages.",
-    emptyTitle: "Start with a project question",
-    emptyText: "Choose a project before the first message. Once a session starts, the project stays locked.",
+    emptyTitle: "Start with a question",
+    emptyText: "Choose the chat scope, then write your question. Project chats stay tied to the selected project.",
     assistantName: "Teamoria AI",
-    projectScope: "Project scope",
+    chatScope: "Chat Scope",
+    companyScope: "Company",
+    projectScope: "Project",
+    companyScopeDetail: "Company-level chat without sending project_id.",
+    projectScopeDetail: "Project chat tied only to the selected project.",
+    companySession: "Company chat",
+    companySessionDetail: "Company scope",
+    projectSessionDetail: "Project scope",
     chooseProject: "Choose a project",
     loadingProjects: "Loading projects...",
     retryProjects: "Reload projects",
     projectUnavailable: "Project unavailable",
     unknownProject: "Saved project",
-    frontendSafeguard: "Frontend safeguard only: new chats are never sent without project_id.",
-    placeholder: "Ask about this project...",
+    placeholder: "Ask your question...",
     send: "Send",
     processing: "Processing",
     retry: "Retry",
@@ -97,11 +109,11 @@ const copyMap = {
     retrySend: "Retry send",
     sendFailed: "Message failed. Your draft was preserved.",
     loadMore: "Load more",
-    selectProjectFirst: "Choose a project before starting a new chat.",
+    selectProjectFirst: "Choose a project before starting a project chat.",
     noProjects: "No projects are available for this account.",
     realtimeConnected: "Realtime connected",
     realtimeFallback: "Polling updates",
-    sourcesLimitation: "Sources are hidden because the current contract does not return structured citations.",
+    sourcesLimitation: "Answers use company or project context based on the selected chat scope.",
     refresh: "Refresh"
   }
 };
@@ -115,6 +127,7 @@ export default function AiChatResourcePage() {
   const copy = copyMap[language] || copyMap.en;
   const [sessions, setSessions] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [scope, setScope] = useState("company");
   const [activeSessionId, setActiveSessionId] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [messagesBySession, setMessagesBySession] = useState({});
@@ -131,7 +144,8 @@ export default function AiChatResourcePage() {
   });
   const activeSessionRef = useRef("");
   const pollingRef = useRef({});
-  const messagesEndRef = useRef(null);
+  const messagesWindowRef = useRef(null);
+  const preserveScrollRef = useRef(null);
   const userId = user?.id || user?.user_id || "";
 
   const activeSession = useMemo(
@@ -143,11 +157,12 @@ export default function AiChatResourcePage() {
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
   const disabledReason = useMemo(() => {
     if (activeSession) return "";
+    if (scope !== "project") return "";
     if (status.projects === "loading") return copy.loadingProjects;
     if (status.projects === "ready" && projects.length === 0) return copy.noProjects;
     if (!selectedProjectId) return copy.selectProjectFirst;
     return "";
-  }, [activeSession, copy, projects.length, selectedProjectId, status.projects]);
+  }, [activeSession, copy, projects.length, scope, selectedProjectId, status.projects]);
 
   const realtime = useRealtimePrivateChannel({
     channelName: userId ? `chat.${userId}` : "",
@@ -173,7 +188,26 @@ export default function AiChatResourcePage() {
   }, [activeSessionId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ block: "end" });
+    if (!activeSession) return;
+    if (activeSession.scope === "project") {
+      setScope("project");
+      setSelectedProjectId(activeSession.project_id || "");
+      return;
+    }
+    setScope("company");
+    setSelectedProjectId("");
+  }, [activeSession]);
+
+  useLayoutEffect(() => {
+    const node = messagesWindowRef.current;
+    if (!node) return;
+    const preserved = preserveScrollRef.current;
+    if (preserved) {
+      node.scrollTop = node.scrollHeight - preserved.scrollHeight + preserved.scrollTop;
+      preserveScrollRef.current = null;
+      return;
+    }
+    node.scrollTop = node.scrollHeight;
   }, [activeMessages.length, status.sending]);
 
   const loadProjects = useCallback(async () => {
@@ -192,8 +226,7 @@ export default function AiChatResourcePage() {
         .flatMap((payload) => extractRows(getPayloadData(payload), ["projects"]))
         .map(normalizeProject)
         .filter((project) => project.id);
-      const nextProjects = dedupeById([...firstRows, ...extraRows]);
-      setProjects(nextProjects);
+      setProjects(dedupeById([...firstRows, ...extraRows]));
       setStatus((current) => ({ ...current, projects: "ready" }));
     } catch (error) {
       setStatus((current) => ({ ...current, projects: "error", error: safeErrorMessage(error, copy.noProjects) }));
@@ -216,6 +249,12 @@ export default function AiChatResourcePage() {
 
   async function loadMessages(sessionId, { cursor = "", append = false, silent = false } = {}) {
     if (!sessionId) return;
+    if (append && messagesWindowRef.current) {
+      preserveScrollRef.current = {
+        scrollHeight: messagesWindowRef.current.scrollHeight,
+        scrollTop: messagesWindowRef.current.scrollTop
+      };
+    }
     if (!silent) setStatus((current) => ({ ...current, messages: "loading", error: "" }));
     try {
       const payload = await listChatSessionMessages(sessionId, cursor);
@@ -243,14 +282,32 @@ export default function AiChatResourcePage() {
     setDraft("");
   }
 
+  function selectSession(sessionId) {
+    const session = sessions.find((item) => item.id === sessionId);
+    if (session?.scope === "project") {
+      setScope("project");
+      setSelectedProjectId(session.project_id || "");
+    } else {
+      setScope("company");
+      setSelectedProjectId("");
+    }
+    setActiveSessionId(sessionId);
+  }
+
+  function changeScope(nextScope) {
+    setScope(nextScope === "project" ? "project" : "company");
+    if (nextScope !== "project") setSelectedProjectId("");
+  }
+
   async function submitMessage(event, retryMessage) {
     event?.preventDefault?.();
     const message = String(retryMessage || draft).trim();
     if (!message || status.sending) return;
 
     const existingSessionId = activeSession?.id || "";
-    const projectId = existingSessionId ? "" : selectedProjectId;
-    if (!existingSessionId && !projectId) return;
+    const sessionScope = activeSession?.scope || scope;
+    const projectId = existingSessionId ? "" : sessionScope === "project" ? selectedProjectId : "";
+    if (!existingSessionId && sessionScope === "project" && !projectId) return;
 
     const localSessionKey = existingSessionId || "new";
     const submittedAt = new Date().toISOString();
@@ -279,7 +336,7 @@ export default function AiChatResourcePage() {
     try {
       const payload = await sendChatMessage({
         session_id: existingSessionId || undefined,
-        project_id: existingSessionId ? undefined : projectId,
+        project_id: existingSessionId ? undefined : projectId || undefined,
         message_content: message
       });
       const data = getPayloadData(payload) || {};
@@ -290,8 +347,10 @@ export default function AiChatResourcePage() {
         setSessions((current) => dedupeById([
           normalizeSession({
             id: nextSessionId,
+            scope: sessionScope,
+            title: sessionScope === "company" ? copy.companySession : undefined,
             project_id: projectId,
-            project: { id: projectId, name: project.name },
+            project: projectId ? { id: projectId, name: project.name } : null,
             created_at: submittedAt,
             updated_at: submittedAt
           }),
@@ -408,7 +467,7 @@ export default function AiChatResourcePage() {
           loading={status.sessions === "loading"}
           onNewChat={startNewChat}
           onRefresh={loadSessions}
-          onSelect={setActiveSessionId}
+          onSelect={selectSession}
           sessions={sessions}
           status={status.sessions}
         />
@@ -416,7 +475,7 @@ export default function AiChatResourcePage() {
         <main className="ai-chat-surface">
           <header className="ai-chat-thread-head">
             <div>
-              <h2>{activeSession?.title || copy.newChat}</h2>
+              <h2>{activeSession?.title || (scope === "company" ? copy.companySession : copy.newChat)}</h2>
               <span>{copy.sourcesLimitation}</span>
             </div>
             <div className="ai-chat-header-actions">
@@ -436,7 +495,9 @@ export default function AiChatResourcePage() {
             disabled={status.sending}
             onChange={setSelectedProjectId}
             onRetry={loadProjects}
+            onScopeChange={changeScope}
             projects={projects}
+            scope={scope}
             selectedProjectId={selectedProjectId}
             status={status.projects}
           />
@@ -449,7 +510,7 @@ export default function AiChatResourcePage() {
             language={language}
             loading={status.messages === "loading"}
             messages={activeMessages}
-            messagesEndRef={messagesEndRef}
+            messagesWindowRef={messagesWindowRef}
             onLoadMore={() => activeSessionId && loadMessages(activeSessionId, { cursor: activeCursor?.nextCursor, append: true, silent: true })}
             onRetry={() => activeSessionId && loadMessages(activeSessionId)}
             status={activeSessionId ? status.messages : "ready"}

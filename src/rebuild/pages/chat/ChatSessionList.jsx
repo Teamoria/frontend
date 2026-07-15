@@ -55,7 +55,10 @@ export default function ChatSessionList({
             <FiMessageSquare aria-hidden="true" />
             <span>
               <strong>{session.title}</strong>
-              <small>{session.project_name || copy.projectUnavailable}</small>
+              <small>
+                <span className="ai-session-scope">{session.scope === "project" ? copy.projectScope : copy.companyScope}</span>
+                {session.scope === "project" ? ` - ${session.project_name || copy.projectUnavailable}` : ` - ${copy.companySessionDetail}`}
+              </small>
             </span>
             <time>{formatShortDate(session.updated_at || session.created_at, language)}</time>
           </button>

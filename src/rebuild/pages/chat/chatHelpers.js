@@ -1,12 +1,17 @@
 export function normalizeSession(session = {}, index = 0) {
   const project = session.project && typeof session.project === "object" ? session.project : null;
   const id = session.id || session.session_id || session.chat_session_id || "";
+  const projectId = session.project_id || project?.id || "";
   const projectName = project?.name || session.project_name || "";
+  const scope = normalizeScope(
+    session.scope || session.chat_scope || session.scope_type || session.type || (projectId ? "project" : "company")
+  );
 
   return {
     id,
-    title: session.title || session.name || projectName || `Project chat ${index + 1}`,
-    project_id: session.project_id || project?.id || "",
+    title: session.title || session.name || projectName || (scope === "company" ? `Company chat ${index + 1}` : `Project chat ${index + 1}`),
+    scope,
+    project_id: projectId,
     project_name: projectName,
     created_at: session.created_at || "",
     updated_at: session.updated_at || session.created_at || ""
@@ -104,6 +109,13 @@ function normalizeRole(role) {
   const value = String(role || "").toLowerCase();
   if (["ai", "assistant", "bot", "model", "teamoria_ai"].includes(value)) return "assistant";
   return "user";
+}
+
+function normalizeScope(scope) {
+  const value = String(scope || "").toLowerCase();
+  if (["project", "project_chat", "project-level", "project_level"].includes(value)) return "project";
+  if (["company", "company_chat", "company-level", "company_level", "workspace", "organization"].includes(value)) return "company";
+  return "company";
 }
 
 function sortByCreatedAt(a, b) {
