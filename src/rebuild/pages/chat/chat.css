@@ -1,6 +1,22 @@
 .t2-main:has(.ai-chat-resource-page) {
   background: var(--tm-next-canvas, var(--t2-bg, #ffffff));
-  height: calc(100dvh - 68px);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.t2-shell:has(.ai-chat-resource-page) {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.t2-shell:has(.ai-chat-resource-page) .t2-shell__body {
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -866,8 +882,6 @@
 
 @media (max-width: 640px) {
   .t2-main:has(.ai-chat-resource-page) {
-    height: calc(100dvh - 113px);
-    max-height: calc(100dvh - 113px);
     padding: 12px;
   }
 
