@@ -46,10 +46,15 @@ import {
   getAdminDashboard,
   getCompanyDashboard,
   getPayloadData,
+  listCompanyProjects,
+  listStaff,
+  listTasks,
+  listUploads,
   listAdminPayments,
   listChatSessionMessages,
   listChatSessions,
   listCompanies,
+  listNotifications,
   listUsers,
   sendChatMessage,
   updateProfile
@@ -246,6 +251,117 @@ const dataKeys = {
   payments: ["payments", "subscriptions"]
 };
 
+const roleDashboardCopy = {
+  ar: {
+    ownerTitle: "مركز قيادة الشركة",
+    ownerSubtitle: "نظرة تنفيذية على المشاريع والمهام والفريق والملفات ضمن صلاحيات الشركة.",
+    managerTitle: "لوحة إدارة التنفيذ",
+    managerSubtitle: "المشاريع والمهام والملفات التي يستطيع المدير الوصول إليها من واجهات العمل الحالية.",
+    memberTitle: "مساحة عملي",
+    memberSubtitle: "مهامك ومواعيدك وملفاتك المتاحة بدون عرض تحليلات الشركة العامة.",
+    fallbackTitle: "لوحة العمل",
+    fallbackSubtitle: "لم نتمكن من تحديد دورك بدقة. يتم عرض مؤشراتك المسموح بها فقط.",
+    loadingOwner: "جاري تحميل مؤشرات الشركة...",
+    loadingManager: "جاري تحميل نطاق الإدارة...",
+    loadingMember: "جاري تحميل مساحة عملك...",
+    retry: "إعادة المحاولة",
+    totalProjects: "إجمالي المشاريع",
+    accessibleProjects: "المشاريع المتاحة",
+    myProjects: "مشاريعي",
+    totalTasks: "إجمالي المهام",
+    accessibleTasks: "مهام النطاق",
+    myTasks: "مهامي",
+    totalEmployees: "إجمالي الموظفين",
+    uploadedFiles: "الملفات",
+    overdueTasks: "مهام متأخرة",
+    upcomingDeadlines: "مواعيد قادمة",
+    active: "نشط",
+    done: "منجز",
+    files: "ملفات",
+    recentProjects: "المشاريع الحديثة",
+    managedProjects: "مشاريع يمكن إدارتها",
+    myProjectList: "المشاريع المرتبطة بمهامي",
+    recentMeetings: "الاجتماعات الحديثة",
+    overdueTaskList: "المهام المتأخرة",
+    myTaskList: "مهامي الحالية",
+    recentFiles: "الملفات الحديثة",
+    teamActivity: "نشاط الفريق",
+    notifications: "الإشعارات",
+    aiInsights: "إشارات AI",
+    companyHealth: "صحة الشركة",
+    managerFocus: "تركيز الإدارة",
+    memberFocus: "ما الذي أحتاج إنجازه؟",
+    noData: "لا توجد بيانات متاحة بعد.",
+    noTasks: "لا توجد مهام ضمن هذا النطاق.",
+    noProjects: "لا توجد مشاريع ضمن هذا النطاق.",
+    noFiles: "لا توجد ملفات متاحة.",
+    noNotifications: "لا توجد إشعارات حديثة.",
+    viewTasks: "فتح المهام",
+    viewProjects: "فتح المشاريع",
+    viewFiles: "فتح الملفات",
+    sourceNoteOwner: "يعتمد العرض على واجهة ملخص الشركة وواجهات المشاريع والمهام والموظفين والملفات.",
+    sourceNoteScoped: "لا يتم توسيع الصلاحيات من الواجهة؛ النتائج تأتي من استجابة backend للدور الحالي.",
+    backendLimit: "لا توجد واجهة Dashboard منفصلة لكل دور حاليًا؛ لذلك يتم تركيب لوحة المدير والعضو من واجهات المشاريع والمهام والملفات والإشعارات المسموح بها.",
+    status: "الحالة",
+    due: "الموعد",
+    updated: "آخر تحديث"
+  },
+  en: {
+    ownerTitle: "Company Command Center",
+    ownerSubtitle: "Executive view of company projects, tasks, team, files, and notifications within company permissions.",
+    managerTitle: "Execution Management",
+    managerSubtitle: "Projects, tasks, files, and notifications available to this manager through the current APIs.",
+    memberTitle: "My Work",
+    memberSubtitle: "Your tasks, upcoming deadlines, projects, files, and notifications without company-wide analytics.",
+    fallbackTitle: "Work Dashboard",
+    fallbackSubtitle: "Your role could not be mapped exactly, so only permitted workspace signals are shown.",
+    loadingOwner: "Loading company signals...",
+    loadingManager: "Loading management scope...",
+    loadingMember: "Loading your workspace...",
+    retry: "Retry",
+    totalProjects: "Total Projects",
+    accessibleProjects: "Accessible Projects",
+    myProjects: "My Projects",
+    totalTasks: "Total Tasks",
+    accessibleTasks: "Scoped Tasks",
+    myTasks: "My Tasks",
+    totalEmployees: "Total Employees",
+    uploadedFiles: "Uploaded Files",
+    overdueTasks: "Overdue Tasks",
+    upcomingDeadlines: "Upcoming Deadlines",
+    active: "active",
+    done: "done",
+    files: "files",
+    recentProjects: "Recent Projects",
+    managedProjects: "Managed Projects",
+    myProjectList: "Projects From My Tasks",
+    recentMeetings: "Recent Meetings",
+    overdueTaskList: "Overdue Tasks",
+    myTaskList: "My Current Tasks",
+    recentFiles: "Recent Files",
+    teamActivity: "Team Activity",
+    notifications: "Notifications",
+    aiInsights: "AI Insights",
+    companyHealth: "Company Health",
+    managerFocus: "Management Focus",
+    memberFocus: "What needs my attention?",
+    noData: "No data is available yet.",
+    noTasks: "No tasks are available in this scope.",
+    noProjects: "No projects are available in this scope.",
+    noFiles: "No files are available.",
+    noNotifications: "No recent notifications.",
+    viewTasks: "Open tasks",
+    viewProjects: "Open projects",
+    viewFiles: "Open files",
+    sourceNoteOwner: "This view uses the company dashboard plus project, task, staff, file, and notification APIs.",
+    sourceNoteScoped: "The frontend does not broaden access; results come from backend responses for the current role.",
+    backendLimit: "There is no separate dashboard API per company role yet, so manager and member dashboards are composed from permitted projects, tasks, uploads, and notifications.",
+    status: "Status",
+    due: "Due",
+    updated: "Updated"
+  }
+};
+
 function dataFallback(key) {
   if (demoRows[key]) return demoRows[key];
   if (key === "meetings") return demoRows.meetings;
@@ -315,6 +431,27 @@ export function DashboardPage({ admin = false }) {
   const { language } = usePreferences();
   const copy = appCopy[language] || appCopy.en;
   const local = pageCopy[language] || pageCopy.en;
+  const roleCopy = roleDashboardCopy[language] || roleDashboardCopy.en;
+  const company = user?.company?.name || user?.company_name || copy.workspace;
+
+  if (admin) return <AdminDashboardContent company={company} copy={copy} language={language} local={local} />;
+
+  if (normalizedRole === "company_owner") {
+    return <RoleDashboardShell company={company} copy={copy} language={language} loadingLabel={roleCopy.loadingOwner} role="owner" roleCopy={roleCopy} />;
+  }
+
+  if (normalizedRole === "company_manager") {
+    return <RoleDashboardShell company={company} copy={copy} language={language} loadingLabel={roleCopy.loadingManager} role="manager" roleCopy={roleCopy} />;
+  }
+
+  if (normalizedRole === "company_member") {
+    return <RoleDashboardShell company={company} copy={copy} language={language} loadingLabel={roleCopy.loadingMember} role="member" roleCopy={roleCopy} />;
+  }
+
+  return <RoleDashboardShell company={company} copy={copy} language={language} loadingLabel={roleCopy.loadingMember} role="fallback" roleCopy={roleCopy} />;
+}
+
+function AdminDashboardContent({ company, copy, language, local }) {
   const [apiState, setApiState] = useState({ loading: !isDemoMode(), error: "", data: null });
 
   useEffect(() => {
@@ -323,34 +460,27 @@ export function DashboardPage({ admin = false }) {
       return;
     }
     let active = true;
-    const loader = admin ? getAdminDashboard : getCompanyDashboard;
     setApiState({ loading: true, error: "", data: null });
-    loader()
+    getAdminDashboard()
       .then((payload) => active && setApiState({ loading: false, error: "", data: getPayloadData(payload) }))
       .catch((error) => active && setApiState({ loading: false, error: error?.message || copy.failedLoad, data: null }));
     return () => { active = false; };
-  }, [admin, copy.failedLoad]);
+  }, [copy.failedLoad]);
 
-  const company = user?.company?.name || user?.company_name || copy.workspace;
-  const metrics = admin ? [
+  const metrics = [
     [FiBriefcase, local.activeProjects, apiState.data?.companies_count ?? demoRows.companies.length, "+1", "primary", 78],
     [FiUsers, copy.users, apiState.data?.users_count ?? demoRows.users.length, "+8%", "teal", 64],
     [FiClock, copy.pending, apiState.data?.pending_payments_count ?? 1, copy.payments, "amber", 32],
     [FiShield, local.workspaceHealth, "99.9%", copy.active, "success", 99]
-  ] : [
-    [FiFolder, local.activeProjects, apiState.data?.projects_count ?? 4, "+1", "primary", 72],
-    [FiCheckCircle, local.dueTasks, apiState.data?.tasks_count ?? 7, copy.high, "amber", 58],
-    [FiFileText, local.knowledgeFiles, apiState.data?.uploads_count ?? 24, "+3", "teal", 81],
-    [FiUsers, local.teamMembers, apiState.data?.staff_count ?? 12, copy.active, "success", 88]
   ];
 
   return (
     <div className="t2-page">
       <PageHeader
-        eyebrow={admin ? copy.platform : company}
-        title={textFor(language, routeMeta[admin ? "/super-admin" : "/dashboard"].title)}
-        subtitle={textFor(language, routeMeta[admin ? "/super-admin" : "/dashboard"].subtitle)}
-        action={<Button icon={FiCheckCircle} onClick={() => { window.location.hash = admin ? "/super-admin/companies" : "/tasks"; }}>{local.review}</Button>}
+        eyebrow={copy.platform}
+        title={textFor(language, routeMeta["/super-admin"].title)}
+        subtitle={textFor(language, routeMeta["/super-admin"].subtitle)}
+        action={<Button icon={FiCheckCircle} onClick={() => { window.location.hash = "/super-admin/companies"; }}>{local.review}</Button>}
       />
 
       {apiState.error ? <div className="t2-inline-alert" role="status"><FiAlertTriangle /><span>{copy.failedLoad}</span></div> : null}
@@ -431,6 +561,425 @@ export function DashboardPage({ admin = false }) {
       </div>
     </div>
   );
+}
+
+function RoleDashboardShell({ company, copy, language, loadingLabel, role, roleCopy }) {
+  const dashboard = useRoleDashboardData(role);
+  const model = useMemo(() => buildRoleDashboardModel(role, dashboard.data, roleCopy, language), [dashboard.data, language, role, roleCopy]);
+  const title = role === "owner" ? roleCopy.ownerTitle : role === "manager" ? roleCopy.managerTitle : role === "member" ? roleCopy.memberTitle : roleCopy.fallbackTitle;
+  const subtitle = role === "owner" ? roleCopy.ownerSubtitle : role === "manager" ? roleCopy.managerSubtitle : role === "member" ? roleCopy.memberSubtitle : roleCopy.fallbackSubtitle;
+  const primaryAction = role === "owner" ? "#/owner/projects" : role === "manager" ? "#/projects" : "#/tasks";
+
+  return (
+    <div className="t2-page">
+      <PageHeader
+        eyebrow={company}
+        title={title}
+        subtitle={subtitle}
+        action={<Button icon={role === "member" ? FiCheckCircle : FiBriefcase} onClick={() => { window.location.hash = primaryAction; }}>{role === "member" ? roleCopy.viewTasks : roleCopy.viewProjects}</Button>}
+      />
+
+      {dashboard.status === "loading" ? <Panel><LoadingState label={loadingLabel} /></Panel> : null}
+      {dashboard.status === "error" ? <Panel><ErrorState onRetry={dashboard.reload} retryLabel={roleCopy.retry} title={dashboard.error || copy.failedLoad} /></Panel> : null}
+      {dashboard.status === "ready" && model.metrics.length === 0 ? <Panel><EmptyState title={roleCopy.noData} /></Panel> : null}
+
+      {dashboard.status === "ready" ? (
+        <>
+          <section className="t2-focus-band">
+            <div>
+              <span className="t2-eyebrow">{model.focusEyebrow}</span>
+              <h2>{model.focusTitle}</h2>
+              <p>{model.focusText}</p>
+            </div>
+            <div className="t2-focus-band__signal">
+              <span>{model.focusCount}</span>
+              <small>{model.focusLabel}</small>
+            </div>
+          </section>
+
+          <section className="t2-metric-grid" aria-label={language === "ar" ? "مؤشرات لوحة العمل" : "Dashboard metrics"}>
+            {model.metrics.map((metric) => <Metric {...metric} key={metric.label} />)}
+          </section>
+
+          <div className="t2-dashboard-grid">
+            <DashboardListPanel
+              actionHref={model.primaryList.href}
+              actionText={model.primaryList.action}
+              description={model.primaryList.description}
+              emptyText={model.primaryList.empty}
+              items={model.primaryList.items}
+              title={model.primaryList.title}
+            />
+            <DashboardListPanel
+              actionHref="#/tasks"
+              actionText={roleCopy.viewTasks}
+              description={model.taskList.description}
+              emptyText={model.taskList.empty}
+              items={model.taskList.items}
+              title={model.taskList.title}
+            />
+            <DashboardListPanel
+              actionHref="#/uploads"
+              actionText={roleCopy.viewFiles}
+              description={model.fileList.description}
+              emptyText={roleCopy.noFiles}
+              items={model.fileList.items}
+              title={model.fileList.title}
+            />
+            <DashboardListPanel
+              actionHref="#/notifications"
+              actionText={copy.view}
+              description={model.activityList.description}
+              emptyText={roleCopy.noNotifications}
+              items={model.activityList.items}
+              title={model.activityList.title}
+            />
+          </div>
+
+          <Panel className="t2-trace-panel">
+            <SectionHeader title={model.insight.title} description={model.insight.description} />
+            <div className="t2-trace-rail">
+              {model.insight.items.map(([Icon, label, value], index) => (
+                <article key={`${label}-${value}`}>
+                  <span><Icon aria-hidden="true" /></span>
+                  <div><small>0{index + 1} · {label}</small><b>{value}</b></div>
+                </article>
+              ))}
+            </div>
+            <p className="t2-dashboard-note">{role === "owner" ? roleCopy.sourceNoteOwner : roleCopy.sourceNoteScoped}</p>
+            {role !== "owner" ? <p className="t2-dashboard-note">{roleCopy.backendLimit}</p> : null}
+          </Panel>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function DashboardListPanel({ actionHref, actionText, description, emptyText, items, title }) {
+  return (
+    <Panel className="t2-priority-panel">
+      <SectionHeader title={title} description={description} action={actionHref ? <a className="t2-inline-link" href={actionHref}>{actionText}</a> : null} />
+      {items.length ? (
+        <div className="t2-priority-list">
+          {items.map((item) => (
+            <article key={item.id}>
+              <button aria-label={item.title} onClick={() => { if (item.href) window.location.hash = item.href; }} type="button">
+                <span className={`t2-priority-dot t2-priority-dot--${item.tone || "medium"}`} />
+                <span>
+                  <b>{item.title}</b>
+                  <small>{item.meta}</small>
+                </span>
+                {item.status ? <StatusBadge value={item.status} /> : null}
+                {typeof item.progress === "number" ? <span className="t2-priority-progress"><Progress label={`${item.title}: ${item.progress}%`} value={item.progress} /><small>{item.progress}%</small></span> : null}
+              </button>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={emptyText} />
+      )}
+    </Panel>
+  );
+}
+
+function useRoleDashboardData(role) {
+  const { normalizedRole } = useAuth();
+  const [state, setState] = useState({ status: "loading", error: "", data: null });
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setState({ status: "loading", error: "", data: null });
+
+    loadRoleDashboardData(role, normalizedRole)
+      .then((data) => {
+        if (active) setState({ status: "ready", error: "", data });
+      })
+      .catch((error) => {
+        if (active) setState({ status: "error", error: error?.message || "", data: null });
+      });
+
+    return () => { active = false; };
+  }, [normalizedRole, revision, role]);
+
+  return {
+    ...state,
+    reload: () => setRevision((value) => value + 1)
+  };
+}
+
+async function loadRoleDashboardData(role, normalizedRole) {
+  if (isDemoMode()) {
+    return demoDashboardData(role);
+  }
+
+  if (role === "owner") {
+    const [summaryResult, projectsResult, tasksResult, staffResult, uploadsResult, notificationsResult] = await Promise.allSettled([
+      getCompanyDashboard(),
+      listCompanyProjects({ page: 1 }),
+      listTasks({ role: normalizedRole, per_page: 50 }),
+      listStaff({ page: 1 }),
+      listUploads({ per_page: 8 }),
+      listNotifications({ per_page: 6 })
+    ]);
+
+    return {
+      summary: unwrapDashboardSummary(summaryResult),
+      projects: rowsFromSettled(projectsResult, ["projects"]),
+      tasks: rowsFromSettled(tasksResult, ["tasks"]),
+      staff: rowsFromSettled(staffResult, ["staff", "users", "employees"]),
+      uploads: rowsFromSettled(uploadsResult, ["uploads", "files", "documents"]),
+      notifications: rowsFromSettled(notificationsResult, ["notifications"])
+    };
+  }
+
+  if (role === "manager") {
+    const [projectsResult, tasksResult, uploadsResult, notificationsResult] = await Promise.allSettled([
+      listCompanyProjects({ page: 1 }),
+      listTasks({ role: normalizedRole, per_page: 50 }),
+      listUploads({ per_page: 8 }),
+      listNotifications({ per_page: 6 })
+    ]);
+
+    return {
+      projects: rowsFromSettled(projectsResult, ["projects"]),
+      tasks: rowsFromSettled(tasksResult, ["tasks"]),
+      uploads: rowsFromSettled(uploadsResult, ["uploads", "files", "documents"]),
+      notifications: rowsFromSettled(notificationsResult, ["notifications"])
+    };
+  }
+
+  const [tasksResult, uploadsResult, notificationsResult] = await Promise.allSettled([
+    listTasks({ role: normalizedRole, per_page: 50 }),
+    listUploads({ per_page: 8 }),
+    listNotifications({ per_page: 6 })
+  ]);
+  const tasks = rowsFromSettled(tasksResult, ["tasks"]);
+
+  return {
+    projects: projectsFromTasks(tasks),
+    tasks,
+    uploads: rowsFromSettled(uploadsResult, ["uploads", "files", "documents"]),
+    notifications: rowsFromSettled(notificationsResult, ["notifications"])
+  };
+}
+
+function demoDashboardData(role) {
+  const tasks = role === "member" ? demoRows.tasks.slice(0, 4) : demoRows.tasks;
+  return {
+    summary: null,
+    projects: role === "member" ? projectsFromTasks(tasks) : demoRows.projects,
+    tasks,
+    staff: role === "owner" ? demoRows.employees : [],
+    uploads: demoRows.uploads,
+    notifications: demoRows.notifications
+  };
+}
+
+function unwrapDashboardSummary(result) {
+  if (result.status !== "fulfilled") return null;
+  const data = getPayloadData(result.value);
+  return data?.dashboard || data?.company_dashboard || data?.overview || data || null;
+}
+
+function rowsFromSettled(result, keys) {
+  if (result.status !== "fulfilled") return [];
+  const data = getPayloadData(result.value);
+  const rows = extractRows(data, keys);
+  if (rows.length) return rows;
+  return Array.isArray(data) ? data : [];
+}
+
+function buildRoleDashboardModel(role, data = {}, copy, language) {
+  const projects = normalizeDashboardCollection(data?.projects);
+  const tasks = normalizeDashboardCollection(data?.tasks);
+  const uploads = normalizeDashboardCollection(data?.uploads);
+  const notifications = normalizeDashboardCollection(data?.notifications);
+  const staff = normalizeDashboardCollection(data?.staff);
+  const overdue = tasks.filter(isDashboardTaskOverdue);
+  const upcoming = tasks.filter((task) => !isDashboardTaskDone(task)).slice(0, 8);
+  const completedCount = tasks.filter(isDashboardTaskDone).length;
+  const projectCount = Number(data?.summary?.totals?.projects ?? projects.length);
+  const taskCount = Number(data?.summary?.totals?.tasks ?? tasks.length);
+  const staffCount = Number(data?.summary?.totals?.users ?? staff.length);
+  const uploadCount = Number(data?.summary?.totals?.uploads ?? uploads.length);
+  const activeProjects = projects.filter((project) => String(project.status || "active") === "active").length;
+  const doneProgress = taskCount ? Math.round((completedCount / taskCount) * 100) : 0;
+
+  if (role === "owner") {
+    return {
+      focusEyebrow: copy.companyHealth,
+      focusTitle: copy.ownerTitle,
+      focusText: `${copy.overdueTasks}: ${overdue.length}. ${copy.sourceNoteOwner}`,
+      focusCount: formatDashboardCount(overdue.length),
+      focusLabel: copy.overdueTasks,
+      metrics: [
+        metric(FiFolder, copy.totalProjects, projectCount, `${activeProjects} ${copy.active}`, "primary", percentFrom(projectCount, activeProjects)),
+        metric(FiCheckCircle, copy.totalTasks, taskCount, `${completedCount} ${copy.done}`, "amber", doneProgress),
+        metric(FiUsers, copy.totalEmployees, staffCount, copy.teamMembers || copy.totalEmployees, "success", Math.min(100, staffCount * 8)),
+        metric(FiFileText, copy.uploadedFiles, uploadCount, copy.files, "teal", Math.min(100, uploadCount * 10))
+      ],
+      primaryList: listModel(copy.recentProjects, copy.sourceNoteOwner, copy.noProjects, copy.viewProjects, "#/owner/projects", projects.map(projectItem).slice(0, 5)),
+      taskList: listModel(copy.overdueTaskList, copy.overdueTasks, copy.noTasks, copy.viewTasks, "#/tasks", overdue.map(taskItem).slice(0, 5)),
+      fileList: listModel(copy.recentFiles, copy.uploadedFiles, copy.noFiles, copy.viewFiles, "#/owner/uploads/files", uploads.map(fileItem).slice(0, 5)),
+      activityList: listModel(copy.teamActivity, copy.notifications, copy.noNotifications, "", "#/notifications", notifications.map(notificationItem).slice(0, 5)),
+      insight: insightModel(copy.aiInsights, copy.sourceNoteOwner, [
+        [FiBriefcase, copy.totalProjects, formatDashboardCount(projectCount)],
+        [FiAlertTriangle, copy.overdueTasks, formatDashboardCount(overdue.length)],
+        [FiFileText, copy.uploadedFiles, formatDashboardCount(uploadCount)]
+      ])
+    };
+  }
+
+  if (role === "manager") {
+    return {
+      focusEyebrow: copy.managerFocus,
+      focusTitle: copy.managerTitle,
+      focusText: copy.sourceNoteScoped,
+      focusCount: formatDashboardCount(overdue.length),
+      focusLabel: copy.overdueTasks,
+      metrics: [
+        metric(FiFolder, copy.accessibleProjects, projects.length, `${activeProjects} ${copy.active}`, "primary", percentFrom(projects.length, activeProjects)),
+        metric(FiCheckCircle, copy.accessibleTasks, tasks.length, `${completedCount} ${copy.done}`, "amber", doneProgress),
+        metric(FiAlertTriangle, copy.overdueTasks, overdue.length, copy.due, overdue.length ? "amber" : "success", Math.min(100, overdue.length * 18)),
+        metric(FiFileText, copy.recentFiles, uploads.length, copy.files, "teal", Math.min(100, uploads.length * 12))
+      ],
+      primaryList: listModel(copy.managedProjects, copy.sourceNoteScoped, copy.noProjects, copy.viewProjects, "#/projects", projects.map(projectItem).slice(0, 5)),
+      taskList: listModel(copy.overdueTaskList, copy.overdueTasks, copy.noTasks, copy.viewTasks, "#/tasks", (overdue.length ? overdue : upcoming).map(taskItem).slice(0, 5)),
+      fileList: listModel(copy.recentFiles, copy.uploadedFiles, copy.noFiles, copy.viewFiles, "#/uploads", uploads.map(fileItem).slice(0, 5)),
+      activityList: listModel(copy.notifications, copy.sourceNoteScoped, copy.noNotifications, "", "#/notifications", notifications.map(notificationItem).slice(0, 5)),
+      insight: insightModel(copy.aiInsights, copy.backendLimit, [
+        [FiBriefcase, copy.accessibleProjects, formatDashboardCount(projects.length)],
+        [FiCheckCircle, copy.accessibleTasks, formatDashboardCount(tasks.length)],
+        [FiFileText, copy.recentFiles, formatDashboardCount(uploads.length)]
+      ])
+    };
+  }
+
+  return {
+    focusEyebrow: copy.memberFocus,
+    focusTitle: copy.memberTitle,
+    focusText: copy.sourceNoteScoped,
+    focusCount: formatDashboardCount(overdue.length || upcoming.length),
+    focusLabel: overdue.length ? copy.overdueTasks : copy.upcomingDeadlines,
+    metrics: [
+      metric(FiCheckCircle, copy.myTasks, tasks.length, `${completedCount} ${copy.done}`, "primary", doneProgress),
+      metric(FiAlertTriangle, copy.overdueTasks, overdue.length, copy.due, overdue.length ? "amber" : "success", Math.min(100, overdue.length * 20)),
+      metric(FiClock, copy.upcomingDeadlines, upcoming.length, copy.due, "teal", Math.min(100, upcoming.length * 14)),
+      metric(FiFolder, copy.myProjects, projects.length, copy.myProjects, "success", Math.min(100, projects.length * 18))
+    ],
+    primaryList: listModel(copy.myProjectList, copy.memberFocus, copy.noProjects, copy.viewProjects, "#/tasks", projects.map(projectItem).slice(0, 5)),
+    taskList: listModel(copy.myTaskList, copy.upcomingDeadlines, copy.noTasks, copy.viewTasks, "#/tasks", (overdue.length ? overdue : upcoming).map(taskItem).slice(0, 5)),
+    fileList: listModel(copy.recentFiles, copy.uploadedFiles, copy.noFiles, copy.viewFiles, "#/uploads", uploads.map(fileItem).slice(0, 5)),
+    activityList: listModel(copy.notifications, copy.sourceNoteScoped, copy.noNotifications, "", "#/notifications", notifications.map(notificationItem).slice(0, 5)),
+    insight: insightModel(copy.aiInsights, copy.backendLimit, [
+      [FiCheckCircle, copy.myTasks, formatDashboardCount(tasks.length)],
+      [FiClock, copy.upcomingDeadlines, formatDashboardCount(upcoming.length)],
+      [FiFileText, copy.recentFiles, formatDashboardCount(uploads.length)]
+    ])
+  };
+}
+
+function metric(icon, label, value, detail, tone, progress) {
+  return { icon, label, value: formatDashboardCount(value), detail, tone, progress };
+}
+
+function listModel(title, description, empty, action, href, items) {
+  return { title, description, empty, action, href, items };
+}
+
+function insightModel(title, description, items) {
+  return { title, description, items };
+}
+
+function projectItem(project) {
+  return {
+    id: project.id || project.project_id || project.name,
+    title: project.name || project.title || "Untitled project",
+    meta: project.status || "active",
+    status: project.status || "active",
+    progress: clampDashboardPercent(project.progress ?? (project.status === "completed" ? 100 : 0)),
+    tone: project.status === "completed" ? "high" : "medium",
+    href: "#/projects"
+  };
+}
+
+function taskItem(task) {
+  return {
+    id: task.id || task.task_id || task.title,
+    title: task.title || task.name || "Untitled task",
+    meta: [task.project?.name || task.project_name, task.due_date ? formatDate(task.due_date) : ""].filter(Boolean).join(" · ") || task.priority || "",
+    status: task.status || "todo",
+    progress: clampDashboardPercent(task.progress ?? (isDashboardTaskDone(task) ? 100 : 0)),
+    tone: isDashboardTaskOverdue(task) ? "high" : task.priority || "medium",
+    href: "#/tasks"
+  };
+}
+
+function fileItem(file) {
+  return {
+    id: file.id || file.upload_id || file.file_id || file.file_name || file.name,
+    title: file.original_name || file.file_name || file.name || "Untitled file",
+    meta: [file.scope, file.visibility, file.updated_at ? formatDate(file.updated_at) : ""].filter(Boolean).join(" · "),
+    status: file.processing_status || file.status || "active",
+    tone: "medium",
+    href: "#/uploads"
+  };
+}
+
+function notificationItem(notification) {
+  return {
+    id: notification.id || notification.title,
+    title: notification.title || notification.name || notification.message || "Notification",
+    meta: notification.created_at || notification.updated_at ? formatDate(notification.created_at || notification.updated_at) : "",
+    status: notification.status || "active",
+    tone: "medium",
+    href: "#/notifications"
+  };
+}
+
+function projectsFromTasks(tasks) {
+  const map = new Map();
+  tasks.forEach((task) => {
+    const project = task.project || {};
+    const id = task.project_id || project.id || project.project_id || project.name || task.project_name;
+    if (!id) return;
+    map.set(String(id), {
+      id,
+      name: project.name || task.project_name || project.title || "Project",
+      status: project.status || "active",
+      progress: project.progress
+    });
+  });
+  return Array.from(map.values());
+}
+
+function normalizeDashboardCollection(value) {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.data)) return value.data;
+  return [];
+}
+
+function isDashboardTaskDone(task) {
+  return ["done", "completed", "complete"].includes(String(task?.status || "").toLowerCase());
+}
+
+function isDashboardTaskOverdue(task) {
+  if (!task?.due_date || isDashboardTaskDone(task)) return false;
+  const dueDate = new Date(task.due_date);
+  return !Number.isNaN(dueDate.getTime()) && dueDate < new Date();
+}
+
+function percentFrom(total, value) {
+  return total ? clampDashboardPercent((Number(value || 0) / Number(total || 1)) * 100) : 0;
+}
+
+function clampDashboardPercent(value) {
+  return Math.max(0, Math.min(100, Math.round(Number(value || 0))));
+}
+
+function formatDashboardCount(value) {
+  return Number(value || 0).toLocaleString();
 }
 
 function DecisionItem({ action, icon: Icon, text, time, title, tone }) {

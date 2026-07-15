@@ -1831,6 +1831,13 @@ html[lang="ar"] .t2-nav__group h2 {
   font-size: 10px;
 }
 
+.t2-dashboard-note {
+  color: var(--t2-text-soft);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  margin: 6px 0 0;
+}
+
 .t2-metric-grid {
   display: grid;
   gap: 12px;
