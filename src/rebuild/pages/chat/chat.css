@@ -101,6 +101,7 @@
 .ai-session-drawer {
   height: 100%;
   inset-block: 0;
+  inset-inline-end: auto;
   inset-inline-start: 0;
   max-width: min(380px, calc(100vw - 28px));
   min-width: 0;
@@ -111,9 +112,9 @@
   z-index: 9;
 }
 
-[dir="rtl"] .ai-session-drawer {
-  inset-inline-end: 0;
-  inset-inline-start: auto;
+.ai-chat-resource-page[dir="rtl"] .ai-session-drawer {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
   transform: translateX(104%);
 }
 
@@ -983,4 +984,22 @@
   .ai-message-skeleton span {
     animation: none;
   }
+}
+
+.ai-chat-resource-page > .ai-chat-command {
+  display: block;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.ai-chat-resource-page .ai-chat-surface {
+  height: 100%;
+}
+
+.ai-chat-resource-page .ai-session-drawer {
+  inset-block: 0;
+  inset-inline-end: auto;
+  inset-inline-start: 0;
 }
