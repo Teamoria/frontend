@@ -1,3 +1,79 @@
+.uploads-browser {
+  background: var(--t2-surface);
+  border: 1px solid var(--t2-border);
+  border-radius: 12px;
+  box-shadow: var(--t2-shadow-small);
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.uploads-category-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.uploads-category-tabs button {
+  background: var(--t2-surface-raised);
+  border: 1px solid var(--t2-border);
+  border-radius: 999px;
+  color: var(--t2-text-soft);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 850;
+  min-height: 40px;
+  padding: 0 16px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.uploads-category-tabs button:hover,
+.uploads-category-tabs button:focus-visible {
+  border-color: color-mix(in srgb, var(--t2-primary) 30%, var(--t2-border));
+  color: var(--t2-text);
+  outline: 0;
+}
+
+.uploads-category-tabs button.is-active {
+  background: color-mix(in srgb, var(--t2-primary) 13%, var(--t2-surface));
+  border-color: color-mix(in srgb, var(--t2-primary) 42%, var(--t2-border));
+  color: var(--t2-primary);
+}
+
+.uploads-filter-row {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+}
+
+.uploads-filter-row.has-project-filter {
+  grid-template-columns: minmax(260px, 1fr) minmax(180px, 260px) auto auto;
+}
+
+.uploads-filter-row .t2-resource-count {
+  justify-self: end;
+}
+
+.uploads-search {
+  min-width: 0;
+}
+
+.uploads-list-footer {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.uploads-list-footer .t2-field,
+.uploads-list-footer label {
+  max-width: 150px;
+}
+
 .upload-progress-list {
   display: grid;
   gap: 10px;
@@ -450,6 +526,29 @@
 }
 
 @media (max-width: 680px) {
+  .uploads-browser {
+    padding: 12px;
+  }
+
+  .uploads-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .uploads-filter-row .t2-resource-count,
+  .uploads-filter-row .t2-view-toggle {
+    justify-self: start;
+  }
+
+  .uploads-list-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .uploads-list-footer .t2-field,
+  .uploads-list-footer label {
+    max-width: none;
+  }
+
   .upload-ai-results__header,
   .upload-permissions > header,
   .upload-delete-action > header {

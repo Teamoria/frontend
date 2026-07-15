@@ -46,6 +46,23 @@ function taskName(upload) {
   return upload?.task?.title || upload?.task_name || upload?.task?.name || upload?.task_id || "-";
 }
 
+function locationLabel(upload, local) {
+  const scope = String(upload?.scope || "").toLowerCase();
+  if (scope === "company") return local.companyLocation;
+  if (scope === "personal") return local.myFiles;
+  if (scope === "project") return projectName(upload) || local.projectFiles;
+  if (scope === "task") return [projectName(upload), taskName(upload)].filter((value) => value && value !== "-").join(" / ") || local.projectFiles;
+  return local.unknownLocation;
+}
+
+function sharingLabel(upload, local) {
+  const visibility = String(upload?.visibility || "").toLowerCase();
+  if (visibility === "private") return local.private;
+  if (visibility === "members") return local.companyMembers;
+  if (visibility === "selected") return local.selectedSharing;
+  return local.unknownLocation;
+}
+
 export default function UploadDetails({
   canManage = false,
   copy,
@@ -73,15 +90,15 @@ export default function UploadDetails({
     [copy.name, getUploadName(upload)],
     [copy.type, safeValue(upload?.mime_type || upload?.type || upload?.content_type)],
     [copy.size, formatUploadSize(upload?.file_size || upload?.size)],
-    [local.scope, safeValue(upload?.scope)],
-    [local.visibility, safeValue(upload?.visibility)],
+    [local.location, locationLabel(upload, local)],
+    [local.sharing, sharingLabel(upload, local)],
     [local.projectId, projectName(upload)],
     [local.taskId, taskName(upload)],
     [local.accessLevel, safeValue(upload?.access_level || upload?.permission?.access_level)],
     [local.processingStatus, safeValue(status)],
     [local.createdAt, upload?.created_at ? new Date(upload.created_at).toLocaleString(language === "ar" ? "ar" : "en") : "-"],
     [copy.updated, upload?.updated_at ? new Date(upload.updated_at).toLocaleString(language === "ar" ? "ar" : "en") : "-"]
-  ], [copy.name, copy.size, copy.type, copy.updated, language, local.accessLevel, local.createdAt, local.processingStatus, local.projectId, local.scope, local.taskId, local.visibility, status, upload]);
+  ], [copy.name, copy.size, copy.type, copy.updated, language, local, status, upload]);
 
   async function loadDetails() {
     if (!uploadId) {

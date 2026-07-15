@@ -56,7 +56,7 @@ import {
 } from "../ui.jsx";
 import UploadDetails from "./uploads/UploadDetails.jsx";
 import UploadProgress from "./uploads/UploadProgress.jsx";
-import { formatUploadSize, getProcessingStatus, getUploadId, uploadStatusTone } from "./uploads/uploadStatus.js";
+import { formatUploadSize, getProcessingStatus, getUploadId, getUploadName, uploadStatusTone } from "./uploads/uploadStatus.js";
 import "./uploads/uploads.css";
 
 const uploadDataKeys = ["uploads", "files", "documents"];
@@ -69,62 +69,74 @@ const validAccessLevels = ["view", "manage"];
 
 const uploadPageCopy = {
   ar: {
-    accessLevel: "Access level",
-    clearFilters: "Clear filters",
-    companyMembers: "Company members",
-    createDescription: "Add a file to company knowledge.",
-    createTitle: "Upload a file",
-    detailTitle: "File details",
-    fileDrop: "Choose files from your device",
-    fileDropHint: "PDF, DOCX, XLSX, CSV, or TXT within the server file limit.",
-    createdAt: "Created",
-    download: "Download",
-    invalidAccess: "Choose a valid access level.",
-    invalidScope: "Choose a valid scope.",
-    invalidVisibility: "Choose a valid visibility.",
-    localSearch: "Search this page",
-    noSelectedUsers: "Choose at least one user.",
-    preview: "Preview",
-    previewUnsupported: "Preview is not supported for this file type. Download is available when the server allows it.",
-    processingStatus: "Processing status",
-    refreshStatus: "Refresh status",
-    deleteButton: "Delete file",
-    deleteConfirm: "Delete",
-    deleteConfirmButton: "Delete file",
-    deleteSuccess: "The file was deleted.",
-    deleteText: "Remove this upload from the workspace. This action may be permanent.",
-    deleteTitle: "Delete upload",
-    aiChunk: "Chunk",
-    aiChunks: "Chunks",
-    aiDecisions: "Decisions",
-    aiEmpty: "Processing completed, but no AI result is available for this file.",
-    aiFailed: "AI processing failed",
-    aiOverview: "Overview",
-    aiProcessing: "AI processing is still running",
-    aiResults: "AI results",
-    aiResultsText: "Read-only results returned with this upload.",
-    aiSummary: "Summary",
-    aiTasks: "Tasks",
-    aiTranscript: "Transcript",
-    permissionsCurrent: "Current access",
-    permissionsEmpty: "No selected-user permissions are attached to this file.",
-    permissionsInvalidAccess: "Choose a documented access level.",
-    permissionsNoStaff: "No staff members are available.",
-    permissionsRemoved: "Permission removed.",
-    permissionsSave: "Save permissions",
-    permissionsSaved: "Permissions updated.",
-    permissionsSelectUser: "Choose at least one user.",
-    permissionsText: "Grant selected company users documented access to this upload.",
-    permissionsTitle: "Permissions",
-    remove: "Remove",
-    private: "Private",
-    projectId: "Project",
-    records: "records",
-    saved: "The file was added to the workspace.",
-    scope: "Scope",
-    selectedUsers: "Selected users",
-    taskId: "Task",
-    visibility: "Visibility"
+    accessLevel: "مستوى الوصول",
+    allFiles: "كل الملفات",
+    clearFilters: "إزالة التصفية",
+    companyFiles: "ملفات الشركة",
+    companyLocation: "مساحة الشركة",
+    companyMembers: "أعضاء النطاق",
+    createDescription: "أضف ملفًا إلى معرفة الشركة.",
+    createTitle: "رفع ملف",
+    detailTitle: "تفاصيل الملف",
+    fileDrop: "اختر ملفات من جهازك",
+    fileDropHint: "PDF أو DOCX أو XLSX أو CSV أو TXT ضمن حد الخادم.",
+    createdAt: "تاريخ الإنشاء",
+    download: "تنزيل",
+    invalidAccess: "اختر مستوى وصول صحيحًا.",
+    invalidScope: "اختر نطاقًا صحيحًا.",
+    invalidVisibility: "اختر ظهورًا صحيحًا.",
+    localSearch: "ابحث في الملفات...",
+    location: "الموقع",
+    myFiles: "ملفاتي",
+    noSelectedUsers: "اختر مستخدمًا واحدًا على الأقل.",
+    preview: "معاينة",
+    previewUnsupported: "المعاينة غير مدعومة لهذا النوع. يمكن التنزيل إذا سمح الخادم.",
+    processingStatus: "حالة المعالجة",
+    projectFiles: "ملفات المشاريع",
+    projectId: "المشروع",
+    allProjects: "كل المشاريع",
+    refreshStatus: "تحديث الحالة",
+    deleteButton: "حذف الملف",
+    deleteConfirm: "حذف",
+    deleteConfirmButton: "حذف الملف",
+    deleteSuccess: "تم حذف الملف.",
+    deleteText: "إزالة هذا الرفع من مساحة العمل. قد يكون هذا الإجراء دائمًا.",
+    deleteTitle: "حذف الرفع",
+    aiChunk: "مقطع",
+    aiChunks: "المقاطع",
+    aiDecisions: "القرارات",
+    aiEmpty: "اكتملت المعالجة، لكن لا توجد نتيجة AI لهذا الملف.",
+    aiFailed: "فشلت معالجة AI",
+    aiOverview: "نظرة عامة",
+    aiProcessing: "معالجة AI ما زالت قيد التشغيل",
+    aiResults: "نتائج AI",
+    aiResultsText: "نتائج للقراءة فقط مرتبطة بهذا الرفع.",
+    aiSummary: "الملخص",
+    aiTasks: "المهام",
+    aiTranscript: "النص",
+    permissionsCurrent: "الوصول الحالي",
+    permissionsEmpty: "لا توجد صلاحيات مستخدمين محددين لهذا الملف.",
+    permissionsInvalidAccess: "اختر مستوى وصول موثقًا.",
+    permissionsNoStaff: "لا يوجد أعضاء فريق متاحون.",
+    permissionsRemoved: "تمت إزالة الصلاحية.",
+    permissionsSave: "حفظ الصلاحيات",
+    permissionsSaved: "تم تحديث الصلاحيات.",
+    permissionsSelectUser: "اختر مستخدمًا واحدًا على الأقل.",
+    permissionsText: "امنح مستخدمين محددين من الشركة وصولًا موثقًا لهذا الرفع.",
+    permissionsTitle: "الصلاحيات",
+    private: "خاص",
+    records: "سجل",
+    remove: "إزالة",
+    saved: "تمت إضافة الملف إلى مساحة العمل.",
+    scope: "النطاق",
+    selectedSharing: "مشاركة محددة",
+    selectedUsers: "مستخدمون محددون",
+    sharing: "المشاركة",
+    sharedWithMe: "تمت مشاركتها معي",
+    taskId: "المهمة",
+    unknownLocation: "موقع غير محدد",
+    perPage: "لكل صفحة",
+    visibility: "الظهور"
   },
   en: {
     accessLevel: "Access level",
@@ -140,11 +152,17 @@ const uploadPageCopy = {
     invalidAccess: "Choose a valid access level.",
     invalidScope: "Choose a valid scope.",
     invalidVisibility: "Choose a valid visibility.",
-    localSearch: "Search this page",
+    allFiles: "All Files",
+    companyFiles: "Company Files",
+    companyLocation: "Company space",
+    localSearch: "Search files...",
+    location: "Location",
+    myFiles: "My Files",
     noSelectedUsers: "Choose at least one user.",
     preview: "Preview",
     previewUnsupported: "Preview is not supported for this file type. Download is available when the server allows it.",
     processingStatus: "Processing status",
+    projectFiles: "Project Files",
     refreshStatus: "Refresh status",
     deleteButton: "Delete file",
     deleteConfirm: "Delete",
@@ -177,23 +195,41 @@ const uploadPageCopy = {
     remove: "Remove",
     private: "Private",
     projectId: "Project",
+    allProjects: "All Projects",
     records: "records",
     saved: "The file was added to the workspace.",
     scope: "Scope",
+    selectedSharing: "Selected sharing",
     selectedUsers: "Selected users",
+    sharing: "Sharing",
+    sharedWithMe: "Shared With Me",
     taskId: "Task",
+    unknownLocation: "Unspecified location",
+    perPage: "Per page",
     visibility: "Visibility"
   }
 };
 
+const fileCategoryTabs = [
+  { key: "all", scope: "", visibility: "", copyKey: "allFiles" },
+  { key: "company", scope: "company", visibility: "", copyKey: "companyFiles" },
+  { key: "project", scope: "project", visibility: "", copyKey: "projectFiles" },
+  { key: "shared", scope: "", visibility: "selected", copyKey: "sharedWithMe" },
+  { key: "personal", scope: "personal", visibility: "", copyKey: "myFiles" }
+];
+
 function buildUploadQuery(filters, page) {
+  const category = fileCategoryTabs.find((item) => item.key === filters.category) || fileCategoryTabs[0];
+  const scope = category.scope || "";
+  const visibility = category.visibility || "";
+  const projectId = category.key === "project" ? filters.projectId : "";
+
   return {
     page,
     per_page: filters.perPage,
-    scope: filters.scope || undefined,
-    visibility: filters.visibility || undefined,
-    project_id: filters.projectId || undefined,
-    task_id: filters.taskId || undefined
+    scope: scope || undefined,
+    visibility: visibility || undefined,
+    project_id: projectId || undefined
   };
 }
 
@@ -247,7 +283,7 @@ function useUploadRows({ filters, page }) {
       });
 
     return () => { active = false; };
-  }, [filters.perPage, filters.projectId, filters.scope, filters.taskId, filters.visibility, page, revision]);
+  }, [filters.category, filters.perPage, filters.projectId, page, revision]);
 
   return {
     rows,
@@ -297,7 +333,7 @@ export default function UploadsResourcePage({ path }) {
   const local = uploadPageCopy[language] || uploadPageCopy.en;
   const meta = routeMeta[path] || routeMeta["/uploads"];
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState({ scope: "", visibility: "", projectId: "", taskId: "", perPage: 15 });
+  const [filters, setFilters] = useState({ category: "all", projectId: "", perPage: 15 });
   const [page, setPage] = useState(1);
   const [view, setView] = useState(() => window.matchMedia?.("(max-width: 700px)").matches ? "grid" : "table");
   const [createOpen, setCreateOpen] = useState(false);
@@ -307,9 +343,9 @@ export default function UploadsResourcePage({ path }) {
   const uploads = useUploadRows({ filters, page });
 
   const filteredRows = useMemo(() => uploads.rows.filter((row) => {
-    const searchable = `${rowName(row, language)} ${ownerName(row, language)} ${row.type || ""} ${row.mime_type || ""} ${row.category || ""}`.toLowerCase();
+    const searchable = `${getUploadName(row)} ${rowName(row, language)} ${ownerName(row, language)} ${uploadLocationLabel(row, language, local)} ${uploadSharingLabel(row, local)} ${row.type || ""} ${row.mime_type || ""} ${row.category || ""}`.toLowerCase();
     return searchable.includes(query.trim().toLowerCase());
-  }), [language, query, uploads.rows]);
+  }), [language, local, query, uploads.rows]);
 
   const pagination = normalizePagination(uploads.pagination, page, uploads.rows.length, filters.perPage);
   const actionLabel = meta.action ? copy[meta.action] : "";
@@ -323,7 +359,13 @@ export default function UploadsResourcePage({ path }) {
   function resetFilters() {
     setQuery("");
     setPage(1);
-    setFilters({ scope: "", visibility: "", projectId: "", taskId: "", perPage: 15 });
+    setFilters({ category: "all", projectId: "", perPage: 15 });
+  }
+
+  function selectCategory(category) {
+    setQuery("");
+    setPage(1);
+    setFilters((current) => sanitizeListFilters({ ...current, category, projectId: "" }));
   }
 
   function handleSaved(row) {
@@ -366,54 +408,65 @@ export default function UploadsResourcePage({ path }) {
 
       {toast ? <div className="t2-toast" role="status"><FiCheckCircle aria-hidden="true" /><span>{toast}</span></div> : null}
 
-      <div className="t2-resource-toolbar">
-        <label className="t2-resource-search">
-          <FiSearch aria-hidden="true" />
-          <span className="t2-sr-only">{local.localSearch}</span>
-          <input placeholder={local.localSearch} type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
-        </label>
-        <SelectControl label={local.scope} value={filters.scope} onChange={(event) => updateFilter("scope", event.target.value)}>
-          <option value="">{copy.all}</option>
-          {validScopes.map((scope) => <option key={scope} value={scope}>{scope}</option>)}
-        </SelectControl>
-        <SelectControl label={local.visibility} value={filters.visibility} onChange={(event) => updateFilter("visibility", event.target.value)}>
-          <option value="">{copy.all}</option>
-          {validVisibility.map((visibility) => <option key={visibility} value={visibility}>{visibilityLabel(visibility, local)}</option>)}
-        </SelectControl>
-        <SelectControl label={local.projectId} value={filters.projectId} onChange={(event) => updateFilter("projectId", event.target.value)}>
-          <option value="">{local.projectId}</option>
-          {options.projects.map((project) => <option key={project.id} value={project.id}>{rowName(project, language)}</option>)}
-        </SelectControl>
-        <SelectControl label={local.taskId} value={filters.taskId} onChange={(event) => updateFilter("taskId", event.target.value)}>
-          <option value="">{local.taskId}</option>
-          {options.tasks.map((task) => <option key={task.id} value={task.id}>{rowName(task, language)}</option>)}
-        </SelectControl>
-        <SelectControl label="Per page" value={filters.perPage} onChange={(event) => updateFilter("perPage", Number(event.target.value))}>
-          {[15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
-        </SelectControl>
-        <span className="t2-resource-count">{totalLabel} {local.records}</span>
-        <div className="t2-view-toggle" role="group" aria-label={copy.view}>
-          <IconButton className={view === "table" ? "is-active" : ""} label={copy.tableView} onClick={() => setView("table")}><FiList /></IconButton>
-          <IconButton className={view === "grid" ? "is-active" : ""} label={copy.gridView} onClick={() => setView("grid")}><FiGrid /></IconButton>
+      <section className="uploads-browser" aria-label={textFor(language, meta.title)}>
+        <div className="uploads-category-tabs" role="tablist" aria-label={local.scope}>
+          {fileCategoryTabs.map((tab) => (
+            <button
+              aria-selected={filters.category === tab.key}
+              className={filters.category === tab.key ? "is-active" : ""}
+              key={tab.key}
+              onClick={() => selectCategory(tab.key)}
+              role="tab"
+              type="button"
+            >
+              {local[tab.copyKey]}
+            </button>
+          ))}
         </div>
-      </div>
+
+        <div className={`uploads-filter-row ${filters.category === "project" ? "has-project-filter" : ""}`.trim()}>
+          <label className="t2-resource-search uploads-search">
+            <FiSearch aria-hidden="true" />
+            <span className="t2-sr-only">{local.localSearch}</span>
+            <input placeholder={local.localSearch} type="search" value={query} onChange={(event) => setQuery(event.target.value)} />
+          </label>
+          {filters.category === "project" ? (
+            <SelectControl label={local.projectId} value={filters.projectId} onChange={(event) => updateFilter("projectId", event.target.value)}>
+              <option value="">{local.allProjects}</option>
+              {options.projects.map((project) => <option key={project.id} value={project.id}>{rowName(project, language)}</option>)}
+            </SelectControl>
+          ) : null}
+          <span className="t2-resource-count">{totalLabel} {local.records}</span>
+          <div className="t2-view-toggle" role="group" aria-label={copy.view}>
+            <IconButton className={view === "table" ? "is-active" : ""} label={copy.tableView} onClick={() => setView("table")}><FiList /></IconButton>
+            <IconButton className={view === "grid" ? "is-active" : ""} label={copy.gridView} onClick={() => setView("grid")}><FiGrid /></IconButton>
+          </div>
+        </div>
+      </section>
 
       {uploads.status === "loading" ? <Panel><SkeletonTable rows={6} /></Panel> : null}
       {uploads.status === "error" ? <Panel><ErrorState onRetry={uploads.reload} retryLabel={copy.retry} title={uploads.error || copy.failedLoad} /></Panel> : null}
       {uploads.status === "ready" && !filteredRows.length ? (
         <Panel><EmptyState title={copy.noData} action={query || hasActiveFilters(filters) ? <Button icon={FiRefreshCw} onClick={resetFilters} tone="secondary">{local.clearFilters}</Button> : actionLabel ? <AddButton onClick={() => setCreateOpen(true)}>{actionLabel}</AddButton> : null} /></Panel>
       ) : null}
-      {uploads.status === "ready" && filteredRows.length && view === "table" ? <UploadsTable copy={copy} language={language} onSelect={setSelected} rows={filteredRows} /> : null}
-      {uploads.status === "ready" && filteredRows.length && view === "grid" ? <UploadsGrid copy={copy} language={language} onSelect={setSelected} rows={filteredRows} /> : null}
-      {uploads.status === "ready" && pagination.lastPage > 1 ? (
-        <PaginationControls
-          copy={copy}
-          disabled={uploads.status === "loading"}
-          page={pagination.currentPage}
-          totalPages={pagination.lastPage}
-          onNext={() => setPage((current) => Math.min(pagination.lastPage, current + 1))}
-          onPrevious={() => setPage((current) => Math.max(1, current - 1))}
-        />
+      {uploads.status === "ready" && filteredRows.length && view === "table" ? <UploadsTable copy={copy} language={language} local={local} onSelect={setSelected} rows={filteredRows} /> : null}
+      {uploads.status === "ready" && filteredRows.length && view === "grid" ? <UploadsGrid copy={copy} language={language} local={local} onSelect={setSelected} rows={filteredRows} /> : null}
+      {uploads.status === "ready" && filteredRows.length ? (
+        <div className="uploads-list-footer">
+          <SelectControl label={local.perPage} value={filters.perPage} onChange={(event) => updateFilter("perPage", Number(event.target.value))}>
+            {[15, 25, 50].map((value) => <option key={value} value={value}>{value}</option>)}
+          </SelectControl>
+          {pagination.lastPage > 1 ? (
+            <PaginationControls
+              copy={copy}
+              disabled={uploads.status === "loading"}
+              page={pagination.currentPage}
+              totalPages={pagination.lastPage}
+              onNext={() => setPage((current) => Math.min(pagination.lastPage, current + 1))}
+              onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+            />
+          ) : null}
+        </div>
       ) : null}
 
       <Modal description={local.createDescription} onClose={() => setCreateOpen(false)} open={createOpen} title={actionLabel || local.createTitle}>
@@ -442,12 +495,12 @@ export default function UploadsResourcePage({ path }) {
   );
 }
 
-function UploadsTable({ copy, language, onSelect, rows }) {
+function UploadsTable({ copy, language, local, onSelect, rows }) {
   const columns = [
     { key: "name", label: copy.name },
-    { key: "scope", label: "Scope" },
-    { key: "visibility", label: "Visibility" },
-    { key: "status", label: copy.status },
+    { key: "location", label: local.location },
+    { key: "sharing", label: local.sharing },
+    { key: "status", label: local.processingStatus },
     { key: "updated", label: copy.updated }
   ];
 
@@ -459,7 +512,7 @@ function UploadsTable({ copy, language, onSelect, rows }) {
           <tbody>
             {rows.map((row) => (
               <tr key={uploadKey(row, language)}>
-                {columns.map((column) => <td key={column.key}>{renderUploadCell(column.key, row, language)}</td>)}
+                {columns.map((column) => <td key={column.key}>{renderUploadCell(column.key, row, language, local)}</td>)}
                 <td className="t2-table__actions"><IconButton label={`${copy.details}: ${rowName(row, language)}`} onClick={() => onSelect(row)}><FiMoreHorizontal /></IconButton></td>
               </tr>
             ))}
@@ -470,14 +523,14 @@ function UploadsTable({ copy, language, onSelect, rows }) {
   );
 }
 
-function UploadsGrid({ copy, language, onSelect, rows }) {
+function UploadsGrid({ copy, language, local, onSelect, rows }) {
   return (
     <div className="t2-resource-grid">
       {rows.map((row) => (
         <article className="t2-resource-card" key={uploadKey(row, language)}>
           <header><span><FiFileText aria-hidden="true" /></span><span className={`upload-status upload-status--${uploadStatusTone(row)}`}><StatusBadge value={getProcessingStatus(row) || row.status} /></span></header>
-          <h2>{rowName(row, language)}</h2>
-          <p>{[row.scope, row.visibility, row.type || row.mime_type || row.category || row.size || row.file_size].filter(Boolean).join(" - ")}</p>
+          <h2>{getUploadName(row)}</h2>
+          <p>{[uploadLocationLabel(row, language, local), uploadSharingLabel(row, local), row.type || row.mime_type || row.category || formatUploadSize(row.file_size || row.size)].filter(Boolean).join(" - ")}</p>
           <footer><small>{formatDate(row.updated_at || row.created_at, language)}</small><Button onClick={() => onSelect(row)} tone="ghost">{copy.details}</Button></footer>
         </article>
       ))}
@@ -614,10 +667,8 @@ function UploadCreateForm({ copy, local, onCancel, onSaved, options }) {
 
 function sanitizeListFilters(filters) {
   const next = { ...filters, perPage: Number(filters.perPage) || 15 };
-  if (next.scope && !validScopes.includes(next.scope)) next.scope = "";
-  if (next.visibility && !validVisibility.includes(next.visibility)) next.visibility = "";
-  if (!["project", "task"].includes(next.scope)) next.projectId = "";
-  if (next.scope !== "task") next.taskId = "";
+  if (!fileCategoryTabs.some((tab) => tab.key === next.category)) next.category = "all";
+  if (next.category !== "project") next.projectId = "";
   return next;
 }
 
@@ -677,7 +728,7 @@ function mapValidationErrors(validationErrors = {}) {
 }
 
 function hasActiveFilters(filters) {
-  return Boolean(filters.scope || filters.visibility || filters.projectId || filters.taskId || Number(filters.perPage) !== 15);
+  return Boolean(filters.category !== "all" || filters.projectId || Number(filters.perPage) !== 15);
 }
 
 function visibilityLabel(value, local) {
@@ -687,16 +738,45 @@ function visibilityLabel(value, local) {
   return value;
 }
 
-function renderUploadCell(key, row, language) {
-  if (key === "name") return <span className="t2-table-name"><b>{rowName(row, language)}</b>{row.description ? <small>{row.description}</small> : null}</span>;
+function renderUploadCell(key, row, language, local) {
+  if (key === "name") return <span className="t2-table-name"><b>{getUploadName(row)}</b>{row.description ? <small>{row.description}</small> : null}</span>;
   if (key === "status") return <span className={`upload-status upload-status--${uploadStatusTone(row)}`}><StatusBadge value={getProcessingStatus(row) || row.status} /></span>;
   if (key === "updated") return formatDate(row.updated_at || row.created_at, language);
-  if (key === "scope") return row.scope || "-";
-  if (key === "visibility") return row.visibility || "-";
+  if (key === "location") return uploadLocationLabel(row, language, local);
+  if (key === "sharing") return uploadSharingLabel(row, local);
   if (key === "size") return formatUploadSize(row.file_size || row.size);
   return row[key] || "-";
 }
 
+function uploadLocationLabel(row, language, local) {
+  const scope = String(row.scope || "").toLowerCase();
+  if (scope === "company") return local.companyLocation;
+  if (scope === "personal") return local.myFiles;
+  if (scope === "project") return projectNameForUpload(row, language) || local.projectFiles;
+  if (scope === "task") {
+    const projectName = projectNameForUpload(row, language);
+    const taskName = taskNameForUpload(row, language);
+    return [projectName, taskName].filter(Boolean).join(" / ") || local.projectFiles;
+  }
+  return local.unknownLocation;
+}
+
+function uploadSharingLabel(row, local) {
+  const visibility = String(row.visibility || "").toLowerCase();
+  if (visibility === "private") return local.private;
+  if (visibility === "members") return local.companyMembers;
+  if (visibility === "selected") return local.selectedSharing;
+  return local.unknownLocation;
+}
+
+function projectNameForUpload(row, language) {
+  return row.project?.name || row.project_name || row.project?.title || (language === "ar" ? row.project?.name_ar : row.project?.name_en) || "";
+}
+
+function taskNameForUpload(row, language) {
+  return row.task?.title || row.task_name || row.task?.name || (language === "ar" ? row.task?.title_ar : row.task?.title_en) || "";
+}
+
 function uploadKey(row, language) {
-  return row.id || row.uuid || row.upload_id || row.file_id || rowName(row, language);
+  return row.id || row.uuid || row.upload_id || row.file_id || getUploadName(row) || rowName(row, language);
 }
