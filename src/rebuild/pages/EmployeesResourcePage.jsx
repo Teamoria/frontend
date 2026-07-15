@@ -30,7 +30,7 @@ import {
 import StaffCreateForm from "./employees/StaffCreateForm.jsx";
 import StaffDetails from "./employees/StaffDetails.jsx";
 import StaffEditForm from "./employees/StaffEditForm.jsx";
-import { localizedStaffStatus, roleText, staffRoleOptions, staffStatusOptions } from "./employees/staffHelpers.js";
+import { companyRoleOptions, localizedStaffStatus, roleText, staffStatusOptions } from "./employees/staffHelpers.js";
 
 const localCopy = {
   ar: {
@@ -303,7 +303,7 @@ export default function EmployeesResourcePage({ path }) {
         </label>
         <SelectControl label={copy.role} value={roleFilter} onChange={(event) => { setRoleFilter(event.target.value); setPage(1); }}>
           <option value="all">{copy.all}</option>
-          {staffRoleOptions().map((role) => <option key={role} value={role}>{roleText(role, language)}</option>)}
+          {companyRoleOptions().map((role) => <option key={role} value={role}>{roleText(role, language)}</option>)}
         </SelectControl>
         <SelectControl label={copy.status} value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setPage(1); }}>
           <option value="all">{copy.all}</option>

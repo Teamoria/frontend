@@ -1,3 +1,14 @@
+export const COMPANY_ROLE_LABELS = {
+  admin: { ar: "مدير المنصة", en: "Platform admin" },
+  company_owner: { ar: "مالك الشركة", en: "Company owner" },
+  company_manager: { ar: "مدير الشركة", en: "Company manager" },
+  company_member: { ar: "عضو الفريق", en: "Team member" }
+};
+
+export function companyRoleOptions() {
+  return ["company_owner", "company_manager", "company_member"];
+}
+
 export function staffRoleOptions() {
   return ["company_manager", "company_member"];
 }
@@ -22,11 +33,5 @@ export function localizedStaffStatus(copy, status) {
 }
 
 export function roleText(role, language) {
-  const roles = {
-    admin: { ar: "Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ù†ØµØ©", en: "Platform admin" },
-    company_owner: { ar: "Ù…Ø§Ù„Ùƒ Ø§Ù„Ø´Ø±ÙƒØ©", en: "Company owner" },
-    company_manager: { ar: "Ù…Ø¯ÙŠØ± Ø§Ù„Ø´Ø±ÙƒØ©", en: "Company manager" },
-    company_member: { ar: "Ø¹Ø¶Ùˆ Ø§Ù„ÙØ±ÙŠÙ‚", en: "Team member" }
-  };
-  return roles[role]?.[language] || role || "â€”";
+  return COMPANY_ROLE_LABELS[role]?.[language] || COMPANY_ROLE_LABELS[role]?.en || role || "-";
 }

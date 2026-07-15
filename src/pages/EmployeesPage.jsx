@@ -33,6 +33,7 @@ import {
 } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { isDemoMode } from "../lib/demoMode.js";
+import { companyRoleOptions, roleText, staffRoleOptions } from "../rebuild/pages/employees/staffHelpers.js";
 import "../styles/employees.css";
 
 const emptyForm = {
@@ -44,10 +45,8 @@ const emptyForm = {
   status: "active"
 };
 
-const roleOptions = [
-  { value: "company_member", label: "Company Member" },
-  { value: "company_manager", label: "Company Manager" }
-];
+const roleFilterOptions = companyRoleOptions().map((role) => ({ value: role, label: roleText(role, "en") }));
+const roleOptions = staffRoleOptions().map((role) => ({ value: role, label: roleText(role, "en") }));
 
 const statusOptions = [
   { value: "active", label: "Active" },
@@ -337,7 +336,7 @@ export default function EmployeesPage() {
                 <span>Role</span>
                 <select value={filters.role} onChange={(event) => changeFilter("role", event.target.value)}>
                   <option value="all">All Roles</option>
-                  {roleOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  {roleFilterOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                 </select>
               </label>
               <label>
@@ -408,12 +407,12 @@ export default function EmployeesPage() {
                       <td>
                         <a className="employees-email" href={`mailto:${employee.email}`}>
                           <FiMail aria-hidden="true" />
-                          {employee.email}
+                          <bdi>{employee.email}</bdi>
                         </a>
                       </td>
                       <td>
                         <span className={`employees-role-pill employees-role-pill--${getRoleClass(employee.role)}`}>
-                          {formatLabel(employee.role)}
+                          {formatRoleLabel(employee.role)}
                         </span>
                       </td>
                       <td>
@@ -680,7 +679,7 @@ function EmployeeProfileModal({ employee, onArchive, onClose, onEdit, showArchiv
                 <div className="employee-modal-name-row">
                   <h2 id="employee-profile-title">{employee.name || "Unnamed employee"}</h2>
                   <span className={`employees-role-pill employees-role-pill--${getRoleClass(employee.role)}`}>
-                    {formatLabel(employee.role)}
+                    {formatRoleLabel(employee.role)}
                   </span>
                   <em className={`employee-profile-status employee-profile-status--${statusClass}`}>
                     <i aria-hidden="true" />
@@ -688,7 +687,7 @@ function EmployeeProfileModal({ employee, onArchive, onClose, onEdit, showArchiv
                   </em>
                 </div>
                 <div className="employee-modal-contact-row">
-                  <a href={`mailto:${employee.email}`}><FiMail aria-hidden="true" />{employee.email || "No email"}</a>
+                  <a href={`mailto:${employee.email}`}><FiMail aria-hidden="true" /><bdi>{employee.email || "No email"}</bdi></a>
                   <span><FiPhone aria-hidden="true" />{employee.phone || "No phone"}</span>
                 </div>
               </div>
@@ -777,7 +776,7 @@ function EmployeeOverviewTab({ employee, statusLabel }) {
       </EmployeeProfileCard>
 
       <EmployeeProfileCard title="Role & permissions">
-        <ProfileDetail icon={FiBriefcase} label="Role" value={formatLabel(employee.role)} />
+        <ProfileDetail icon={FiBriefcase} label="Role" value={formatRoleLabel(employee.role)} />
         <ProfileDetail icon={FiUser} label="Access scope" value={getAccessScope(employee.role)} />
       </EmployeeProfileCard>
 
@@ -794,7 +793,7 @@ function EmployeePermissionsTab({ employee }) {
     <div className="employee-profile-card-grid employee-profile-card-grid--single">
       <EmployeeProfileCard title="Permissions">
         <ProfileDetail icon={FiShield} label="Access scope" value={getAccessScope(employee.role)} />
-        <ProfileDetail icon={FiBriefcase} label="Role" value={formatLabel(employee.role)} />
+        <ProfileDetail icon={FiBriefcase} label="Role" value={formatRoleLabel(employee.role)} />
         <ProfileDetail icon={FiCheckCircle} label="Account state" value={getProfileStatusLabel(employee)} />
       </EmployeeProfileCard>
     </div>
@@ -877,6 +876,10 @@ function getProfileStatusClass(employee) {
 
 function getAccessScope(role) {
   return role === "company_manager" ? "Can manage company work" : "Assigned workspace access";
+}
+
+function formatRoleLabel(role) {
+  return roleText(role, "en");
 }
 
 function formatLabel(value) {
