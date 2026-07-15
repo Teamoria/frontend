@@ -30,6 +30,21 @@ import {
 import { useAuth } from "../lib/AuthContext.jsx";
 import "../styles/owner-projects.css";
 
+const PROJECT_ROLE_LABELS = {
+  ar: {
+    manager: "مدير المشروع",
+    member: "عضو",
+    viewer: "مشاهد"
+  },
+  en: {
+    manager: "Project manager",
+    member: "Member",
+    viewer: "Viewer"
+  }
+};
+
+const PROJECT_ROLE_OPTIONS = ["manager", "member", "viewer"];
+
 export default function OwnerProjectsPage() {
   const { user } = useAuth();
   const [projectModal, setProjectModal] = useState(null);
@@ -279,6 +294,7 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
     end_date: toDateInputValue(project?.end_date)
   });
   const [selectedMemberIds, setSelectedMemberIds] = useState(() => getProjectUserIds(project));
+  const [selectedMemberRoles, setSelectedMemberRoles] = useState(() => getProjectUserRoleMap(project));
   const [status, setStatus] = useState({ type: "", message: "" });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -307,11 +323,21 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
   function toggleMember(userId) {
     setSelectedMemberIds((current) => {
       if (current.includes(userId)) {
+        setSelectedMemberRoles((roles) => {
+          const nextRoles = { ...roles };
+          delete nextRoles[userId];
+          return nextRoles;
+        });
         return current.filter((id) => id !== userId);
       }
 
+      setSelectedMemberRoles((roles) => ({ ...roles, [userId]: normalizeProjectRole(roles[userId]) }));
       return [...current, userId];
     });
+  }
+
+  function updateMemberRole(userId, role) {
+    setSelectedMemberRoles((roles) => ({ ...roles, [userId]: normalizeProjectRole(role) }));
   }
 
   async function submitProject(event) {
@@ -341,7 +367,7 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
       }
 
       if (savedProject?.id) {
-        await syncProjectMembers(savedProject, selectedMemberIds, { removeMissing: isEditing });
+        await syncProjectMembers(savedProject, selectedMemberIds, selectedMemberRoles, { removeMissing: isEditing });
       }
 
       onSaved(
@@ -450,23 +476,40 @@ function ProjectModal({ mode, project, staff, onClose, onSaved }) {
               ) : null}
 
               <fieldset className="initialize-project-members initialize-project-field-wide">
-                <legend>Project employees</legend>
+                <legend>Project team</legend>
                 {staff.length === 0 ? (
                   <p>No employees loaded yet.</p>
                 ) : (
                   <div>
-                    {staff.map((member) => (
-                      <label key={member.id}>
-                        <input
-                          checked={selectedMemberIds.includes(member.id)}
-                          type="checkbox"
-                          onChange={() => toggleMember(member.id)}
-                        />
-                        <span>{member.initials}</span>
-                        <b>{member.name}</b>
-                        <small>{member.role}</small>
-                      </label>
-                    ))}
+                    {staff.map((member) => {
+                      const isSelected = selectedMemberIds.includes(member.id);
+                      const projectRole = normalizeProjectRole(selectedMemberRoles[member.id]);
+
+                      return (
+                        <label key={member.id}>
+                          <input
+                            checked={isSelected}
+                            type="checkbox"
+                            onChange={() => toggleMember(member.id)}
+                          />
+                          <span>{member.initials}</span>
+                          <b>{member.name}</b>
+                          <small>{isSelected ? getProjectRoleLabel(projectRole, "ar") : member.email || member.companyRole}</small>
+                          <select
+                            aria-label={`Project role for ${member.name}`}
+                            dir="rtl"
+                            disabled={!isSelected}
+                            value={projectRole}
+                            onChange={(event) => updateMemberRole(member.id, event.target.value)}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {PROJECT_ROLE_OPTIONS.map((role) => (
+                              <option key={role} value={role}>{getProjectRoleLabel(role, "ar")}</option>
+                            ))}
+                          </select>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
               </fieldset>
@@ -517,27 +560,50 @@ function MessageRow({ text }) {
   );
 }
 
-async function syncProjectMembers(project, selectedMemberIds, { removeMissing = false } = {}) {
+async function syncProjectMembers(project, selectedMemberIds, selectedMemberRoles = {}, { removeMissing = false } = {}) {
   const projectId = project.id;
   const currentIds = getProjectUserIds(project);
-  const idsToAdd = selectedMemberIds.filter((id) => !currentIds.includes(id));
-  const idsToRemove = removeMissing ? currentIds.filter((id) => !selectedMemberIds.includes(id)) : [];
-
-  if (idsToAdd.length > 0) {
-    await addCompanyProjectMembers(projectId, {
-      user_ids: idsToAdd,
-      role: "member"
-    });
-  }
+  const currentRoles = getProjectUserRoleMap(project);
+  const idsToChangeRole = selectedMemberIds.filter((id) => (
+    currentIds.includes(id) && normalizeProjectRole(currentRoles[id]) !== normalizeProjectRole(selectedMemberRoles[id])
+  ));
+  const idsToAdd = selectedMemberIds.filter((id) => !currentIds.includes(id) || idsToChangeRole.includes(id));
+  const idsToRemove = removeMissing
+    ? currentIds.filter((id) => !selectedMemberIds.includes(id) || idsToChangeRole.includes(id))
+    : idsToChangeRole;
+  const idsByRole = idsToAdd.reduce((groups, id) => {
+    const role = normalizeProjectRole(selectedMemberRoles[id]);
+    groups[role].push(id);
+    return groups;
+  }, { manager: [], member: [], viewer: [] });
 
   if (idsToRemove.length > 0) {
     await Promise.all(idsToRemove.map((userId) => removeCompanyProjectMember(projectId, userId)));
   }
+
+  await Promise.all(PROJECT_ROLE_OPTIONS
+    .filter((role) => idsByRole[role].length > 0)
+    .map((role) => addCompanyProjectMembers(projectId, {
+      user_ids: idsByRole[role],
+      role
+    })));
 }
 
 function getProjectUserIds(project) {
   const users = normalizeResourceCollection(project?.users || project?.members || []);
   return users.map((member) => String(member.id || member.user_id || member.user?.id)).filter(Boolean);
+}
+
+function getProjectUserRoleMap(project) {
+  const users = normalizeResourceCollection(project?.users || project?.members || []);
+  return users.reduce((roles, member) => {
+    const id = String(member.id || member.user_id || member.user?.id || "");
+    if (!id) return roles;
+    return {
+      ...roles,
+      [id]: normalizeProjectRole(member.project_role || member.projectRole || member.pivot?.role || member.membership?.role || member.role)
+    };
+  }, {});
 }
 
 function normalizeStaffMember(member) {
@@ -548,7 +614,7 @@ function normalizeStaffMember(member) {
     id: String(value.id),
     name,
     email: value.email || "",
-    role: formatLabel(value.role || "member"),
+    companyRole: formatLabel(value.role || "member"),
     initials: getInitials(name)
   };
 }
@@ -620,6 +686,16 @@ function normalizeResourceCollection(value) {
   if (Array.isArray(value)) return value;
   if (Array.isArray(value?.data)) return value.data;
   return [];
+}
+
+function normalizeProjectRole(value) {
+  const role = String(value || "member").toLowerCase().replace(/[\s-]+/g, "_");
+  return PROJECT_ROLE_OPTIONS.includes(role) ? role : "member";
+}
+
+function getProjectRoleLabel(role, language = "en") {
+  const key = normalizeProjectRole(role);
+  return PROJECT_ROLE_LABELS[language]?.[key] || PROJECT_ROLE_LABELS.en[key];
 }
 
 function getInitials(value) {

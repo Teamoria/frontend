@@ -15,12 +15,21 @@ import "./projects.css";
 
 function roleText(role, language) {
   const roles = {
-    admin: { ar: "Ù…Ø¯ÙŠØ± Ø§Ù„Ù…Ù†ØµØ©", en: "Platform admin" },
-    company_owner: { ar: "Ù…Ø§Ù„Ùƒ Ø§Ù„Ø´Ø±ÙƒØ©", en: "Company owner" },
-    company_manager: { ar: "Ù…Ø¯ÙŠØ± Ø§Ù„Ø´Ø±ÙƒØ©", en: "Company manager" },
-    company_member: { ar: "Ø¹Ø¶Ùˆ Ø§Ù„ÙØ±ÙŠÙ‚", en: "Team member" }
+    admin: { ar: "مدير المنصة", en: "Platform admin" },
+    company_owner: { ar: "مالك الشركة", en: "Company owner" },
+    company_manager: { ar: "مدير الشركة", en: "Company manager" },
+    company_member: { ar: "عضو الفريق", en: "Team member" }
   };
-  return roles[role]?.[language] || role || "â€”";
+  return roles[role]?.[language] || role || "-";
+}
+
+function projectRoleText(role, language) {
+  const roles = {
+    manager: { ar: "مدير المشروع", en: "Project manager" },
+    member: { ar: "عضو", en: "Member" },
+    viewer: { ar: "مشاهد", en: "Viewer" }
+  };
+  return roles[role]?.[language] || roles.member[language];
 }
 
 export default function ProjectMembersForm({ copy, language, onCancel, onSaved, project, role }) {
@@ -109,9 +118,9 @@ export default function ProjectMembersForm({ copy, language, onCancel, onSaved, 
         <>
           <Field label={copy.role}>
             <select value={memberRole} onChange={(event) => setMemberRole(event.target.value)}>
-              {canAssignManager ? <option value="manager">{roleText("company_manager", language)}</option> : null}
-              <option value="member">{roleText("company_member", language)}</option>
-              <option value="viewer">Viewer</option>
+              {canAssignManager ? <option value="manager">{projectRoleText("manager", language)}</option> : null}
+              <option value="member">{projectRoleText("member", language)}</option>
+              <option value="viewer">{projectRoleText("viewer", language)}</option>
             </select>
           </Field>
           <div className="t2-member-picker">
