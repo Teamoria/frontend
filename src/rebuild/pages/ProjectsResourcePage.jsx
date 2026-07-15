@@ -195,6 +195,7 @@ export default function ProjectsResourcePage({ path }) {
   const [archiveMode, setArchiveMode] = useState("active");
   const [view, setView] = useState(() => window.matchMedia?.("(max-width: 700px)").matches ? "grid" : "table");
   const [createOpen, setCreateOpen] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
   const [selected, setSelected] = useState(null);
   const [detailStatus, setDetailStatus] = useState("idle");
   const [detailError, setDetailError] = useState("");
@@ -233,10 +234,10 @@ export default function ProjectsResourcePage({ path }) {
     setPage(1);
   }
 
-  function handleSaved(row) {
+  function handleSaved(row, meta = {}) {
     if (row) projects.setRows((current) => [row, ...current]);
     setCreateOpen(false);
-    setToast(local.saved);
+    setToast(meta.warning || local.saved);
     window.setTimeout(() => setToast(""), 3500);
     if (!isDemoMode()) projects.reload();
   }
@@ -369,8 +370,8 @@ export default function ProjectsResourcePage({ path }) {
         />
       ) : null}
 
-      <Modal description={local.createDescription} onClose={() => setCreateOpen(false)} open={createOpen} title={actionLabel || copy.create}>
-        <ProjectCreateForm copy={copy} language={language} onCancel={() => setCreateOpen(false)} onSaved={handleSaved} />
+      <Modal description={local.createDescription} onClose={() => !createBusy && setCreateOpen(false)} open={createOpen} title={actionLabel || copy.create}>
+        <ProjectCreateForm copy={copy} language={language} onBusyChange={setCreateBusy} onCancel={() => setCreateOpen(false)} onSaved={handleSaved} />
       </Modal>
 
       <Modal onClose={() => setSelected(null)} open={Boolean(selected)} title={local.detailTitle}>
