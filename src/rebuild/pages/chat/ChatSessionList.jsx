@@ -45,27 +45,47 @@ export default function ChatSessionList({
             <p>{copy.noSessionsText}</p>
           </div>
         ) : null}
-        {status !== "loading" ? sessions.map((session) => (
-          <button
-            className={session.id === activeSessionId ? "is-active" : ""}
-            key={session.id}
-            onClick={() => onSelect(session.id)}
-            type="button"
-          >
-            <FiMessageSquare aria-hidden="true" />
-            <span>
-              <strong>{session.title}</strong>
-              <small>
-                <span className="ai-session-scope">{session.scope === "project" ? copy.projectScope : copy.companyScope}</span>
-                {session.scope === "project" ? ` - ${session.project_name || copy.projectUnavailable}` : ` - ${copy.companySessionDetail}`}
-              </small>
-            </span>
-            <time>{formatShortDate(session.updated_at || session.created_at, language)}</time>
-          </button>
-        )) : null}
+        {status !== "loading" ? sessions.map((session) => {
+          const scope = normalizeScope(session.scope);
+          return (
+            <button
+              className={session.id === activeSessionId ? "is-active" : ""}
+              key={session.id}
+              onClick={() => onSelect(session.id)}
+              type="button"
+            >
+              <FiMessageSquare aria-hidden="true" />
+              <span>
+                <strong>{session.title}</strong>
+                <small>
+                  <span className="ai-session-scope">{scopeLabel(scope, copy)}</span>
+                  {scopeMeta(scope, session, copy)}
+                </small>
+              </span>
+              <time>{formatShortDate(session.updated_at || session.created_at, language)}</time>
+            </button>
+          );
+        }) : null}
       </div>
     </aside>
   );
+}
+
+function normalizeScope(scope) {
+  if (scope === "project" || scope === "company") return scope;
+  return "general";
+}
+
+function scopeLabel(scope, copy) {
+  if (scope === "project") return copy.projectScope;
+  if (scope === "company") return copy.companyScope;
+  return copy.generalScope;
+}
+
+function scopeMeta(scope, session, copy) {
+  if (scope === "project") return ` - ${session.project_name || copy.projectUnavailable}`;
+  if (scope === "company") return ` - ${copy.companySessionDetail}`;
+  return ` - ${copy.generalSessionDetail}`;
 }
 
 function SessionSkeleton() {

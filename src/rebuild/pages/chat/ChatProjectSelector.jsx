@@ -2,6 +2,7 @@ import { FiLock, FiRefreshCw } from "react-icons/fi";
 
 export default function ChatProjectSelector({
   activeSession,
+  availableScopes = ["general", "company", "project"],
   copy,
   disabled,
   onChange,
@@ -13,7 +14,7 @@ export default function ChatProjectSelector({
   status
 }) {
   const locked = Boolean(activeSession);
-  const sessionScope = activeSession?.scope === "project" ? "project" : "company";
+  const sessionScope = normalizeScope(activeSession?.scope);
   const projectName = activeSession?.project_name || copy.unknownProject;
 
   if (locked) {
@@ -22,8 +23,8 @@ export default function ChatProjectSelector({
         <FiLock aria-hidden="true" />
         <div>
           <span>{copy.chatScope}</span>
-          <strong>{sessionScope === "project" ? `${copy.projectScope} - ${projectName}` : copy.companyScope}</strong>
-          <small>{sessionScope === "project" ? copy.projectSessionDetail : copy.companySessionDetail}</small>
+          <strong>{scopeLabel(sessionScope, copy, projectName)}</strong>
+          <small>{scopeDetail(sessionScope, copy)}</small>
         </div>
       </div>
     );
@@ -33,10 +34,21 @@ export default function ChatProjectSelector({
     <div className="ai-project-selector">
       <label>
         <span>{copy.chatScope}</span>
-        <select disabled={disabled} onChange={(event) => onScopeChange(event.target.value)} value={scope}>
-          <option value="company">{copy.companyScope}</option>
-          <option value="project">{copy.projectScope}</option>
-        </select>
+        <div className="ai-scope-options" role="radiogroup" aria-label={copy.chatScope}>
+          {availableScopes.map((option) => (
+            <button
+              aria-checked={scope === option}
+              className={scope === option ? "is-active" : ""}
+              disabled={disabled}
+              key={option}
+              onClick={() => onScopeChange(option)}
+              role="radio"
+              type="button"
+            >
+              {scopeLabel(option, copy)}
+            </button>
+          ))}
+        </div>
       </label>
 
       {scope === "project" ? (
@@ -52,7 +64,7 @@ export default function ChatProjectSelector({
           </select>
         </label>
       ) : (
-        <p>{copy.companyScopeDetail}</p>
+        <p>{scopeDetail(scope, copy)}</p>
       )}
 
       {status === "error" && scope === "project" ? (
@@ -60,7 +72,24 @@ export default function ChatProjectSelector({
           <FiRefreshCw aria-hidden="true" />
         </button>
       ) : null}
-      <small>{scope === "project" ? copy.projectScopeDetail : copy.companySessionDetail}</small>
+      {scope === "project" ? <small>{copy.projectScopeDetail}</small> : null}
     </div>
   );
+}
+
+function normalizeScope(scope) {
+  if (scope === "project" || scope === "company") return scope;
+  return "general";
+}
+
+function scopeLabel(scope, copy, projectName = "") {
+  if (scope === "project") return projectName ? `${copy.projectScope} - ${projectName}` : copy.projectScope;
+  if (scope === "company") return copy.companyScope;
+  return copy.generalScope;
+}
+
+function scopeDetail(scope, copy) {
+  if (scope === "project") return copy.projectScopeDetail;
+  if (scope === "company") return copy.companyScopeDetail;
+  return copy.generalScopeDetail;
 }

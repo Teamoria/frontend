@@ -4,12 +4,12 @@ export function normalizeSession(session = {}, index = 0) {
   const projectId = session.project_id || project?.id || "";
   const projectName = project?.name || session.project_name || "";
   const scope = normalizeScope(
-    session.scope || session.chat_scope || session.scope_type || session.type || (projectId ? "project" : "company")
+    session.scope || session.chat_scope || session.scope_type || session.type || (projectId ? "project" : "general")
   );
 
   return {
     id,
-    title: session.title || session.name || projectName || (scope === "company" ? `Company chat ${index + 1}` : `Project chat ${index + 1}`),
+    title: deriveSessionTitle(session, scope, projectName, index),
     scope,
     project_id: projectId,
     project_name: projectName,
@@ -115,7 +115,34 @@ function normalizeScope(scope) {
   const value = String(scope || "").toLowerCase();
   if (["project", "project_chat", "project-level", "project_level"].includes(value)) return "project";
   if (["company", "company_chat", "company-level", "company_level", "workspace", "organization"].includes(value)) return "company";
-  return "company";
+  if (["general", "general_chat", "personal", "private", "global"].includes(value)) return "general";
+  return "general";
+}
+
+function deriveSessionTitle(session, scope, projectName, index) {
+  const candidates = [
+    session.title,
+    session.name,
+    session.ai_title,
+    session.summary_title,
+    session.subject,
+    session.first_user_message,
+    session.first_message?.content,
+    session.first_message?.message_content,
+    session.last_message?.content,
+    session.last_message?.message_content,
+    session.last_message_content,
+    session.message_content,
+    scope === "project" ? projectName : ""
+  ];
+  const title = candidates.map(cleanTitle).find(Boolean);
+  return title || `Chat ${index + 1}`;
+}
+
+function cleanTitle(value) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  return text.length > 64 ? `${text.slice(0, 61)}...` : text;
 }
 
 function sortByCreatedAt(a, b) {
