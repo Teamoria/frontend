@@ -209,6 +209,7 @@ export default function TasksResourcePage({ path }) {
   const [archiveMode, setArchiveMode] = useState("active");
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
   const [selected, setSelected] = useState(null);
   const [detailStatus, setDetailStatus] = useState("idle");
   const [detailError, setDetailError] = useState("");
@@ -241,10 +242,10 @@ export default function TasksResourcePage({ path }) {
     setPage(1);
   }
 
-  function refreshAfterSave(row) {
+  function refreshAfterSave(row, meta = {}) {
     setCreateOpen(false);
     if (row) tasks.setRows((current) => [row, ...current]);
-    setToast(local.saved);
+    setToast(meta.warning || local.saved);
     window.setTimeout(() => setToast(""), 3500);
     if (!isDemoMode()) tasks.reload();
   }
@@ -381,11 +382,11 @@ export default function TasksResourcePage({ path }) {
 
       <Modal
         description={textFor(language, { ar: "\u0623\u0636\u0641 \u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0647\u0645\u0629 \u0648\u062d\u062f\u062f \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0648\u0627\u0644\u0645\u0648\u0639\u062f \u0627\u0644\u0646\u0647\u0627\u0626\u064a", en: "Add task details, then choose the project and deadline" })}
-        onClose={() => setCreateOpen(false)}
+        onClose={() => !createBusy && setCreateOpen(false)}
         open={createOpen}
         title={textFor(language, { ar: "\u0645\u0647\u0645\u0629 \u062c\u062f\u064a\u062f\u0629", en: "New task" })}
       >
-        <TaskCreateForm copy={copy} language={language} onCancel={() => setCreateOpen(false)} onSaved={refreshAfterSave} projects={projects.rows} projectsStatus={projects.status} role={normalizedRole} />
+        <TaskCreateForm copy={copy} language={language} onBusyChange={setCreateBusy} onCancel={() => setCreateOpen(false)} onSaved={refreshAfterSave} projects={projects.rows} projectsStatus={projects.status} role={normalizedRole} />
       </Modal>
 
       <Modal onClose={() => setSelected(null)} open={Boolean(selected)} title={local.detailTitle}>
